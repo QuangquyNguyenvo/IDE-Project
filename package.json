@@ -1,0 +1,72 @@
+{
+    "name": "cpp-ide",
+    "version": "1.0.0",
+    "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
+    "main": "main.js",
+    "author": "QuangquyNguyenvo",
+    "license": "MIT",
+    "homepage": "https://github.com/QuangquyNguyenvo/IDE-Project",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/QuangquyNguyenvo/IDE-Project.git"
+    },
+    "bugs": {
+        "url": "https://github.com/QuangquyNguyenvo/IDE-Project/issues"
+    },
+    "keywords": [
+        "cpp",
+        "c++",
+        "ide",
+        "editor",
+        "electron",
+        "monaco-editor",
+        "programming",
+        "development"
+    ],
+    "scripts": {
+        "start": "electron .",
+        "dev": "electron . --enable-logging",
+        "build": "electron-builder",
+        "build:win": "electron-builder --win",
+        "build:mac": "electron-builder --mac",
+        "build:linux": "electron-builder --linux"
+    },
+    "dependencies": {
+        "monaco-editor": "^0.45.0"
+    },
+    "devDependencies": {
+        "electron": "^28.0.0",
+        "electron-builder": "^24.9.1"
+    },
+    "build": {
+        "appId": "com.quangquy.cppide",
+        "productName": "C++ IDE",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "main.js",
+            "preload.js",
+            "src/**/*",
+            "node_modules/**/*"
+        ],
+        "win": {
+            "target": [
+                "nsis",
+                "portable"
+            ],
+            "icon": "src/assets/icon.ico"
+        },
+        "mac": {
+            "target": "dmg",
+            "icon": "src/assets/icon.icns"
+        },
+        "linux": {
+            "target": [
+                "AppImage",
+                "deb"
+            ],
+            "icon": "src/assets/icon.png"
+        }
+    }
+}
