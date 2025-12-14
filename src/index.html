@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ IDE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles/theme.css">
+    <link rel="stylesheet" href="../node_modules/monaco-editor/min/vs/editor/editor.main.css">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- ===== HEADER ===== -->
+        <div class="header-bar">
+            <div class="logo">C++</div>
+
+            <div class="menu-group">
+                <button class="menu-btn" data-menu="file">File</button>
+                <button class="menu-btn" data-menu="edit">Edit</button>
+                <button class="menu-btn" data-menu="view">View</button>
+                <button class="menu-btn" data-menu="run">Run</button>
+            </div>
+
+            <div class="tabs-wrap">
+                <div class="tabs-container" id="tabs-container"></div>
+                <button class="tab-add" id="btn-new-tab" title="New File (Ctrl+N)">+</button>
+            </div>
+
+            <div class="header-actions">
+                <!-- Toggle buttons -->
+                <button class="toggle-btn" id="btn-toggle-io" title="Input/Output">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="8" rx="1.5" />
+                        <rect x="3" y="13" width="7" height="8" rx="1.5" />
+                        <path d="M14 7h6M14 12h4M14 17h5" />
+                    </svg>
+                </button>
+                <button class="toggle-btn active" id="btn-toggle-term" title="Terminal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M4 17l6-5-6-5" />
+                        <path d="M12 19h8" />
+                    </svg>
+                </button>
+                <button class="toggle-btn" id="btn-toggle-problems" title="Problems (Ctrl+J)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                </button>
+
+                <span class="sep"></span>
+
+                <!-- Run buttons -->
+                <button class="action-btn primary" id="btn-buildrun" title="Build & Run (F11)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <span>Run</span>
+                </button>
+                <button class="action-btn" id="btn-run-only" title="Run Only (F10)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M5 4l12 8-12 8V4z" />
+                    </svg>
+                </button>
+                <button class="action-btn danger" id="btn-stop" title="Stop" disabled>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="5" y="5" width="14" height="14" rx="2" />
+                    </svg>
+                </button>
+
+                <span class="sep"></span>
+
+                <!-- Settings button -->
+                <button class="toggle-btn" id="btn-settings" title="Settings (Ctrl+,)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                    </svg>
+                </button>
+            </div>
+
+            <span class="sep"></span>
+
+            <!-- Windows buttons -->
+            <div class="win-btns">
+                <button class="win-btn" id="btn-min" title="Minimize">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14" />
+                    </svg>
+                </button>
+                <button class="win-btn" id="btn-max" title="Maximize">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="5" y="5" width="14" height="14" rx="2" />
+                    </svg>
+                </button>
+                <button class="win-btn close" id="btn-close" title="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dropdowns -->
+        <div class="dropdown" id="menu-file">
+            <div class="dropdown-item" data-action="new"><span>New File</span><span class="key">Ctrl+N</span></div>
+            <div class="dropdown-item" data-action="open"><span>Open</span><span class="key">Ctrl+O</span></div>
+            <div class="dropdown-item" data-action="save"><span>Save</span><span class="key">Ctrl+S</span></div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item" data-action="exit"><span>Exit</span></div>
+        </div>
+        <div class="dropdown" id="menu-edit">
+            <div class="dropdown-item" data-action="undo"><span>Undo</span><span class="key">Ctrl+Z</span></div>
+            <div class="dropdown-item" data-action="redo"><span>Redo</span><span class="key">Ctrl+Y</span></div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item" data-action="find"><span>Find</span><span class="key">Ctrl+F</span></div>
+        </div>
+        <div class="dropdown" id="menu-view">
+            <div class="dropdown-item" data-action="toggleio"><span>Input/Output</span></div>
+            <div class="dropdown-item" data-action="toggleterm"><span>Terminal</span></div>
+            <div class="dropdown-item" data-action="toggleproblems"><span>Problems</span><span class="key">Ctrl+J</span>
+            </div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item" data-action="spliteditor"><span>Split Editor</span><span
+                    class="key">Ctrl+\</span></div>
+            <div class="dropdown-item" data-action="closesplit"><span>Close Split</span></div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item" data-action="settings"><span>Settings</span><span class="key">Ctrl+,</span></div>
+        </div>
+        <div class="dropdown" id="menu-run">
+            <div class="dropdown-item" data-action="buildrun"><span>Build & Run</span><span class="key">F11</span></div>
+            <div class="dropdown-item" data-action="run"><span>Run</span><span class="key">F10</span></div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item" data-action="stop"><span>Stop</span><span class="key">Shift+F5</span></div>
+        </div>
+
+        <!-- ===== SETTINGS POPUP ===== -->
+        <div class="settings-overlay" id="settings-overlay">
+            <div class="settings-popup" id="settings-popup">
+                <div class="settings-header">
+                    <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                        </svg> Settings</h2>
+                    <button class="settings-close" id="settings-close">×</button>
+                </div>
+
+                <div class="settings-body">
+                    <!-- Editor -->
+                    <div class="settings-section">
+                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                            </svg> Editor</h3>
+
+                        <div class="setting-row">
+                            <label>Font Size</label>
+                            <div class="setting-control">
+                                <input type="range" id="set-fontSize" min="10" max="24" value="14">
+                                <span class="setting-value" id="val-fontSize">14px</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>Font Family</label>
+                            <select id="set-fontFamily">
+                                <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                                <option value="'Fira Code', monospace">Fira Code</option>
+                                <option value="Consolas, monospace">Consolas</option>
+                                <option value="'Cascadia Code', monospace">Cascadia Code</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>Tab Size</label>
+                            <select id="set-tabSize">
+                                <option value="2">2 spaces</option>
+                                <option value="4" selected>4 spaces</option>
+                                <option value="8">8 spaces</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>Minimap</label>
+                            <label class="switch">
+                                <input type="checkbox" id="set-minimap">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>Word Wrap</label>
+                            <label class="switch">
+                                <input type="checkbox" id="set-wordWrap">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Compiler -->
+                    <div class="settings-section">
+                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                            </svg> Compiler</h3>
+
+                        <div class="setting-row">
+                            <label>C++ Standard</label>
+                            <select id="set-cppStandard">
+                                <option value="c++11">C++11</option>
+                                <option value="c++14">C++14</option>
+                                <option value="c++17" selected>C++17</option>
+                                <option value="c++20">C++20</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>
+                                Optimization
+                                <span class="tooltip"
+                                    title="None: Không tối ưu, build nhanh, debug dễ&#10;Fast: Cân bằng, chương trình nhanh hơn 2-3x&#10;Fastest: Nhanh nhất, đôi khi lỗi lạ">?</span>
+                            </label>
+                            <select id="set-optimization">
+                                <option value="">None (-O0)</option>
+                                <option value="-O2" selected>Fast (-O2)</option>
+                                <option value="-O3">Fastest (-O3)</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>
+                                Warnings
+                                <span class="tooltip" title="Bật -Wall -Wextra để thấy cảnh báo lỗi tiềm năng">?</span>
+                            </label>
+                            <label class="switch">
+                                <input type="checkbox" id="set-warnings" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Execution -->
+                    <div class="settings-section">
+                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3" />
+                            </svg> Execution</h3>
+
+                        <div class="setting-row">
+                            <label>
+                                Time Limit
+                                <span class="tooltip"
+                                    title="Tự động dừng chương trình sau X giây.&#10;TẮT nếu làm game hoặc chương trình chạy liên tục.">?</span>
+                            </label>
+                            <div class="setting-control">
+                                <label class="switch">
+                                    <input type="checkbox" id="set-timeLimitEnabled">
+                                    <span class="slider"></span>
+                                </label>
+                                <input type="number" id="set-timeLimitSeconds" min="1" max="60" value="3"
+                                    style="width:50px;margin-left:10px">
+                                <span>seconds</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>Clear Terminal on Run</label>
+                            <label class="switch">
+                                <input type="checkbox" id="set-clearTerminal" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>Auto-send Input</label>
+                            <label class="switch">
+                                <input type="checkbox" id="set-autoSendInput" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Theme -->
+                    <div class="settings-section">
+                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 2a10 10 0 0110 10" />
+                            </svg> Appearance</h3>
+
+                        <div class="setting-row">
+                            <label>Theme</label>
+                            <select id="set-theme">
+                                <option value="kawaii-dark" selected>Kawaii Dark</option>
+                                <option value="kawaii-light">Kawaii Light</option>
+                                <option value="dracula">Dracula</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>Accent Color</label>
+                            <input type="color" id="set-accentColor" value="#b48ead">
+                        </div>
+
+                        <div class="setting-row">
+                            <label>
+                                Background Opacity
+                                <span class="tooltip"
+                                    title="Độ mờ của lớp phủ. Thấp = thấy rõ ảnh nền. Cao = tối hơn dễ đọc code.">?</span>
+                            </label>
+                            <div class="setting-control">
+                                <input type="range" id="set-bgOpacity" min="20" max="90" value="50">
+                                <span class="setting-value" id="val-bgOpacity">50%</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>
+                                Custom Background
+                                <span class="tooltip" title="Nhập URL ảnh hoặc upload file từ máy">?</span>
+                            </label>
+                            <div class="setting-control" style="flex-direction:column;align-items:flex-end;gap:6px">
+                                <input type="text" id="set-bgUrl" placeholder="https://..."
+                                    style="width:180px;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px">
+                                <div style="display:flex;gap:6px">
+                                    <label class="btn-upload">
+                                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                                        </svg>
+                                        Upload
+                                        <input type="file" id="set-bgFile" accept="image/*" style="display:none">
+                                    </label>
+                                    <button class="btn-reset-bg" id="btn-reset-bg"
+                                        title="Reset to default">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-footer">
+                    <button class="btn-reset" id="btn-reset-settings">Reset to Defaults</button>
+                    <button class="btn-save" id="btn-save-settings">Save & Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== MAIN ===== -->
+        <div class="main">
+            <!-- Welcome -->
+            <div class="welcome" id="welcome">
+                <div class="welcome-box">
+                    <h1>C++ IDE</h1>
+                    <p>Fast & Modern Development</p>
+                    <div class="welcome-btns">
+                        <button class="welcome-btn" id="welcome-new">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            New File
+                        </button>
+                        <button class="welcome-btn" id="welcome-open">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5">
+                                <path d="M3 7h4l2 2h8a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                            </svg>
+                            Open File
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Section with Split support -->
+            <div class="editor-section" id="editor-section" style="display:none">
+                <div class="editors-container" id="editors-container">
+                    <!-- Primary Editor -->
+                    <div class="editor-pane" id="editor-pane-1">
+                        <div class="editor-area" id="editor-area">
+                            <div id="editor-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- Split Resizer (hidden by default) -->
+                    <div class="resizer-split" id="resizer-split" style="display:none"></div>
+
+                    <!-- Secondary Editor (hidden by default) -->
+                    <div class="editor-pane" id="editor-pane-2" style="display:none">
+                        <div class="editor-area" id="editor-area-2">
+                            <div id="editor-container-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resizer-h" id="resizer-problems"></div>
+
+                <div class="problems-panel hidden" id="problems-panel">
+                    <div class="panel-head">
+                        <span class="panel-title problems">PROBLEMS</span>
+                        <span class="problem-count" id="problem-count">0</span>
+                        <button class="panel-close" id="close-problems" title="Hide">×</button>
+                    </div>
+                    <div class="problems-body" id="problems-list"></div>
+                </div>
+            </div>
+
+            <div class="resizer" id="resizer-io"></div>
+
+            <div class="io-section" id="io-section">
+                <div class="io-panel">
+                    <div class="panel-head">
+                        <span class="panel-title input">INPUT</span>
+                        <button class="clear-btn" id="clear-input" title="Clear">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                            </svg>
+                        </button>
+                    </div>
+                    <textarea class="panel-textarea" id="input-area" placeholder="Test input..."></textarea>
+                </div>
+                <div class="io-panel">
+                    <div class="panel-head">
+                        <span class="panel-title output">EXPECTED</span>
+                        <button class="clear-btn" id="clear-output" title="Clear">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                            </svg>
+                        </button>
+                    </div>
+                    <textarea class="panel-textarea" id="expected-area" placeholder="Expected output..."></textarea>
+                </div>
+            </div>
+
+            <div class="resizer" id="resizer-term"></div>
+
+            <div class="terminal-section" id="terminal-section">
+                <div class="panel-head">
+                    <span class="panel-title terminal">TERMINAL</span>
+                    <button class="clear-btn" id="clear-term" title="Clear">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="terminal-body" id="terminal"></div>
+                <div class="terminal-input">
+                    <span class="prompt">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                    </span>
+                    <input type="text" id="terminal-in" placeholder="Input..." disabled>
+                    <button class="send-btn" id="btn-send" disabled title="Send">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar" id="status-bar">
+            <div class="status-left">
+                <span class="status-item" id="status"><span class="dot"></span>Ready</span>
+            </div>
+            <div class="status-right">
+                <span class="status-item" id="cursor-pos">Ln 1, Col 1</span>
+                <span class="status-item">C++</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>var require = { paths: { vs: '../node_modules/monaco-editor/min/vs' } };</script>
+    <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
