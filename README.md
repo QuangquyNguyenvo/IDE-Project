@@ -1,138 +1,158 @@
-# C++ IDE
+<img src="src/assets/readme-header.svg" width="100%" />
 
-<p align="center">
-  <img src="src/assets/sameko_mascot.png" alt="C++ IDE Mascot" width="200">
-</p>
+<div align="center">
+  <br />
+  <img src="src/assets/logo.svg" alt="Sameko Logo" width="500" />
+  <br />
 
-<p align="center">
-  <b>A fast, modern, and beautiful C++ IDE built with Electron</b>
-</p>
+  # 🦈 Sameko IDE ⚓
+  
+  **The cutest & fastest C++ IDE for your coding adventures! (≧◡≦) ♡**
+  
+  <p>
+    <a href="https://github.com/QuangquyNguyenvo/IDE-Project">
+      <img src="https://img.shields.io/badge/Version-1.0.0-9cf?style=flat-square&logo=github" alt="Version" />
+    </a>
+    <img src="https://img.shields.io/badge/Made%20with-Electron-blue?style=flat-square&logo=electron" alt="Electron" />
+    <img src="https://img.shields.io/badge/Theme-Kawaii%20Ocean-pink?style=flat-square" alt="Theme" />
+  </p>
+</div>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Electron-28.0.0-blue?logo=electron" alt="Electron">
-  <img src="https://img.shields.io/badge/Monaco%20Editor-0.45.0-purple" alt="Monaco">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green" alt="Platform">
-  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
-</p>
+<br />
+
+<div align="center">
+  ★ 。＼｜／。★
+  <br/>
+  <b>Welcome to the deep blue sea of coding! 🌊</b>
+  <br/>
+  ★ 。／｜＼。★
+</div>
+
+<br />
+
+## 🫧 Introduction (o^▽^o)
+
+**Sameko IDE** is a super adorable environment for C++ development! Designed with a **"Kawaii Ocean"** aesthetic, it brings the calm and charm of the sea directly to your workflow. 
+
+Whether you are a competitive programmer or just saying "Hello World", Sameko helps you swim through problems with speed and style! 💙
+
+<div align="center">
+  <p><i>"Code like a shark, sleep like a cat! ~ Nya!"</i></p>
+</div>
 
 ---
 
-## ✨ Features
+## ✨ Features (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
 
-- 🎨 **Beautiful Kawaii Ocean Theme** - Modern glassmorphism design with pastel colors
-- ⚡ **Fast Compilation** - Precompiled headers support for lightning-fast builds
-- 📝 **Monaco Editor** - Same powerful editor as VS Code with C++ syntax highlighting
-- 🔀 **Split Editor** - Code side by side
-- 📁 **Multi-tab Support** - Work on multiple files simultaneously  
-- 🖥️ **Integrated Terminal** - Interactive input/output terminal
-- 📊 **I/O Panels** - Test with custom input and expected output
-- ⚠️ **Problems Panel** - View compilation errors and warnings
-- ⚙️ **Customizable Settings** - Font, theme, compiler options, background image
-- ⌨️ **Keyboard Shortcuts** - Familiar shortcuts for productivity
+<div align="center">
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <h3>🎨 Kawaii Design</h3>
+      <p>Soft pastel blue interface with glassmorphism effects and bubbly animations. So aesthetically pleasing! (´｡• ᵕ •｡`)</p>
+    </td>
+    <td align="center" width="33%">
+      <h3>⚡ Lightning Fast</h3>
+      <p>Bundled TDM-GCC compiler! No setup needed, just install and code immediately! Zoom zoom! 🚀</p>
+    </td>
+    <td align="center" width="33%">
+      <h3>📝 Smart Editor</h3>
+      <p>Powered by Monaco Editor (like VS Code), helping you write error-free code with magic highlighting! ✨</p>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <h3>🧩 Problem Solver</h3>
+      <p>Special "Diff Mode" to check your inputs and outputs instantly. Perfect for CP! 🧐</p>
+    </td>
+    <td align="center" width="33%">
+      <h3>🖥️ Terminal Magic</h3>
+      <p>A beautiful integrated terminal to talk to your computer directly! 💬</p>
+    </td>
+    <td align="center" width="33%">
+      <h3>⚙️ Customization</h3>
+      <p>Make it yours! Change themes and moods whenever you like! 🌈</p>
+    </td>
+  </tr>
+</table>
+</div>
 
-## 📸 Screenshots
+<br />
 
-> Add your screenshots here
+## 📸 Snapshots (* >ω<)
 
-## 🚀 Getting Started
+<div align="center">
+  <!-- Placeholders for your beautiful screenshots -->
+  <img src="https://placehold.co/800x450/B8E2F2/555555?text=Main+Interface+Preview" alt="Main Interface" style="border-radius: 15px; border: 4px solid #89CFF0;" />
+  <br/><br/>
+  <img src="https://placehold.co/800x450/FFD1DC/555555?text=Problem+Solving+Mode" alt="Problem Solving" style="border-radius: 15px; border: 4px solid #FFB7B2;" />
+</div>
+
+<br />
+
+## ⚓ Getting Started ⸜(｡˃ ᵕ ˂ )⸝♡
+
+Ready to dive in? Follow these simple steps to set up your ocean base!
 
 ### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [G++ Compiler](https://winlibs.com/) (MinGW-w64 for Windows)
+*   **Node.js** (v18+) 📦
+*   **A love for sharks and cute things** (Super important!) 💖
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/QuangquyNguyenvo/IDE-Project.git
-   cd IDE-Project
-   ```
+1.  **Clone the treasure map** 🗺️
+    ```bash
+    git clone https://github.com/QuangquyNguyenvo/IDE-Project.git
+    cd IDE-Project
+    ```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+2.  **Summon the crew (Install dependencies)** 👯‍♀️
+    ```bash
+    npm install
+    ```
 
-3. **Run the application**
-   ```bash
-   npm start
-   ```
+3.  **Set sail! (Run the app)** ⛵
+    ```bash
+    npm start
+    ```
 
-### Build for Production
+<br />
 
-```bash
-npm run build
-```
+## ⌨️ Shortcuts (English Keyboard)
 
-## ⌨️ Keyboard Shortcuts
+| Key | Magic Spell 🪄 |
+| :---: | :--- |
+| `F9` | **Compile (Cooking code...)** 🍳 |
+| `F10` | **Run (Let's go!)** 🏃‍♀️ |
+| `F11` | **Compile & Run** 🔥 |
+| `Ctrl` + `N` | New Page 📄 |
+| `Ctrl` + `J` | Toggle Panel ↕️ |
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+N` | New File |
-| `Ctrl+O` | Open File |
-| `Ctrl+S` | Save File |
-| `Ctrl+W` | Close Tab |
-| `F9` | Compile |
-| `F10` | Run |
-| `F11` | Build & Run |
-| `Ctrl+J` | Toggle Problems Panel |
-| `Ctrl+\` | Split Editor |
-| `Ctrl+,` | Settings |
+<br />
 
-## 📁 Project Structure
+## 🤝 Join the Crew (´• ω •`)
 
-```
-IDE-Project/
-├── src/
-│   ├── index.html      # Main HTML
-│   ├── js/
-│   │   └── app.js      # Renderer process logic
-│   ├── styles/
-│   │   ├── theme.css   # Main theme styles
-│   │   └── base.css    # Base styles
-│   └── assets/         # Images, icons, backgrounds
-├── main.js             # Electron main process
-├── preload.js          # IPC bridge (secure)
-├── package.json
-└── README.md
-```
+We love new friends! If you want to make **Sameko IDE** even better:
 
-## 🛠️ Tech Stack
+1.  Fork the repo 🍴
+2.  Create a branch (`git checkout -b feature/CoolFeature`)
+3.  Commit your changes 💻
+4.  Push to the branch 🚀
+5.  Open a Pull Request 📩
 
-- **[Electron](https://www.electronjs.org/)** - Cross-platform desktop framework
-- **[Monaco Editor](https://microsoft.github.io/monaco-editor/)** - Powerful code editor
-- **[G++](https://gcc.gnu.org/)** - GNU C++ Compiler
+Check out [CONTRIBUTING.md](CONTRIBUTING.md) for more details!
 
-## 🎨 Themes
+<br />
 
-Currently includes:
-- **Kawaii Ocean** (Light) - Soft pastel blue theme
-- **Kawaii Dark** - Dark mode variant
-- **Dracula** - Classic dark theme
+## 📜 License
 
-## 🤝 Contributing
+This project is protected under the **MIT License**. Free as the ocean! 🌊
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+<br />
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+<div align="center">
+  <p>Made with 💙 and 🦈 by <b>QuangquyNguyenvo</b></p>
+  <p><i>"Have a bubbly day!"</i></p>
+</div>
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👏 Acknowledgements
-
-- [Monaco Editor](https://microsoft.github.io/monaco-editor/) for the amazing code editor
-- [Electron](https://www.electronjs.org/) for the cross-platform framework
-- Font families: [Fredoka](https://fonts.google.com/specimen/Fredoka), [Nunito](https://fonts.google.com/specimen/Nunito), [JetBrains Mono](https://www.jetbrains.com/lp/mono/)
-
----
-
-<p align="center">
-  Made with ❤️ by <a href="https://github.com/QuangquyNguyenvo">QuangquyNguyenvo</a>
-</p>
+<img src="src/assets/readme-footer.svg" width="100%" />
