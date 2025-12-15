@@ -67,18 +67,18 @@ Whether you are a competitive programmer or just saying "Hello World", Sameko he
 Ready to dive in? Follow these simple steps to set up your ocean base!
 
 ### Prerequisites
-*   **Node.js** (v18+) 📦
-*   **A love for sharks and cute things** (Super important!) 💖
+*   **Node.js** (v18+)
+*   **A love for sharks and cute things** (Super important!) 💙
 
 ### Installation
 
-1.  **Clone the treasure map** 🗺️
+1.  **Clone the treasure map**
     ```bash
     git clone https://github.com/QuangquyNguyenvo/IDE-Project.git
     cd IDE-Project
     ```
 
-2.  **Summon the crew (Install dependencies)** 👯‍♀️
+2.  **Summon the crew (Install dependencies)**
     ```bash
     npm install
     ```
@@ -92,13 +92,13 @@ Ready to dive in? Follow these simple steps to set up your ocean base!
 
 ## ⌨️ Shortcuts (English Keyboard)
 
-| Key | Magic Spell 🪄 |
-| :---: | :--- |
-| `F9` | **Compile (Cooking code...)** 🍳 |
-| `F10` | **Run (Let's go!)** 🏃‍♀️ |
-| `F11` | **Compile & Run** 🔥 |
-| `Ctrl` + `N` | New Page 📄 |
-| `Ctrl` + `J` | Toggle Panel ↕️ |
+|     Key      | Action ⚓          |
+| :----------: | :---------------- |
+|     `F9`     | **Compile**       |
+|    `F10`     | **Run**           |
+|    `F11`     | **Compile & Run** |
+| `Ctrl` + `N` | New Page          |
+| `Ctrl` + `J` | Toggle Panel      |
 
 <br />
 
@@ -106,11 +106,11 @@ Ready to dive in? Follow these simple steps to set up your ocean base!
 
 We love new friends! If you want to make **Sameko IDE** even better:
 
-1.  Fork the repo 🍴
+1.  Fork the repo
 2.  Create a branch (`git checkout -b feature/CoolFeature`)
-3.  Commit your changes 💻
-4.  Push to the branch 🚀
-5.  Open a Pull Request 📩
+3.  Commit your changes
+4.  Push to the branch
+5.  Open a Pull Request
 
 Check out [CONTRIBUTING.md](CONTRIBUTING.md) for more details!
 
