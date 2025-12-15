@@ -48,7 +48,8 @@
             "main.js",
             "preload.js",
             "src/**/*",
-            "node_modules/**/*"
+            "node_modules/**/*",
+            "mingw64/**/*"
         ],
         "win": {
             "target": [

@@ -1,8 +1,20 @@
 /**
- * C++ IDE - Full Featured with Settings, Error Highlighting & Split Editor
+ * C++ IDE - Renderer Process
+ * 
+ * Main application logic for the C++ IDE including:
+ * - Monaco Editor integration with syntax highlighting
+ * - Tab management and split editor support
+ * - Build system integration (compile, run, stop)
+ * - Settings management and theme system
+ * - Terminal and I/O panel handling
+ * 
+ * @author Project IDE Team
+ * @license MIT
  */
 
-// ===== DEFAULT SETTINGS =====
+// ============================================================================
+// DEFAULT SETTINGS
+// ============================================================================
 const DEFAULT_SETTINGS = {
     editor: {
         fontSize: 14,
@@ -26,7 +38,8 @@ const DEFAULT_SETTINGS = {
         theme: 'kawaii-dark',
         accentColor: '#b48ead',
         bgOpacity: 50,
-        bgUrl: ''
+        bgUrl: '',
+        performanceMode: false
     },
     panels: {
         showIO: false,
@@ -35,7 +48,9 @@ const DEFAULT_SETTINGS = {
     }
 };
 
-// ===== APP STATE =====
+// ============================================================================
+// APPLICATION STATE
+// ============================================================================
 const App = {
     editor: null,
     editor2: null,
@@ -69,7 +84,9 @@ int main() {
 }
 `;
 
-// ===== INIT =====
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     applySettings(); // Apply saved settings on load
@@ -85,33 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI();
 });
 
-// ===== MONACO EDITOR =====
 function initMonaco() {
     require(['vs/editor/editor.main'], function () {
-        monaco.editor.defineTheme('kawaii', {
-            base: 'vs-dark',
-            inherit: true,
-            rules: [
-                { token: 'comment', foreground: '6a8a9a', fontStyle: 'italic' },
-                { token: 'keyword', foreground: '88c9ea' },
-                { token: 'string', foreground: 'a3d9a5' },
-                { token: 'number', foreground: 'ebcb8b' },
-                { token: 'type', foreground: 'e8a8b8' },
-                { token: 'function', foreground: '7ec8e3' },
-            ],
-            colors: {
-                'editor.background': '#1a2530',
-                'editor.foreground': '#e0f0ff',
-                'editor.lineHighlightBackground': '#243040',
-                'editor.selectionBackground': '#88c9ea40',
-                'editorCursor.foreground': '#88c9ea',
-                'editorLineNumber.foreground': '#4a6a7a',
-                'editorLineNumber.activeForeground': '#88c9ea',
-            }
-        });
+        // Define all Monaco themes
+        defineMonacoThemes();
 
         App.editor = createEditor('editor-container');
         App.ready = true;
+
+        // Apply initial theme
+        applyTheme(App.settings.appearance.theme);
 
         // Track active editor on focus
         document.getElementById('editor-container').addEventListener('mousedown', () => {
@@ -120,11 +120,163 @@ function initMonaco() {
     });
 }
 
+// ============================================================================
+// MONACO EDITOR THEMES
+// ============================================================================
+function defineMonacoThemes() {
+    // Kawaii Dark Theme
+    monaco.editor.defineTheme('kawaii-dark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'comment', foreground: '6a8a9a', fontStyle: 'italic' },
+            { token: 'keyword', foreground: '88c9ea' },
+            { token: 'string', foreground: 'a3d9a5' },
+            { token: 'number', foreground: 'ebcb8b' },
+            { token: 'type', foreground: 'e8a8b8' },
+            { token: 'function', foreground: '7ec8e3' },
+        ],
+        colors: {
+            'editor.background': '#1a2530',
+            'editor.foreground': '#e0f0ff',
+            'editor.lineHighlightBackground': '#243040',
+            'editor.selectionBackground': '#88c9ea40',
+            'editorCursor.foreground': '#88c9ea',
+            'editorLineNumber.foreground': '#4a6a7a',
+            'editorLineNumber.activeForeground': '#88c9ea',
+        }
+    });
+
+    // Kawaii Light Theme - Uses same dark editor as kawaii-dark for consistency
+    monaco.editor.defineTheme('kawaii-light', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'comment', foreground: '6a8a9a', fontStyle: 'italic' },
+            { token: 'keyword', foreground: '88c9ea' },
+            { token: 'string', foreground: 'a3d9a5' },
+            { token: 'number', foreground: 'ebcb8b' },
+            { token: 'type', foreground: 'e8a8b8' },
+            { token: 'function', foreground: '7ec8e3' },
+        ],
+        colors: {
+            'editor.background': '#1a2530',
+            'editor.foreground': '#e0f0ff',
+            'editor.lineHighlightBackground': '#243040',
+            'editor.selectionBackground': '#88c9ea40',
+            'editorCursor.foreground': '#88c9ea',
+            'editorLineNumber.foreground': '#4a6a7a',
+            'editorLineNumber.activeForeground': '#88c9ea',
+        }
+    });
+
+    // Dracula Theme
+    monaco.editor.defineTheme('dracula', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'comment', foreground: '6272a4', fontStyle: 'italic' },
+            { token: 'keyword', foreground: 'ff79c6' },
+            { token: 'string', foreground: 'f1fa8c' },
+            { token: 'number', foreground: 'bd93f9' },
+            { token: 'type', foreground: '8be9fd', fontStyle: 'italic' },
+            { token: 'function', foreground: '50fa7b' },
+            { token: 'variable', foreground: 'f8f8f2' },
+            { token: 'operator', foreground: 'ff79c6' },
+        ],
+        colors: {
+            'editor.background': '#282a36',
+            'editor.foreground': '#f8f8f2',
+            'editor.lineHighlightBackground': '#44475a',
+            'editor.selectionBackground': '#44475a',
+            'editorCursor.foreground': '#f8f8f2',
+            'editorLineNumber.foreground': '#6272a4',
+            'editorLineNumber.activeForeground': '#f8f8f2',
+        }
+    });
+
+    // Monokai Theme
+    monaco.editor.defineTheme('monokai', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'comment', foreground: '75715e', fontStyle: 'italic' },
+            { token: 'keyword', foreground: 'f92672' },
+            { token: 'string', foreground: 'e6db74' },
+            { token: 'number', foreground: 'ae81ff' },
+            { token: 'type', foreground: '66d9ef', fontStyle: 'italic' },
+            { token: 'function', foreground: 'a6e22e' },
+            { token: 'variable', foreground: 'f8f8f2' },
+            { token: 'operator', foreground: 'f92672' },
+        ],
+        colors: {
+            'editor.background': '#272822',
+            'editor.foreground': '#f8f8f2',
+            'editor.lineHighlightBackground': '#3e3d32',
+            'editor.selectionBackground': '#49483e',
+            'editorCursor.foreground': '#f8f8f0',
+            'editorLineNumber.foreground': '#75715e',
+            'editorLineNumber.activeForeground': '#f8f8f2',
+        }
+    });
+
+    // Nord Theme
+    monaco.editor.defineTheme('nord', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'comment', foreground: '616e88', fontStyle: 'italic' },
+            { token: 'keyword', foreground: '81a1c1' },
+            { token: 'string', foreground: 'a3be8c' },
+            { token: 'number', foreground: 'b48ead' },
+            { token: 'type', foreground: '8fbcbb' },
+            { token: 'function', foreground: '88c0d0' },
+            { token: 'variable', foreground: 'eceff4' },
+            { token: 'operator', foreground: '81a1c1' },
+        ],
+        colors: {
+            'editor.background': '#2e3440',
+            'editor.foreground': '#eceff4',
+            'editor.lineHighlightBackground': '#3b4252',
+            'editor.selectionBackground': '#434c5e',
+            'editorCursor.foreground': '#d8dee9',
+            'editorLineNumber.foreground': '#4c566a',
+            'editorLineNumber.activeForeground': '#d8dee9',
+        }
+    });
+
+    // One Dark Pro Theme
+    monaco.editor.defineTheme('one-dark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'comment', foreground: '5c6370', fontStyle: 'italic' },
+            { token: 'keyword', foreground: 'c678dd' },
+            { token: 'string', foreground: '98c379' },
+            { token: 'number', foreground: 'd19a66' },
+            { token: 'type', foreground: 'e5c07b' },
+            { token: 'function', foreground: '61afef' },
+            { token: 'variable', foreground: 'e06c75' },
+            { token: 'operator', foreground: '56b6c2' },
+        ],
+        colors: {
+            'editor.background': '#282c34',
+            'editor.foreground': '#abb2bf',
+            'editor.lineHighlightBackground': '#2c313c',
+            'editor.selectionBackground': '#3e4451',
+            'editorCursor.foreground': '#528bff',
+            'editorLineNumber.foreground': '#495162',
+            'editorLineNumber.activeForeground': '#abb2bf',
+        }
+    });
+}
+
+
 function createEditor(containerId) {
     const editor = monaco.editor.create(document.getElementById(containerId), {
         value: '',
         language: 'cpp',
-        theme: 'kawaii',
+        theme: App.settings.appearance.theme || 'kawaii-dark',
         fontSize: App.settings.editor.fontSize,
         fontFamily: App.settings.editor.fontFamily,
         fontLigatures: true,
@@ -172,7 +324,9 @@ function createEditor(containerId) {
     return editor;
 }
 
-// ===== SPLIT EDITOR =====
+// ============================================================================
+// SPLIT EDITOR
+// ============================================================================
 function toggleSplit() {
     if (App.isSplit) {
         closeSplit();
@@ -330,7 +484,9 @@ function setupSplitResizer() {
     });
 }
 
-// ===== SETTINGS =====
+// ============================================================================
+// SETTINGS
+// ============================================================================
 function loadSettings() {
     try {
         let saved = null;
@@ -432,6 +588,7 @@ function openSettings() {
     document.getElementById('set-autoSendInput').checked = App.settings.execution.autoSendInput;
 
     document.getElementById('set-theme').value = App.settings.appearance.theme;
+    document.getElementById('set-performanceMode').checked = App.settings.appearance.performanceMode || false;
     document.getElementById('set-accentColor').value = App.settings.appearance.accentColor;
     document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
     document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
@@ -461,6 +618,7 @@ function saveSettingsAndClose() {
     App.settings.execution.autoSendInput = document.getElementById('set-autoSendInput').checked;
 
     App.settings.appearance.theme = document.getElementById('set-theme').value;
+    App.settings.appearance.performanceMode = document.getElementById('set-performanceMode').checked;
     App.settings.appearance.accentColor = document.getElementById('set-accentColor').value;
     App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
     App.settings.appearance.bgUrl = document.getElementById('set-bgUrl').value;
@@ -493,24 +651,95 @@ function applySettings() {
     if (App.editor2) App.editor2.updateOptions(opts);
     document.documentElement.style.setProperty('--accent', App.settings.appearance.accentColor);
 
-    // Apply background opacity overlay
-    const opacity = (App.settings.appearance.bgOpacity || 50) / 100;
-    const appContainer = document.querySelector('.app-container');
-    if (appContainer) {
-        appContainer.style.background = `rgba(255, 255, 255, ${opacity * 0.3})`;
+    // Apply Performance Mode
+    if (App.settings.appearance.performanceMode) {
+        document.body.classList.add('performance-mode');
+    } else {
+        document.body.classList.remove('performance-mode');
     }
 
-    // Apply custom background or default gradient
+    // Apply Theme
+    applyTheme(App.settings.appearance.theme);
+
+    // Apply background opacity overlay
+    applyBackgroundSettings();
+}
+
+// ============================================================================
+// THEME APPLICATION
+// ============================================================================
+function applyTheme(themeName) {
+    const theme = themeName || 'kawaii-dark';
+
+    // Set data-theme attribute on html element for CSS
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // Update Monaco editor theme if editors exist
+    if (typeof monaco !== 'undefined') {
+        monaco.editor.setTheme(theme);
+    }
+
+    // Apply theme-specific background 
+    applyBackgroundSettings();
+}
+
+function applyBackgroundSettings() {
+    const theme = App.settings.appearance.theme || 'kawaii-dark';
     const bgUrl = App.settings.appearance.bgUrl;
+    const opacity = (App.settings.appearance.bgOpacity || 50) / 100;
+
+    // Define theme-specific backgrounds
+    const themeBackgrounds = {
+        'kawaii-dark': {
+            default: 'linear-gradient(135deg, #1a2530 0%, #152535 100%)',
+            overlay: `rgba(26, 37, 48, ${0.3 + opacity * 0.5})`
+        },
+        'kawaii-light': {
+            default: 'linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 50%, #c5e3f6 100%)',
+            overlay: `rgba(255, 255, 255, ${opacity * 0.3})`
+        },
+        'dracula': {
+            default: 'linear-gradient(135deg, #282a36 0%, #21222c 100%)',
+            overlay: `rgba(40, 42, 54, ${0.3 + opacity * 0.5})`
+        },
+        'monokai': {
+            default: 'linear-gradient(135deg, #272822 0%, #1e1f1c 100%)',
+            overlay: `rgba(39, 40, 34, ${0.3 + opacity * 0.5})`
+        },
+        'nord': {
+            default: 'linear-gradient(135deg, #2e3440 0%, #242931 100%)',
+            overlay: `rgba(46, 52, 64, ${0.3 + opacity * 0.5})`
+        },
+        'one-dark': {
+            default: 'linear-gradient(135deg, #282c34 0%, #21252b 100%)',
+            overlay: `rgba(40, 44, 52, ${0.3 + opacity * 0.5})`
+        }
+    };
+
+    const themeConfig = themeBackgrounds[theme] || themeBackgrounds['kawaii-dark'];
+
+    // Apply custom background or theme default
     if (bgUrl) {
         document.body.style.background = `url('${bgUrl}') no-repeat center center fixed`;
         document.body.style.backgroundSize = 'cover';
     } else {
-        document.body.style.background = 'linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 50%, #c5e3f6 100%)';
+        document.body.style.background = themeConfig.default;
+    }
+
+    // Apply overlay
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+        if (bgUrl) {
+            appContainer.style.background = themeConfig.overlay;
+        } else {
+            appContainer.style.background = 'transparent';
+        }
     }
 }
 
-// ===== KEYBOARD SHORTCUTS =====
+// ============================================================================
+// KEYBOARD SHORTCUTS
+// ============================================================================
 function initShortcuts() {
     document.addEventListener('keydown', e => {
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); save(); }
@@ -537,7 +766,9 @@ function initTabsScroll() {
     });
 }
 
-// ===== UI UPDATE =====
+// ============================================================================
+// UI UPDATE
+// ============================================================================
 function updateUI() {
     const hasTabs = App.tabs.length > 0;
     document.getElementById('welcome').style.display = hasTabs ? 'none' : 'flex';
@@ -556,7 +787,9 @@ function updateUI() {
     document.getElementById('btn-toggle-problems').classList.toggle('active', App.showProblems);
 }
 
-// ===== HEADER =====
+// ============================================================================
+// HEADER
+// ============================================================================
 function initHeader() {
     document.getElementById('btn-new-tab').onclick = newFile;
     document.getElementById('btn-buildrun').onclick = buildRun;
@@ -605,18 +838,30 @@ function toggleProblems() {
     updateUI();
 }
 
-// ===== PANELS =====
+// ============================================================================
+// PANELS
+// ============================================================================
 function initPanels() {
     document.getElementById('clear-input').onclick = () => { document.getElementById('input-area').value = ''; };
-    document.getElementById('clear-output').onclick = () => { document.getElementById('expected-area').value = ''; };
+    document.getElementById('clear-output').onclick = () => {
+        document.getElementById('expected-area').value = '';
+        document.getElementById('expected-area').style.display = 'block';
+        document.getElementById('expected-diff').style.display = 'none';
+        document.getElementById('expected-diff').innerHTML = '';
+    };
     document.getElementById('clear-term').onclick = clearTerm;
     document.getElementById('close-problems').onclick = () => { App.showProblems = false; updateUI(); };
 
     document.getElementById('btn-send').onclick = sendInput;
     document.getElementById('terminal-in').onkeypress = e => { if (e.key === 'Enter') sendInput(); };
+
+    // Click on diff display to go back to edit mode
+    document.getElementById('expected-diff').onclick = switchToExpectedEdit;
 }
 
-// ===== RESIZERS =====
+// ============================================================================
+// RESIZERS
+// ============================================================================
 function initResizers() {
     setupResizer('resizer-io', 'io-section', 180, 500);
     setupResizer('resizer-term', 'terminal-section', 200, 600);
@@ -685,7 +930,9 @@ function setupResizerH(resizerId, targetId, min, max) {
     });
 }
 
-// ===== TABS =====
+// ============================================================================
+// TABS
+// ============================================================================
 function newFile() {
     const id = 'tab_' + Date.now();
     const tab = { id, name: 'untitled.cpp', path: null, content: DEFAULT_CODE, original: DEFAULT_CODE, modified: false };
@@ -757,7 +1004,9 @@ function renderTabs() {
     }, 10);
 }
 
-// ===== MENUS =====
+// ============================================================================
+// MENUS
+// ============================================================================
 let activeMenu = null;
 
 function initMenus() {
@@ -809,7 +1058,9 @@ function getActiveEditor() {
     return App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
 }
 
-// ===== FILE OPERATIONS =====
+// ============================================================================
+// FILE OPERATIONS
+// ============================================================================
 async function openFile() { await window.electronAPI.openFile(); }
 
 async function save() {
@@ -838,7 +1089,9 @@ async function saveAs() {
     }
 }
 
-// ===== BUILD & RUN =====
+// ============================================================================
+// BUILD & RUN
+// ============================================================================
 async function buildRun() {
     const tab = App.tabs.find(t => t.id === App.activeTabId);
     if (!tab) { log('No file open', 'warning'); return; }
@@ -942,7 +1195,9 @@ async function stop() {
     await window.electronAPI.stopProcess();
 }
 
-// ===== ERROR HIGHLIGHTING =====
+// ============================================================================
+// ERROR HIGHLIGHTING
+// ============================================================================
 function highlightErrorLines() {
     if (!App.editor || App.problems.length === 0) return;
 
@@ -966,7 +1221,9 @@ function clearErrorDecorations() {
     }
 }
 
-// ===== PROBLEMS =====
+// ============================================================================
+// PROBLEMS PANEL
+// ============================================================================
 function clearProblems() {
     App.problems = [];
     renderProblems();
@@ -1024,7 +1281,9 @@ function renderProblems() {
     });
 }
 
-// ===== TERMINAL =====
+// ============================================================================
+// TERMINAL
+// ============================================================================
 function log(msg, type = '') {
     const t = document.getElementById('terminal');
     const l = document.createElement('pre');
@@ -1062,17 +1321,92 @@ function setStatus(msg, type) {
 }
 
 function compareOutput() {
-    const expected = document.getElementById('expected-area').value.trim();
-    if (!expected) return;
-    const actual = document.getElementById('terminal').innerText;
-    if (actual.includes(expected)) {
-        log('\nOutput matches!', 'success');
-    } else {
-        log('\nOutput differs', 'warning');
+    const expectedText = document.getElementById('expected-area').value.trim();
+    if (!expectedText) return;
+
+    // Extract actual output from terminal (filter out system messages and inputs)
+    const terminalEl = document.getElementById('terminal');
+    const lines = Array.from(terminalEl.querySelectorAll('pre, .line'));
+    let actualText = '';
+    let capturing = false;
+
+    for (const line of lines) {
+        const text = line.textContent;
+        if (text.includes('--- Running ---')) {
+            capturing = true;
+            continue;
+        }
+        if (text.includes('--- Exit') || text.includes('--- Stopped')) {
+            break;
+        }
+        if (capturing && !text.startsWith('>') && !line.classList.contains('system') && !line.classList.contains('info')) {
+            actualText += (actualText ? '\n' : '') + text;
+        }
     }
+
+    // Tokenize: split by whitespace, keeping structure
+    const expectedTokens = expectedText.split(/(\s+)/);
+    const actualTokens = actualText.split(/(\s+)/);
+
+    const diffDisplay = document.getElementById('expected-diff');
+    const textarea = document.getElementById('expected-area');
+
+    // Build diff HTML - compare token by token
+    let html = '';
+    let actualIdx = 0;
+
+    for (let i = 0; i < expectedTokens.length; i++) {
+        const expToken = expectedTokens[i];
+
+        // Whitespace tokens - just render
+        if (/^\s+$/.test(expToken)) {
+            html += expToken.includes('\n') ? '<br>' : ' ';
+            continue;
+        }
+
+        // Find corresponding actual token (skip whitespace)
+        while (actualIdx < actualTokens.length && /^\s+$/.test(actualTokens[actualIdx])) {
+            actualIdx++;
+        }
+
+        const actToken = actualIdx < actualTokens.length ? actualTokens[actualIdx] : null;
+        actualIdx++;
+
+        if (actToken === null) {
+            // Missing in actual
+            html += `<span class="diff-token incorrect">${escapeHtml(expToken)}</span>`;
+        } else if (expToken === actToken) {
+            // Match
+            html += `<span class="diff-token correct">${escapeHtml(expToken)}</span>`;
+        } else {
+            // Mismatch
+            html += `<span class="diff-token incorrect">${escapeHtml(expToken)}</span>`;
+        }
+    }
+
+    // Show diff display, hide textarea
+    diffDisplay.innerHTML = html;
+    diffDisplay.style.display = 'block';
+    textarea.style.display = 'none';
 }
 
-// ===== IPC HANDLERS =====
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function switchToExpectedEdit() {
+    const textarea = document.getElementById('expected-area');
+    const diffDisplay = document.getElementById('expected-diff');
+    textarea.style.display = 'block';
+    diffDisplay.style.display = 'none';
+    textarea.focus();
+}
+
+// ============================================================================
+// IPC HANDLERS
+// ============================================================================
 if (window.electronAPI) {
     window.electronAPI.onFileOpened?.(data => {
         const exists = App.tabs.find(t => t.path === data.path);

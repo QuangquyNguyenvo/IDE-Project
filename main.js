@@ -1,3 +1,18 @@
+/**
+ * C++ IDE - Main Process
+ * 
+ * Electron main process handling:
+ * - Window creation and management
+ * - IPC communication with renderer
+ * - File system operations
+ * - Compiler detection and integration
+ * - Build system (compile, run, stop)
+ * - Precompiled header (PCH) management
+ * 
+ * @author Project IDE Team
+ * @license MIT
+ */
+
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -6,6 +21,100 @@ const { exec, spawn } = require('child_process');
 let mainWindow;
 let currentFile = null;
 let runningProcess = null;
+
+// ============================================================================
+// COMPILER DETECTION
+// ============================================================================
+// Bundled MinGW path (inside app folder - HIGHEST PRIORITY)
+const BUNDLED_MINGW_PATHS = [
+    path.join(__dirname, 'mingw64', 'bin', 'g++.exe'),
+    path.join(__dirname, 'mingw32', 'bin', 'g++.exe'),
+    path.join(__dirname, 'MinGW', 'bin', 'g++.exe'),
+    path.join(__dirname, 'TDM-GCC-64', 'bin', 'g++.exe'),
+    path.join(__dirname, 'compiler', 'bin', 'g++.exe'),
+];
+
+// System-installed compiler paths (fallback)
+const SYSTEM_COMPILER_PATHS = [
+    'C:\\TDM-GCC-64\\bin\\g++.exe',
+    'C:\\TDM-GCC-32\\bin\\g++.exe',
+    'C:\\MinGW\\bin\\g++.exe',
+    'C:\\MinGW64\\bin\\g++.exe',
+    'C:\\msys64\\mingw64\\bin\\g++.exe',
+    'C:\\msys64\\mingw32\\bin\\g++.exe',
+    'C:\\Program Files\\mingw-w64\\x86_64-8.1.0-posix-seh-rt_v6-rev0\\mingw64\\bin\\g++.exe',
+    'C:\\Program Files (x86)\\Dev-Cpp\\MinGW64\\bin\\g++.exe',
+];
+
+let detectedCompiler = null;
+let compilerInfo = { name: 'Unknown', version: '', path: '', bundled: false };
+
+// Find the best available compiler
+function detectCompiler() {
+    // PRIORITY 1: Check bundled MinGW in app folder (no installation needed!)
+    for (const compilerPath of BUNDLED_MINGW_PATHS) {
+        if (fs.existsSync(compilerPath)) {
+            detectedCompiler = compilerPath;
+            compilerInfo.name = 'Bundled MinGW';
+            compilerInfo.path = compilerPath;
+            compilerInfo.bundled = true;
+            console.log(`[Compiler] Found bundled MinGW: ${compilerPath}`);
+            return compilerPath;
+        }
+    }
+
+    // PRIORITY 2: Check system-installed compilers
+    for (const compilerPath of SYSTEM_COMPILER_PATHS) {
+        if (fs.existsSync(compilerPath)) {
+            detectedCompiler = compilerPath;
+            const dirName = path.dirname(path.dirname(compilerPath));
+            if (dirName.includes('TDM-GCC')) {
+                compilerInfo.name = 'TDM-GCC';
+            } else if (dirName.includes('Dev-Cpp')) {
+                compilerInfo.name = 'Dev-C++ MinGW';
+            } else if (dirName.includes('msys64')) {
+                compilerInfo.name = 'MSYS2 MinGW';
+            } else {
+                compilerInfo.name = 'MinGW';
+            }
+            compilerInfo.path = compilerPath;
+            compilerInfo.bundled = false;
+            console.log(`[Compiler] Found system compiler: ${compilerPath}`);
+            return compilerPath;
+        }
+    }
+
+    // PRIORITY 3: Fallback to PATH
+    detectedCompiler = 'g++';
+    compilerInfo.name = 'System GCC';
+    compilerInfo.path = 'g++ (from PATH)';
+    compilerInfo.bundled = false;
+    console.log('[Compiler] Using g++ from PATH');
+    return 'g++';
+}
+
+// Get compiler version
+async function getCompilerVersion() {
+    return new Promise((resolve) => {
+        const compiler = detectedCompiler || 'g++';
+        exec(`"${compiler}" --version`, (error, stdout) => {
+            if (error) {
+                resolve('Unknown');
+                return;
+            }
+            const match = stdout.match(/g\+\+.*?(\d+\.\d+\.\d+)/);
+            if (match) {
+                compilerInfo.version = match[1];
+                resolve(match[1]);
+            } else {
+                resolve('Unknown');
+            }
+        });
+    });
+}
+
+// Initialize compiler on startup
+detectCompiler();
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -124,7 +233,7 @@ ipcMain.handle('save-file-dialog', async (event, content) => {
 const pchDir = path.join(app.getPath('userData'), 'pch');
 let pchReady = false;
 
-// Ensure PCH is created on startup
+// Ensure PCH is created on startup (or rebuild if compiler changed)
 async function ensurePCH() {
     if (!fs.existsSync(pchDir)) {
         fs.mkdirSync(pchDir, { recursive: true });
@@ -132,26 +241,58 @@ async function ensurePCH() {
 
     const pchHeader = path.join(pchDir, 'stdc++.h');
     const pchFile = path.join(pchDir, 'stdc++.h.gch');
+    const pchInfoFile = path.join(pchDir, 'pch-info.json');
 
-    // Check if PCH already exists
-    if (fs.existsSync(pchFile)) {
-        pchReady = true;
-        return true;
+    const compilerExe = detectedCompiler || 'g++';
+
+    // Check if PCH needs rebuild (different compiler or version)
+    let needsRebuild = true;
+    if (fs.existsSync(pchFile) && fs.existsSync(pchInfoFile)) {
+        try {
+            const pchInfo = JSON.parse(fs.readFileSync(pchInfoFile, 'utf-8'));
+            if (pchInfo.compiler === compilerExe && pchInfo.version === compilerInfo.version) {
+                console.log('[PCH] Using cached PCH');
+                pchReady = true;
+                return true;
+            } else {
+                console.log(`[PCH] Compiler changed: ${pchInfo.compiler} → ${compilerExe}`);
+            }
+        } catch (e) {
+            console.log('[PCH] Invalid pch-info.json, rebuilding');
+        }
     }
+
+    console.log('[PCH] Building precompiled header (this takes ~10 seconds first time)...');
 
     // Create the header file
     fs.writeFileSync(pchHeader, '#include <bits/stdc++.h>\n', 'utf-8');
 
-    // Compile PCH
+    // Compile PCH using detected compiler
     return new Promise((resolve) => {
-        const compiler = spawn('g++', ['-x', 'c++-header', pchHeader, '-o', pchFile, '-O0'], { cwd: pchDir });
+        const startTime = Date.now();
+        const compiler = spawn(compilerExe, ['-x', 'c++-header', pchHeader, '-o', pchFile, '-O0'], { cwd: pchDir });
 
         compiler.on('close', (code) => {
-            pchReady = (code === 0);
-            resolve(pchReady);
+            const elapsed = Date.now() - startTime;
+            if (code === 0) {
+                // Save PCH info for future checks
+                fs.writeFileSync(pchInfoFile, JSON.stringify({
+                    compiler: compilerExe,
+                    version: compilerInfo.version,
+                    created: new Date().toISOString()
+                }), 'utf-8');
+                console.log(`[PCH] Built successfully in ${elapsed}ms`);
+                pchReady = true;
+                resolve(true);
+            } else {
+                console.log('[PCH] Build failed');
+                pchReady = false;
+                resolve(false);
+            }
         });
 
-        compiler.on('error', () => {
+        compiler.on('error', (err) => {
+            console.log('[PCH] Error:', err.message);
             pchReady = false;
             resolve(false);
         });
@@ -159,13 +300,15 @@ async function ensurePCH() {
 }
 
 ipcMain.handle('compile', async (event, { filePath, content }) => {
+    const startTime = Date.now();
+
     return new Promise(async (resolve) => {
         // Kill any running process first (to release .exe lock)
         if (runningProcess) {
             runningProcess.kill();
             runningProcess = null;
-            // Small delay to ensure file is released
-            await new Promise(r => setTimeout(r, 100));
+            // Minimal delay - just enough to release file lock
+            await new Promise(r => setTimeout(r, 50));
         }
 
         // Save file first if needed
@@ -184,17 +327,24 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
         // Check if file uses bits/stdc++.h and PCH is ready
         const usesPCH = content.includes('bits/stdc++.h') && pchReady;
 
-        // Build args - optimized for fastest compilation
-        // -O0: no optimization (fastest compile)
-        // -pipe: use pipes instead of temp files (faster I/O)
-        // -fno-exceptions: disable exceptions if not used (optional)
-        const args = [filePath, '-o', outputPath, '-O0', '-pipe'];
+        // Build args - optimized for speed without breaking STL
+        const args = [
+            filePath,
+            '-o', outputPath,
+            '-O0',      // No optimization (fastest compile)
+            '-w',       // Suppress warnings
+        ];
+
+        // PCH optimization - CRITICAL for speed with bits/stdc++.h
         if (usesPCH) {
+            // Use -I to add PCH dir and -include to use the precompiled header
             args.push('-I', pchDir);
             args.push('-include', 'stdc++.h');
         }
 
-        const compiler = spawn('g++', args, { cwd: dir });
+        // Use detected compiler (TDM-GCC, MinGW, or fallback)
+        const compilerExe = detectedCompiler || 'g++';
+        const compiler = spawn(compilerExe, args, { cwd: dir });
 
         let stderr = '';
 
@@ -203,18 +353,24 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
         });
 
         compiler.on('close', (code) => {
+            const compileTime = Date.now() - startTime;
+            console.log(`[Compile] Finished in ${compileTime}ms`);
+
             if (code !== 0) {
                 resolve({
                     success: false,
                     error: stderr || `Compilation failed with code ${code}`,
-                    outputPath: null
+                    outputPath: null,
+                    time: compileTime
                 });
             } else {
                 resolve({
                     success: true,
-                    message: 'Compilation successful!' + (usesPCH ? ' (PCH)' : ''),
+                    message: 'Compilation successful!',
                     outputPath: outputPath,
-                    warnings: stderr || ''
+                    warnings: stderr || '',
+                    compiler: compilerInfo.name,
+                    time: compileTime
                 });
             }
         });
@@ -296,13 +452,22 @@ ipcMain.handle('get-current-file', () => {
     return currentFile;
 });
 
+// Get compiler information
+ipcMain.handle('get-compiler-info', async () => {
+    await getCompilerVersion();
+    return compilerInfo;
+});
+
 app.whenReady().then(async () => {
     createWindow();
-    // Prepare PCH in background (takes a few seconds first time)
+
+    // Get compiler version (silent - no terminal output)
+    await getCompilerVersion();
+    console.log(`[System] Compiler: ${compilerInfo.name} ${compilerInfo.version}`);
+
+    // Prepare PCH in background (silent - no terminal output)
     const pchResult = await ensurePCH();
-    if (pchResult) {
-        mainWindow.webContents.send('process-output', '[System] Precompiled header ready - faster compilation enabled!\n');
-    }
+    console.log(`[System] PCH ready: ${pchResult}`);
 });
 
 app.on('window-all-closed', () => {

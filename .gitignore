@@ -9,6 +9,9 @@ build/
 *.o
 *.gch
 
+# ===== Bundled Tools =====
+mingw64/
+
 # ===== Electron =====
 .cache/
 
