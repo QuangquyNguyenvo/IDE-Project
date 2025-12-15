@@ -11,6 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="styles/theme.css">
+    <link rel="stylesheet" href="styles/themes.css">
     <link rel="stylesheet" href="../node_modules/monaco-editor/min/vs/editor/editor.main.css">
 </head>
 
@@ -309,7 +310,22 @@
                                 <option value="kawaii-dark" selected>Kawaii Dark</option>
                                 <option value="kawaii-light">Kawaii Light</option>
                                 <option value="dracula">Dracula</option>
+                                <option value="monokai">Monokai</option>
+                                <option value="nord">Nord</option>
+                                <option value="one-dark">One Dark Pro</option>
                             </select>
+                        </div>
+
+                        <div class="setting-row">
+                            <label>
+                                Performance Mode
+                                <span class="tooltip"
+                                    title="Tắt blur effects và giảm shadows để chạy mượt trên máy yếu (Core 2 Duo, RAM thấp). UI vẫn giữ nguyên.">?</span>
+                            </label>
+                            <label class="switch">
+                                <input type="checkbox" id="set-performanceMode">
+                                <span class="slider"></span>
+                            </label>
                         </div>
 
                         <div class="setting-row">
@@ -446,6 +462,7 @@
                         </button>
                     </div>
                     <textarea class="panel-textarea" id="expected-area" placeholder="Expected output..."></textarea>
+                    <div class="diff-display" id="expected-diff" style="display:none"></div>
                 </div>
             </div>
 

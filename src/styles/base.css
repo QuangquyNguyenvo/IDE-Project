@@ -1,4 +1,13 @@
-/* ===== SAMEKO SABA KAWAII OCEAN THEME ===== */
+/**
+ * C++ IDE - Base Component Stylesheet
+ * 
+ * Alternative base styles with custom mascot and bubble decorations.
+ * Import this file for a more decorated UI variant.
+ * 
+ * @author Project IDE Team
+ * @license MIT
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
 * {
@@ -8,7 +17,7 @@
 }
 
 :root {
-    /* Color Palette - Sameko Saba Style */
+    /* Light Theme Color Palette */
     --bg-ocean-light: #eff8fe;
     --bg-ocean-medium: #bce2f5;
     --bg-ocean-deep: #88c9ea;
@@ -19,7 +28,6 @@
     --bg-glass-border: rgba(255, 255, 255, 0.8);
 
     --accent: #eb6b9d;
-    /* Pink for blush/hearts */
     --accent-hover: #ff8fb8;
     --text-primary: #2a5a75;
     --text-secondary: #5a8a95;
@@ -219,7 +227,6 @@ body::after {
     border-color: var(--bg-ocean-deep);
     color: var(--text-primary);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-    /* Sunken effect */
 }
 
 .tab-x {
@@ -400,7 +407,6 @@ body::after {
 .editor-area {
     flex: 1;
     background: rgba(255, 255, 255, 0.5);
-    /* Lighter editor bg */
     border-radius: var(--radius-sm);
     margin: 6px;
     overflow: hidden;
@@ -454,7 +460,6 @@ body::after {
 
 .terminal-body {
     background: #1e2933;
-    /* Dark terminal for contrast */
     color: #e0f0ff;
     flex: 1;
     padding: 12px;
