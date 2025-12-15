@@ -45,36 +45,7 @@ Whether you are a competitive programmer or just saying "Hello World", Sameko he
 ## ✨ Features (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
 
 <div align="center">
-  <p align="center">
-    <b> 🌸 Kawaii Design 🌸 </b> <br>
-    Soft pastel blue interface with glassmorphism effects and bubbly animations. So aesthetically pleasing! (´｡• ᵕ •｡`)
-  </p>
-  
-  <p align="center">
-    <b> ⚡ Lightning Fast ⚡ </b> <br>
-    Bundled TDM-GCC compiler! No setup needed, just install and code immediately! Zoom zoom! 🚀
-  </p>
-  
-  <p align="center">
-    <b> 📝 Smart Editor 📝 </b> <br>
-    Powered by Monaco Editor (like VS Code), helping you write error-free code with magic highlighting! ✨
-  </p>
-  
-  <p align="center">
-    <b> 🧩 Problem Solver 🧩 </b> <br>
-    Special "Diff Mode" to check your inputs and outputs instantly. Perfect for CP! 🧐
-  </p>
-  
-  <p align="center">
-    <b> 🖥️ Terminal Magic 🖥️ </b> <br>
-    A beautiful integrated terminal to talk to your computer directly! 💬
-  </p>
-  
-  <p align="center">
-    <b> ⚙️ Customization ⚙️ </b> <br>
-    Make it yours! Change themes and moods whenever you like! 🌈
-  </p>
-
+  <img src="src/assets/features.svg" width="100%" alt="Features" />
 </div>
 
 <br />
@@ -82,13 +53,11 @@ Whether you are a competitive programmer or just saying "Hello World", Sameko he
 ## 📸 Snapshots (* >ω<)
 
 <div align="center">
-  <!-- Main Editor View -->
-  <img src="src/assets/screenshot_editor.png" alt="Main Interface" width="70%" style="border-radius: 20px; border: 4px solid #89CFF0; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-  
-  <br/>
-  
   <!-- Welcome Screen View -->
-  <img src="src/assets/screenshot_welcome.png" alt="Welcome Screen" width="70%" style="border-radius: 20px; border: 4px solid #FFB7B2; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+  <img src="src/assets/screenshot_welcome.png" alt="Welcome Screen" width="45%" style="border-radius: 30px; border: 4px solid #FFB7B2; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block;" />
+
+  <!-- Main Editor View -->
+  <img src="src/assets/screenshot_editor.png" alt="Main Interface" width="45%" style="border-radius: 30px; border: 4px solid #89CFF0; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block;" />
 </div>
 
 <br />
