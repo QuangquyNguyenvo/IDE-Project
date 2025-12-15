@@ -1,4 +1,4 @@
-<svg width="100%" height="200" viewBox="0 0 1440 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+<svg width="100%" height="250" viewBox="0 0 1440 250" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
   <defs>
     <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#A2D9F5;stop-opacity:1" />
@@ -6,21 +6,54 @@
     </linearGradient>
   </defs>
   
-  <!-- Animated Background Bubbles -->
-  <circle cx="10%" cy="50%" r="20" fill="#ffffff" opacity="0.3">
-    <animate attributeName="cy" values="100;80;100" dur="4s" repeatCount="indefinite" />
-  </circle>
-  <circle cx="90%" cy="30%" r="30" fill="#ffffff" opacity="0.4">
-    <animate attributeName="cy" values="60;40;60" dur="5s" repeatCount="indefinite" />
-  </circle>
-  
-  <!-- Waves -->
-  <path fill="url(#grad1)" fill-opacity="1" d="M0,0 L1440,0 L1440,100 Q720,200 0,100 Z">
-     <animate d="M0,0 L1440,0 L1440,120 Q720,160 0,120 Z; M0,0 L1440,0 L1440,100 Q720,200 0,100 Z; M0,0 L1440,0 L1440,120 Q720,160 0,120 Z" dur="10s" repeatCount="indefinite" attributeName="d" />
+  <!-- Bubble Group -->
+  <g opacity="0.4">
+      <circle cx="10%" cy="80%" r="25" fill="#ffffff">
+        <animate attributeName="cy" values="250; -50" dur="15s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;0" dur="15s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="20%" cy="80%" r="15" fill="#ffffff">
+        <animate attributeName="cy" values="250; -50" dur="12s" begin="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;0" dur="12s" begin="2s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="50%" cy="80%" r="35" fill="#ffffff">
+        <animate attributeName="cy" values="250; -50" dur="20s" begin="5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;0" dur="20s" begin="5s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="80%" cy="80%" r="20" fill="#ffffff">
+         <animate attributeName="cy" values="250; -50" dur="10s" begin="1s" repeatCount="indefinite" />
+         <animate attributeName="opacity" values="0;1;0" dur="10s" begin="1s" repeatCount="indefinite" />
+      </circle>
+       <circle cx="95%" cy="80%" r="10" fill="#ffffff">
+         <animate attributeName="cy" values="250; -50" dur="18s" begin="3s" repeatCount="indefinite" />
+         <animate attributeName="opacity" values="0;1;0" dur="18s" begin="3s" repeatCount="indefinite" />
+      </circle>
+  </g>
+
+  <!-- Layer 1 (Furthest) -->
+  <path fill="#A2D9F5" fill-opacity="0.3" d="M0,100 C320,180 420,0 740,80 C1060,160 1180,60 1440,100 V0 H0 V100 Z">
+     <animate attributeName="d" 
+              values="M0,100 C320,180 420,0 740,80 C1060,160 1180,60 1440,100 V0 H0 V100 Z;
+                      M0,100 C320,80 420,160 740,120 C1060,80 1180,180 1440,100 V0 H0 V100 Z;
+                      M0,100 C320,180 420,0 740,80 C1060,160 1180,60 1440,100 V0 H0 V100 Z"
+              dur="20s" repeatCount="indefinite"/>
   </path>
   
-  <!-- Decorative Star/Sparkles -->
-  <text x="50%" y="80" text-anchor="middle" font-size="20" fill="white" opacity="0.8">✧</text>
-  <text x="20%" y="60" text-anchor="middle" font-size="15" fill="white" opacity="0.6">★</text>
-  <text x="80%" y="60" text-anchor="middle" font-size="15" fill="white" opacity="0.6">★</text>
+  <!-- Layer 2 (Middle) -->
+  <path fill="#5FA8D3" fill-opacity="0.5" d="M0,130 C300,60 600,200 900,100 C1200,0 1400,120 1440,130 V0 H0 V130 Z">
+      <animate attributeName="d" 
+              values="M0,130 C300,60 600,200 900,100 C1200,0 1400,120 1440,130 V0 H0 V130 Z;
+                      M0,130 C300,180 600,100 900,160 C1200,80 1400,160 1440,130 V0 H0 V130 Z;
+                      M0,130 C300,60 600,200 900,100 C1200,0 1400,120 1440,130 V0 H0 V130 Z"
+              dur="15s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Layer 3 (Closest) -->
+  <path fill="url(#grad1)" d="M0,160 C360,240 720,80 1080,160 C1260,200 1380,140 1440,160 V0 H0 V160 Z">
+      <animate attributeName="d" 
+              values="M0,160 C360,240 720,80 1080,160 C1260,200 1380,140 1440,160 V0 H0 V160 Z;
+                      M0,160 C360,120 720,200 1080,140 C1260,100 1380,200 1440,160 V0 H0 V160 Z;
+                      M0,160 C360,240 720,80 1080,160 C1260,200 1380,140 1440,160 V0 H0 V160 Z"
+              dur="10s" repeatCount="indefinite"/>
+  </path>
 </svg>

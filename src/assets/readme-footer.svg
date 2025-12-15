@@ -1,23 +1,49 @@
-<svg width="100%" height="200" viewBox="0 0 1440 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+<svg width="100%" height="250" viewBox="0 0 1440 250" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+    <linearGradient id="gradInv" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#5FA8D3;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#A2D9F5;stop-opacity:1" />
     </linearGradient>
   </defs>
-  
-  <!-- Waves -->
-  <path fill="url(#grad1)" fill-opacity="1" d="M0,200 L1440,200 L1440,50 Q720,-50 0,50 Z">
-      <animate d="M0,200 L1440,200 L1440,60 Q720,0 0,60 Z; M0,200 L1440,200 L1440,40 Q720,-40 0,40 Z; M0,200 L1440,200 L1440,60 Q720,0 0,60 Z" dur="8s" repeatCount="indefinite" attributeName="d" />
+
+  <!-- Layer 1 (Furthest) -->
+  <path fill="#A2D9F5" fill-opacity="0.3" d="M0,150 C320,70 420,250 740,170 C1060,90 1180,190 1440,150 V250 H0 V150 Z">
+     <animate attributeName="d" 
+              values="M0,150 C320,70 420,250 740,170 C1060,90 1180,190 1440,150 V250 H0 V150 Z;
+                      M0,150 C320,170 420,90 740,130 C1060,170 1180,70 1440,150 V250 H0 V150 Z;
+                      M0,150 C320,70 420,250 740,170 C1060,90 1180,190 1440,150 V250 H0 V150 Z"
+              dur="22s" repeatCount="indefinite"/>
   </path>
   
-  <!-- Bubbles rising from bottom -->
-  <circle cx="15%" cy="160" r="10" fill="#ffffff" opacity="0.5">
-    <animate attributeName="cy" values="160;140;160" dur="3s" repeatCount="indefinite" />
-  </circle>
-  <circle cx="85%" cy="170" r="15" fill="#ffffff" opacity="0.5">
-    <animate attributeName="cy" values="170;150;170" dur="4s" repeatCount="indefinite" />
-  </circle>
+  <!-- Layer 2 (Middle) -->
+  <path fill="#5FA8D3" fill-opacity="0.5" d="M0,120 C300,190 600,50 900,150 C1200,250 1400,130 1440,120 V250 H0 V120 Z">
+      <animate attributeName="d" 
+              values="M0,120 C300,190 600,50 900,150 C1200,250 1400,130 1440,120 V250 H0 V120 Z;
+                      M0,120 C300,70 600,150 900,90 C1200,170 1400,170 1440,120 V250 H0 V120 Z;
+                      M0,120 C300,190 600,50 900,150 C1200,250 1400,130 1440,120 V250 H0 V120 Z"
+              dur="17s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Layer 3 (Closest) -->
+  <path fill="url(#gradInv)" d="M0,90 C360,10 720,170 1080,90 C1260,50 1380,110 1440,90 V250 H0 V90 Z">
+      <animate attributeName="d" 
+              values="M0,90 C360,10 720,170 1080,90 C1260,50 1380,110 1440,90 V250 H0 V90 Z;
+                      M0,90 C360,130 720,50 1080,110 C1260,150 1380,50 1440,90 V250 H0 V90 Z;
+                      M0,90 C360,10 720,170 1080,90 C1260,50 1380,110 1440,90 V250 H0 V90 Z"
+              dur="12s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Bubbles Rising -->
+   <g opacity="0.6">
+      <circle cx="15%" cy="100%" r="12" fill="#ffffff">
+        <animate attributeName="cy" values="250; 50" dur="8s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;0.8;0" dur="8s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="75%" cy="100%" r="8" fill="#ffffff">
+        <animate attributeName="cy" values="250; 50" dur="10s" begin="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;0.8;0" dur="10s" begin="2s" repeatCount="indefinite" />
+      </circle>
+  </g>
   
-   <text x="50%" y="150" text-anchor="middle" font-size="20" fill="white" font-family="sans-serif" font-weight="bold" letter-spacing="2">THANKS FOR VISITING!</text>
+  <text x="50%" y="200" text-anchor="middle" font-size="24" fill="white" font-family="'Nunito', sans-serif" font-weight="bold" letter-spacing="4" opacity="0.8">THANKS FOR VISITING!</text>
 </svg>

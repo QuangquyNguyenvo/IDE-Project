@@ -82,10 +82,13 @@ Whether you are a competitive programmer or just saying "Hello World", Sameko he
 ## 📸 Snapshots (* >ω<)
 
 <div align="center">
-  <!-- Placeholders for your beautiful screenshots -->
-  <img src="https://placehold.co/800x450/B8E2F2/555555?text=Main+Interface+Preview" alt="Main Interface" style="border-radius: 15px; border: 4px solid #89CFF0;" />
-  <br/><br/>
-  <img src="https://placehold.co/800x450/FFD1DC/555555?text=Problem+Solving+Mode" alt="Problem Solving" style="border-radius: 15px; border: 4px solid #FFB7B2;" />
+  <!-- Main Editor View -->
+  <img src="src/assets/screenshot_editor.png" alt="Main Interface" width="100%" style="border-radius: 15px; border: 4px solid #89CFF0; margin-bottom: 20px;" />
+  
+  <br/>
+  
+  <!-- Welcome Screen View -->
+  <img src="src/assets/screenshot_welcome.png" alt="Welcome Screen" width="100%" style="border-radius: 15px; border: 4px solid #FFB7B2;" />
 </div>
 
 <br />
