@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200">
+  <defs>
+    <!-- Bubbly Text Filter -->
+    <filter id="bubble-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+      <feOffset in="blur" dx="4" dy="4" result="offsetBlur"/>
+      <feMerge>
+        <feMergeNode in="offsetBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Gradient for Text -->
+    <linearGradient id="ocean-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A2D9F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5FA8D3;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Stroke Gradient -->
+    <linearGradient id="stroke-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0f7fa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background decorative elements (Bubbles) -->
+  <circle cx="50" cy="150" r="15" fill="#A2D9F5" opacity="0.4">
+    <animate attributeName="cy" values="160;140;160" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="550" cy="40" r="10" fill="#A2D9F5" opacity="0.6">
+    <animate attributeName="cy" values="40;20;40" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Main Text Group -->
+  <g transform="translate(30, 20)">
+    <!-- Outline/Shadow Layer -->
+    <text x="50%" y="110" text-anchor="middle" 
+          font-family="'Fredoka One', 'Nunito', sans-serif" 
+          font-weight="900" 
+          font-size="110" 
+          fill="none" 
+          stroke="#3FA0D8" 
+          stroke-width="18"
+          stroke-linejoin="round"
+          filter="url(#bubble-glow)">
+      SAMEKO
+    </text>
+
+    <!-- Inner White Stroke -->
+    <text x="50%" y="110" text-anchor="middle" 
+          font-family="'Fredoka One', 'Nunito', sans-serif" 
+          font-weight="900" 
+          font-size="110" 
+          fill="none" 
+          stroke="url(#stroke-grad)" 
+          stroke-width="10"
+          stroke-linejoin="round">
+      SAMEKO
+    </text>
+
+    <!-- Main Fill -->
+    <text x="50%" y="110" text-anchor="middle" 
+          font-family="'Fredoka One', 'Nunito', sans-serif" 
+          font-weight="900" 
+          font-size="110" 
+          fill="url(#ocean-grad)">
+      SAMEKO
+    </text>
+    
+    <!-- Highlight Shine -->
+    <path d="M120,50 Q140,40 160,50" stroke="white" stroke-width="5" fill="none" opacity="0.8" />
+    <path d="M440,50 Q460,40 480,50" stroke="white" stroke-width="5" fill="none" opacity="0.8" />
+
+    <!-- Subtitle Group -->
+    <g>
+      <!-- Blue Outline -->
+      <text x="50%" y="165" text-anchor="middle" 
+            font-family="'Fredoka One', 'Nunito', sans-serif" 
+            font-weight="700" 
+            font-size="32" 
+            fill="none" 
+            stroke="#3FA0D8" 
+            stroke-width="5"
+            stroke-linejoin="round"
+            letter-spacing="2">
+        IDE PROJECT
+      </text>
+      <!-- White Inner Stroke -->
+      <text x="50%" y="165" text-anchor="middle" 
+            font-family="'Fredoka One', 'Nunito', sans-serif" 
+            font-weight="700" 
+            font-size="32" 
+            fill="none" 
+            stroke="#ffffff" 
+            stroke-width="2"
+            stroke-linejoin="round"
+            letter-spacing="2">
+        IDE PROJECT
+      </text>
+      <!-- Fill -->
+      <text x="50%" y="165" text-anchor="middle" 
+            font-family="'Fredoka One', 'Nunito', sans-serif" 
+            font-weight="700" 
+            font-size="32" 
+            fill="#5FA8D3" 
+            letter-spacing="2">
+        IDE PROJECT
+      </text>
+    </g>
+  </g>
+</svg>
