@@ -11,10 +11,10 @@
   
   <p>
     <a href="https://github.com/QuangquyNguyenvo/IDE-Project">
-      <img src="https://img.shields.io/badge/Version-1.0.0-9cf?style=flat-square&logo=github" alt="Version" />
+      <img src="https://img.shields.io/badge/Version-1.0.0-A2D9F5?style=flat-square&logo=github&logoColor=white&labelColor=5FA8D3" alt="Version" />
     </a>
-    <img src="https://img.shields.io/badge/Made%20with-Electron-blue?style=flat-square&logo=electron" alt="Electron" />
-    <img src="https://img.shields.io/badge/Theme-Kawaii%20Ocean-pink?style=flat-square" alt="Theme" />
+    <img src="https://img.shields.io/badge/Made%20with-Electron-A2D9F5?style=flat-square&logo=electron&logoColor=white&labelColor=5FA8D3" alt="Electron" />
+    <img src="https://img.shields.io/badge/Theme-Kawaii%20Ocean-A2D9F5?style=flat-square&labelColor=5FA8D3" alt="Theme" />
   </p>
 </div>
 
@@ -30,6 +30,12 @@
 
 <br />
 
+<div align="center">
+  <img src="src/assets/divider.svg" width="80%" alt="divider" />
+</div>
+
+<br />
+
 ## 🫧 Introduction (o^▽^o)
 
 **Sameko IDE** is a super adorable environment for C++ development! Designed with a **"Kawaii Ocean"** aesthetic, it brings the calm and charm of the sea directly to your workflow. 
@@ -40,7 +46,7 @@ Whether you are a competitive programmer or just saying "Hello World", Sameko he
   <p><i>"Code like a shark, sleep like a cat! ~ Nya!"</i></p>
 </div>
 
----
+<br />
 
 ## ✨ Features (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
 
@@ -53,12 +59,15 @@ Whether you are a competitive programmer or just saying "Hello World", Sameko he
 ## 📸 Snapshots (* >ω<)
 
 <div align="center">
+  
   <!-- Welcome Screen View -->
   <img src="src/assets/screenshot_welcome.png" alt="Welcome Screen" width="45%" style="border-radius: 30px; border: 4px solid #FFB7B2; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block;" />
 
   <!-- Main Editor View -->
   <img src="src/assets/screenshot_editor.png" alt="Main Interface" width="45%" style="border-radius: 30px; border: 4px solid #89CFF0; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block;" />
 </div>
+
+<br />
 
 <br />
 
@@ -90,6 +99,8 @@ Ready to dive in? Follow these simple steps to set up your ocean base!
 
 <br />
 
+<br />
+
 ## ⌨️ Shortcuts (English Keyboard)
 
 |     Key      | Action ⚓          |
@@ -99,6 +110,8 @@ Ready to dive in? Follow these simple steps to set up your ocean base!
 |    `F11`     | **Compile & Run** |
 | `Ctrl` + `N` | New Page          |
 | `Ctrl` + `J` | Toggle Panel      |
+
+<br />
 
 <br />
 
