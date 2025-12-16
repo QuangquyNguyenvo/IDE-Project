@@ -31,8 +31,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keyboard shortcuts for all major actions
 - Custom frameless window with native controls
 
-### Coming Soon
-- File explorer sidebar
-- Debugger integration (GDB)
-- Auto-complete with clangd
-- Git integration
+
