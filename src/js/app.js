@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
         fontSize: 14,
         fontFamily: "'JetBrains Mono', monospace",
         tabSize: 4,
-        minimap: false,
+        minimap: true,
         wordWrap: false
     },
     compiler: {
@@ -35,11 +35,13 @@ const DEFAULT_SETTINGS = {
         autoSendInput: true
     },
     appearance: {
-        theme: 'kawaii-dark',
-        accentColor: '#b48ead',
+        theme: 'kawaii-light',
         bgOpacity: 50,
-        bgUrl: '',
+        bgUrl: 'assets/background.jpg',
         performanceMode: false
+    },
+    terminal: {
+        colorScheme: 'ansi-16'
     },
     panels: {
         showIO: false,
@@ -117,7 +119,40 @@ function initMonaco() {
         document.getElementById('editor-container').addEventListener('mousedown', () => {
             App.activeEditor = 1;
         });
+
+        // Ctrl + Wheel zoom in/out
+        initCtrlWheelZoom();
     });
+}
+
+// Ctrl + Wheel to zoom in/out editor font
+function initCtrlWheelZoom() {
+    // Use capture phase to intercept before Monaco handles it
+    window.addEventListener('wheel', e => {
+        if (!e.ctrlKey) return;
+
+        // Check if wheel is over an editor container
+        const editorContainer = e.target.closest('#editor-container, #editor-container-2');
+        if (!editorContainer) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const delta = e.deltaY > 0 ? -1 : 1;
+        const currentSize = App.settings.editor.fontSize;
+        const newSize = Math.min(40, Math.max(8, currentSize + delta));
+
+        if (newSize !== currentSize) {
+            App.settings.editor.fontSize = newSize;
+
+            // Update all editors
+            if (App.editor) App.editor.updateOptions({ fontSize: newSize });
+            if (App.editor2) App.editor2.updateOptions({ fontSize: newSize });
+
+            // Save settings
+            saveSettings();
+        }
+    }, { passive: false, capture: true });
 }
 
 // ============================================================================
@@ -286,9 +321,40 @@ function createEditor(containerId) {
         automaticLayout: true,
         tabSize: App.settings.editor.tabSize,
         cursorBlinking: 'smooth',
-        smoothScrolling: true,
+        smoothScrolling: false,
         bracketPairColorization: { enabled: true },
-        padding: { top: 12 }
+        padding: { top: 12 },
+        // Hide the white circle on scrollbar (overview ruler decorations)
+        overviewRulerBorder: false,
+        overviewRulerLanes: 0,
+        hideCursorInOverviewRuler: true,
+        scrollbar: {
+            // VSCode-like scrollbar - simple rectangle, no decorations
+            vertical: 'auto',
+            horizontal: 'auto',
+            verticalScrollbarSize: 14,
+            horizontalScrollbarSize: 14,
+            arrowSize: 0,
+            useShadows: false,
+            // Make slider visible but subtle
+            verticalSliderSize: 14,
+            horizontalSliderSize: 14
+        },
+        // Minimap with normal slider
+        minimap: {
+            enabled: App.settings.editor.minimap,
+            showSlider: 'always',  // Show slider normally
+            renderCharacters: true,
+            scale: 1
+        },
+        // Disable code suggestions/autocomplete
+        quickSuggestions: false,
+        suggestOnTriggerCharacters: false,
+        acceptSuggestionOnEnter: 'off',
+        tabCompletion: 'off',
+        wordBasedSuggestions: 'off',
+        parameterHints: { enabled: false },
+        suggest: { enabled: false }
     });
 
     editor.onDidChangeCursorPosition(e => {
@@ -504,6 +570,7 @@ function loadSettings() {
                 compiler: { ...DEFAULT_SETTINGS.compiler, ...saved.compiler },
                 execution: { ...DEFAULT_SETTINGS.execution, ...saved.execution },
                 appearance: { ...DEFAULT_SETTINGS.appearance, ...saved.appearance },
+                terminal: { ...DEFAULT_SETTINGS.terminal, ...saved.terminal },
                 panels: { ...DEFAULT_SETTINGS.panels, ...saved.panels }
             };
         }
@@ -521,6 +588,7 @@ function loadSettings() {
 
 function saveSettings() {
     try {
+        console.log('[Settings] Saving:', JSON.stringify(App.settings.appearance));
         if (window.electronAPI?.saveSettings) {
             window.electronAPI.saveSettings(App.settings);
         } else {
@@ -538,6 +606,23 @@ function initSettings() {
         if (e.target.id === 'settings-overlay') closeSettings();
     };
 
+    // Tab switching
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.onclick = () => {
+            // Remove active from all tabs
+            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+
+            // Add active to clicked tab
+            tab.classList.add('active');
+            const panelId = 'panel-' + tab.dataset.tab;
+            document.getElementById(panelId)?.classList.add('active');
+
+            // Re-apply theme colors to fix inline styles
+            updateThemePreview();
+        };
+    });
+
     const fontSizeSlider = document.getElementById('set-fontSize');
     fontSizeSlider.oninput = () => {
         document.getElementById('val-fontSize').textContent = fontSizeSlider.value + 'px';
@@ -548,6 +633,9 @@ function initSettings() {
     bgOpacitySlider.oninput = () => {
         document.getElementById('val-bgOpacity').textContent = bgOpacitySlider.value + '%';
     };
+
+    // Theme preview - update when theme changes
+    document.getElementById('set-theme').onchange = updateThemePreview;
 
     // Background file upload
     document.getElementById('set-bgFile').onchange = e => {
@@ -563,11 +651,238 @@ function initSettings() {
 
     // Reset background button
     document.getElementById('btn-reset-bg').onclick = () => {
-        document.getElementById('set-bgUrl').value = '';
+        document.getElementById('set-bgUrl').value = 'assets/background.jpg';
     };
 
     document.getElementById('btn-save-settings').onclick = saveSettingsAndClose;
     document.getElementById('btn-reset-settings').onclick = resetSettings;
+}
+
+// Theme color palettes for preview and settings
+const THEME_COLORS = {
+    'kawaii-dark': {
+        headerBg: '#2d3748', editorBg: '#1a202c', terminalBg: '#171923', statusBg: '#2d3748', ioBg: '#1e2530',
+        text: '#e2e8f0', textMuted: '#a0aec0', lineNum: '#4a5568',
+        keyword: '#88c9ea', string: '#a3d9a5', type: '#ebcb8b', func: '#88c9ea',
+        accent: '#88c9ea', success: '#68d391', info: '#63b3ed',
+        // Settings popup colors
+        popupBg: '#2d3748', sidebarBg: '#1e2530', contentBg: '#1a202c',
+        border: '#4a5568', borderLight: '#3d4a5c', accentColor: '#88c9ea'
+    },
+    'kawaii-light': {
+        headerBg: '#88c9ea', editorBg: '#f8fafc', terminalBg: '#1e2530', statusBg: '#88c9ea', ioBg: '#ffffff',
+        text: '#2d3748', textMuted: '#64748b', lineNum: '#a0aec0',
+        keyword: '#3182ce', string: '#38a169', type: '#d69e2e', func: '#9f7aea',
+        accent: '#88c9ea', success: '#38a169', info: '#3182ce',
+        // Settings popup colors
+        popupBg: '#e8f4fc', sidebarBg: '#ffffff', contentBg: '#ffffff',
+        border: '#b8e2f5', borderLight: '#d4eef8', accentColor: '#7fc4e8',
+        headerFooterBg: '#c8e7f5'
+    },
+    'dracula': {
+        headerBg: '#282a36', editorBg: '#282a36', terminalBg: '#1e1f29', statusBg: '#282a36', ioBg: '#21222c',
+        text: '#f8f8f2', textMuted: '#6272a4', lineNum: '#6272a4',
+        keyword: '#ff79c6', string: '#50fa7b', type: '#8be9fd', func: '#ffb86c',
+        accent: '#bd93f9', success: '#50fa7b', info: '#8be9fd',
+        // Settings popup colors
+        popupBg: '#282a36', sidebarBg: '#21222c', contentBg: '#282a36',
+        border: '#6272a4', borderLight: '#44475a', accentColor: '#bd93f9'
+    },
+    'monokai': {
+        headerBg: '#272822', editorBg: '#272822', terminalBg: '#1e1f1c', statusBg: '#272822', ioBg: '#1e1f1c',
+        text: '#f8f8f2', textMuted: '#75715e', lineNum: '#75715e',
+        keyword: '#f92672', string: '#a6e22e', type: '#66d9ef', func: '#e6db74',
+        accent: '#a6e22e', success: '#a6e22e', info: '#66d9ef',
+        // Settings popup colors
+        popupBg: '#272822', sidebarBg: '#1e1f1c', contentBg: '#272822',
+        border: '#75715e', borderLight: '#49483e', accentColor: '#a6e22e'
+    },
+    'nord': {
+        headerBg: '#3b4252', editorBg: '#2e3440', terminalBg: '#242933', statusBg: '#3b4252', ioBg: '#2e3440',
+        text: '#eceff4', textMuted: '#4c566a', lineNum: '#4c566a',
+        keyword: '#b48ead', string: '#a3be8c', type: '#88c0d0', func: '#ebcb8b',
+        accent: '#88c0d0', success: '#a3be8c', info: '#88c0d0',
+        // Settings popup colors
+        popupBg: '#2e3440', sidebarBg: '#3b4252', contentBg: '#2e3440',
+        border: '#4c566a', borderLight: '#434c5e', accentColor: '#88c0d0'
+    },
+    'one-dark': {
+        headerBg: '#282c34', editorBg: '#282c34', terminalBg: '#21252b', statusBg: '#282c34', ioBg: '#21252b',
+        text: '#abb2bf', textMuted: '#5c6370', lineNum: '#4b5263',
+        keyword: '#c678dd', string: '#98c379', type: '#61afef', func: '#e5c07b',
+        accent: '#61afef', success: '#98c379', info: '#61afef',
+        // Settings popup colors
+        popupBg: '#282c34', sidebarBg: '#21252b', contentBg: '#282c34',
+        border: '#5c6370', borderLight: '#3e4452', accentColor: '#61afef'
+    }
+};
+
+function updateThemePreview() {
+    const theme = document.getElementById('set-theme').value;
+    const colors = THEME_COLORS[theme] || THEME_COLORS['kawaii-dark'];
+    const preview = document.getElementById('theme-preview');
+    if (!preview) return;
+
+    const isLight = theme === 'kawaii-light';
+
+    // Preview window background
+    preview.style.background = colors.editorBg;
+    preview.style.borderColor = colors.headerBg;
+
+    // Header
+    const header = preview.querySelector('.preview-header');
+    if (header) {
+        header.style.background = colors.headerBg;
+    }
+
+    // Tab in header
+    const tab = preview.querySelector('.preview-tab');
+    if (tab) {
+        tab.style.background = isLight ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.1)';
+        tab.style.color = isLight ? colors.text : colors.textMuted;
+    }
+
+    // Body background
+    const body = preview.querySelector('.preview-body');
+    if (body) {
+        body.style.background = isLight ? 'rgba(136,201,234,0.15)' : 'rgba(0,0,0,0.2)';
+    }
+
+    // Editor
+    const editor = preview.querySelector('.preview-editor');
+    if (editor) {
+        editor.style.background = colors.editorBg;
+        editor.style.color = colors.text;
+        editor.style.borderColor = isLight ? 'rgba(136,201,234,0.4)' : 'rgba(255,255,255,0.1)';
+    }
+
+    // IO panels
+    preview.querySelectorAll('.preview-io-panel').forEach(panel => {
+        panel.style.background = colors.ioBg;
+        panel.style.borderColor = isLight ? 'rgba(136,201,234,0.4)' : 'rgba(255,255,255,0.1)';
+    });
+    preview.querySelectorAll('.preview-io-header').forEach(h => {
+        h.style.color = colors.accent;
+        h.style.background = isLight ? 'rgba(136,201,234,0.2)' : 'rgba(136,201,234,0.1)';
+    });
+    preview.querySelectorAll('.preview-io-body').forEach(b => {
+        b.style.color = colors.textMuted;
+    });
+
+    // Terminal
+    const terminal = preview.querySelector('.preview-terminal');
+    if (terminal) {
+        terminal.style.background = colors.terminalBg;
+        terminal.style.borderColor = isLight ? 'rgba(136,201,234,0.4)' : 'rgba(255,255,255,0.1)';
+    }
+    const termHeader = preview.querySelector('.preview-term-header');
+    if (termHeader) {
+        termHeader.style.color = colors.accent;
+    }
+    const termContent = preview.querySelector('.preview-term-content');
+    if (termContent) {
+        termContent.style.color = colors.text;
+    }
+
+    // Syntax highlighting
+    preview.querySelectorAll('.ln').forEach(el => el.style.color = colors.lineNum);
+    preview.querySelectorAll('.kw').forEach(el => el.style.color = colors.keyword);
+    preview.querySelectorAll('.str').forEach(el => el.style.color = colors.string);
+    preview.querySelectorAll('.type').forEach(el => el.style.color = colors.type);
+    preview.querySelectorAll('.fn').forEach(el => el.style.color = colors.func);
+
+    // Terminal output colors
+    preview.querySelectorAll('.term-success').forEach(el => el.style.color = colors.success);
+    preview.querySelectorAll('.term-output').forEach(el => el.style.color = colors.text);
+    preview.querySelectorAll('.term-info').forEach(el => el.style.color = colors.info);
+
+    // Status bar
+    const statusbar = preview.querySelector('.preview-statusbar');
+    if (statusbar) {
+        statusbar.style.background = colors.statusBg;
+        statusbar.style.color = isLight ? colors.text : colors.textMuted;
+    }
+
+    // Status dot
+    const statusDot = preview.querySelector('.status-dot');
+    if (statusDot) {
+        statusDot.style.background = colors.success;
+    }
+
+    // Sync settings popup colors with theme
+    const popup = document.querySelector('.settings-popup');
+    const sidebar = document.querySelector('.settings-sidebar');
+    const content = document.querySelector('.settings-content');
+    const settingsHeader = document.querySelector('.settings-header');
+    const footer = document.querySelector('.settings-footer');
+    const container = document.querySelector('.settings-container');
+
+    if (popup) {
+        popup.style.background = colors.popupBg;
+        popup.style.borderColor = colors.border;
+    }
+    if (sidebar) {
+        sidebar.style.background = colors.sidebarBg;
+        sidebar.style.borderColor = colors.border;
+    }
+    if (content) {
+        content.style.background = colors.contentBg;
+        content.style.borderColor = colors.border;
+    }
+
+    // Use headerFooterBg if available (for kawaii-light), else popupBg
+    const hfBg = colors.headerFooterBg || colors.popupBg;
+
+    if (settingsHeader) {
+        settingsHeader.style.background = hfBg;
+        settingsHeader.style.borderColor = colors.borderLight;
+        const h2 = settingsHeader.querySelector('h2');
+        if (h2) h2.style.color = colors.accentColor;
+    }
+    if (footer) {
+        footer.style.background = hfBg;
+        footer.style.borderColor = colors.borderLight;
+    }
+    if (container) {
+        container.style.background = colors.popupBg;
+    }
+
+    // Update tabs - reset all first, then style active
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.style.background = 'transparent';
+        tab.style.color = colors.textMuted;
+    });
+    document.querySelectorAll('.settings-tab.active').forEach(tab => {
+        tab.style.background = colors.accentColor;
+        tab.style.color = '#ffffff';
+    });
+
+    // Update panel headers
+    document.querySelectorAll('.settings-panel h3').forEach(h3 => {
+        h3.style.color = colors.accentColor;
+        h3.style.borderColor = colors.borderLight;
+    });
+
+    // Update setting rows
+    document.querySelectorAll('.setting-row').forEach(row => {
+        row.style.background = isLight ? '#f5fafd' : colors.sidebarBg;
+        row.style.borderColor = colors.borderLight;
+        const label = row.querySelector('label');
+        if (label) label.style.color = colors.textMuted;
+    });
+
+    // Update buttons
+    const btnSave = document.querySelector('.btn-save');
+    if (btnSave) {
+        btnSave.style.background = colors.accentColor;
+        btnSave.style.borderColor = colors.accent;
+    }
+    const btnReset = document.querySelector('.btn-reset');
+    if (btnReset) {
+        btnReset.style.background = colors.contentBg;
+        btnReset.style.color = colors.accentColor;
+        btnReset.style.borderColor = colors.border;
+    }
 }
 
 function openSettings() {
@@ -587,12 +902,16 @@ function openSettings() {
     document.getElementById('set-clearTerminal').checked = App.settings.execution.clearTerminal;
     document.getElementById('set-autoSendInput').checked = App.settings.execution.autoSendInput;
 
+    document.getElementById('set-terminalColorScheme').value = App.settings.terminal?.colorScheme || 'ansi-16';
+
     document.getElementById('set-theme').value = App.settings.appearance.theme;
     document.getElementById('set-performanceMode').checked = App.settings.appearance.performanceMode || false;
-    document.getElementById('set-accentColor').value = App.settings.appearance.accentColor;
     document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
     document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
     document.getElementById('set-bgUrl').value = App.settings.appearance.bgUrl || '';
+
+    // Update theme preview to match current theme
+    updateThemePreview();
 
     document.getElementById('settings-overlay').classList.add('show');
 }
@@ -617,9 +936,11 @@ function saveSettingsAndClose() {
     App.settings.execution.clearTerminal = document.getElementById('set-clearTerminal').checked;
     App.settings.execution.autoSendInput = document.getElementById('set-autoSendInput').checked;
 
+    if (!App.settings.terminal) App.settings.terminal = {};
+    App.settings.terminal.colorScheme = document.getElementById('set-terminalColorScheme').value;
+
     App.settings.appearance.theme = document.getElementById('set-theme').value;
     App.settings.appearance.performanceMode = document.getElementById('set-performanceMode').checked;
-    App.settings.appearance.accentColor = document.getElementById('set-accentColor').value;
     App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
     App.settings.appearance.bgUrl = document.getElementById('set-bgUrl').value;
 
@@ -649,7 +970,6 @@ function applySettings() {
     };
     if (App.editor) App.editor.updateOptions(opts);
     if (App.editor2) App.editor2.updateOptions(opts);
-    document.documentElement.style.setProperty('--accent', App.settings.appearance.accentColor);
 
     // Apply Performance Mode
     if (App.settings.appearance.performanceMode) {
@@ -774,16 +1094,17 @@ function updateUI() {
     document.getElementById('welcome').style.display = hasTabs ? 'none' : 'flex';
     document.getElementById('editor-section').style.display = hasTabs ? 'flex' : 'none';
 
-    document.getElementById('io-section').style.display = App.showIO ? 'flex' : 'none';
-    document.getElementById('resizer-io').style.display = App.showIO ? 'block' : 'none';
+    // Use class toggle instead of display style to preserve CSS properties
+    document.getElementById('io-section').classList.toggle('panel-hidden', !App.showIO);
+    document.getElementById('resizer-io').classList.toggle('panel-hidden', !App.showIO);
     document.getElementById('btn-toggle-io').classList.toggle('active', App.showIO);
 
-    document.getElementById('terminal-section').style.display = App.showTerm ? 'flex' : 'none';
-    document.getElementById('resizer-term').style.display = App.showTerm ? 'block' : 'none';
+    document.getElementById('terminal-section').classList.toggle('panel-hidden', !App.showTerm);
+    document.getElementById('resizer-term').classList.toggle('panel-hidden', !App.showTerm);
     document.getElementById('btn-toggle-term').classList.toggle('active', App.showTerm);
 
     document.getElementById('problems-panel').classList.toggle('hidden', !App.showProblems);
-    document.getElementById('resizer-problems').style.display = App.showProblems ? 'block' : 'none';
+    document.getElementById('resizer-problems').classList.toggle('panel-hidden', !App.showProblems);
     document.getElementById('btn-toggle-problems').classList.toggle('active', App.showProblems);
 }
 
@@ -1101,6 +1422,14 @@ async function buildRun() {
     await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
     tab.original = tab.content; tab.modified = false; renderTabs();
 
+    // Auto-show terminal when building
+    if (!App.showTerm) {
+        App.showTerm = true;
+        if (App.settings.panels) App.settings.panels.showTerm = true;
+        saveSettings();
+        updateUI();
+    }
+
     if (App.settings.execution.clearTerminal) clearTerm();
     clearProblems();
     clearErrorDecorations();
@@ -1281,16 +1610,139 @@ function renderProblems() {
     });
 }
 
-// ============================================================================
-// TERMINAL
-// ============================================================================
+// ANSI 16-color palette (basic colors)
+const ANSI_COLORS_16 = {
+    // Standard colors (30-37)
+    30: '#1a1a1a', // black
+    31: '#e06c75', // red
+    32: '#98c379', // green
+    33: '#e5c07b', // yellow
+    34: '#61afef', // blue
+    35: '#c678dd', // magenta
+    36: '#56b6c2', // cyan
+    37: '#abb2bf', // white
+    // Bright colors (90-97)
+    90: '#5c6370', // bright black (gray)
+    91: '#ff6b6b', // bright red
+    92: '#a6e22e', // bright green
+    93: '#f1fa8c', // bright yellow
+    94: '#8be9fd', // bright blue
+    95: '#ff79c6', // bright magenta
+    96: '#66d9ef', // bright cyan
+    97: '#f8f8f2', // bright white
+    // Background colors (40-47)
+    40: '#1a1a1a',
+    41: '#e06c75',
+    42: '#98c379',
+    43: '#e5c07b',
+    44: '#61afef',
+    45: '#c678dd',
+    46: '#56b6c2',
+    47: '#abb2bf'
+};
+
+// Parse ANSI escape codes and convert to HTML spans
+function parseAnsiToHtml(text) {
+    // Strip or parse ANSI escape sequences
+    // Regex matches ANSI escape codes: ESC[...m
+    const ansiRegex = /\x1b\[([0-9;]*)m/g;
+
+    // Check if color scheme is disabled
+    const colorScheme = App.settings?.terminal?.colorScheme || 'ansi-16';
+    if (colorScheme === 'disabled') {
+        // Strip all ANSI codes and return plain text
+        return escapeHtml(text.replace(ansiRegex, ''));
+    }
+
+    let result = '';
+    let lastIndex = 0;
+    let currentFg = null;
+    let currentBg = null;
+    let isBold = false;
+    let isUnderline = false;
+    let match;
+
+    while ((match = ansiRegex.exec(text)) !== null) {
+        // Append text before this match (escaped for HTML)
+        if (match.index > lastIndex) {
+            const textChunk = text.slice(lastIndex, match.index);
+            result += applyAnsiStyle(escapeHtml(textChunk), currentFg, currentBg, isBold, isUnderline);
+        }
+
+        // Parse the ANSI codes
+        const codes = match[1].split(';').map(c => parseInt(c) || 0);
+
+        for (const code of codes) {
+            if (code === 0) {
+                // Reset all
+                currentFg = null;
+                currentBg = null;
+                isBold = false;
+                isUnderline = false;
+            } else if (code === 1) {
+                isBold = true;
+            } else if (code === 4) {
+                isUnderline = true;
+            } else if (code === 22) {
+                isBold = false;
+            } else if (code === 24) {
+                isUnderline = false;
+            } else if (code >= 30 && code <= 37) {
+                currentFg = ANSI_COLORS_16[code];
+            } else if (code >= 90 && code <= 97) {
+                currentFg = ANSI_COLORS_16[code];
+            } else if (code >= 40 && code <= 47) {
+                currentBg = ANSI_COLORS_16[code];
+            } else if (code === 39) {
+                currentFg = null; // default foreground
+            } else if (code === 49) {
+                currentBg = null; // default background
+            }
+        }
+
+        lastIndex = ansiRegex.lastIndex;
+    }
+
+    // Append remaining text
+    if (lastIndex < text.length) {
+        const textChunk = text.slice(lastIndex);
+        result += applyAnsiStyle(escapeHtml(textChunk), currentFg, currentBg, isBold, isUnderline);
+    }
+
+    return result;
+}
+
+// Apply ANSI style to text chunk
+function applyAnsiStyle(text, fg, bg, bold, underline) {
+    if (!fg && !bg && !bold && !underline) {
+        return text;
+    }
+
+    let style = '';
+    if (fg) style += `color:${fg};`;
+    if (bg) style += `background:${bg};`;
+    if (bold) style += 'font-weight:bold;';
+    if (underline) style += 'text-decoration:underline;';
+
+    return `<span style="${style}">${text}</span>`;
+}
+
 function log(msg, type = '') {
     const t = document.getElementById('terminal');
     const l = document.createElement('pre');
     l.className = 'line' + (type ? ' ' + type : '');
     l.style.margin = '0';
     l.style.fontFamily = 'inherit';
-    l.textContent = msg;
+
+    // Parse ANSI codes and render with colors
+    const colorScheme = App.settings?.terminal?.colorScheme || 'ansi-16';
+    if (colorScheme !== 'disabled' && msg.includes('\x1b[')) {
+        l.innerHTML = parseAnsiToHtml(msg);
+    } else {
+        // Plain text - use textContent for safety (no HTML injection)
+        l.textContent = msg.replace(/\x1b\[[0-9;]*m/g, '');
+    }
+
     t.appendChild(l);
     t.scrollTop = t.scrollHeight;
 }
@@ -1423,14 +1875,55 @@ if (window.electronAPI) {
     window.electronAPI.onProcessStarted?.(() => setRunning(true));
     window.electronAPI.onProcessOutput?.(d => log(d));
     window.electronAPI.onProcessError?.(d => log(d, 'error'));
-    window.electronAPI.onProcessExit?.(code => {
+    window.electronAPI.onProcessExit?.(data => {
         if (App.runTimeout) {
             clearTimeout(App.runTimeout);
             App.runTimeout = null;
         }
-        log(`\n--- Exit (${code}) ---`, code === 0 ? 'success' : 'warning');
+        // Handle both old format (just code) and new format (object with code + executionTime + peakMemoryKB)
+        const code = typeof data === 'object' ? data.code : data;
+        const execTime = typeof data === 'object' ? data.executionTime : null;
+        const peakMemKB = typeof data === 'object' ? data.peakMemoryKB : null;
+
+        // Format execution time
+        let timeStr = '';
+        if (execTime !== null) {
+            if (execTime >= 1000) {
+                timeStr = (execTime / 1000).toFixed(2) + 's';
+            } else {
+                timeStr = execTime + 'ms';
+            }
+        }
+
+        // Format memory
+        let memStr = '';
+        if (peakMemKB && peakMemKB > 0) {
+            if (peakMemKB >= 1024) {
+                memStr = (peakMemKB / 1024).toFixed(1) + 'MB';
+            } else {
+                memStr = peakMemKB + 'KB';
+            }
+        }
+
+        // Display with detailed format
+        // --- Exit: 0 ---
+        // Time: 757ms | Memory: 2.4MB
+        log(`\n--- Exit: ${code} ---`, code === 0 ? 'success' : 'warning');
+
+        // Show stats on separate line if available (no dashes)
+        if (timeStr || memStr) {
+            const parts = [];
+            if (timeStr) parts.push('Time: ' + timeStr);
+            if (memStr) parts.push('Memory: ' + memStr);
+            log(parts.join(' | '), 'info');
+        }
+
         setRunning(false);
-        setStatus(code === 0 ? 'Done' : `Exit: ${code}`, code === 0 ? 'success' : '');
+        // Status bar shows compact version
+        const statusParts = [];
+        if (timeStr) statusParts.push(timeStr);
+        if (memStr) statusParts.push(memStr);
+        setStatus(code === 0 ? (statusParts.join(' | ') || 'Done') : `Exit: ${code}`, code === 0 ? 'success' : '');
         if (code === 0) setTimeout(compareOutput, 100);
     });
     window.electronAPI.onProcessStopped?.(() => {
