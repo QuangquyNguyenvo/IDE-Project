@@ -160,210 +160,277 @@
                     <button class="settings-close" id="settings-close">×</button>
                 </div>
 
-                <div class="settings-body">
-                    <!-- Editor -->
-                    <div class="settings-section">
-                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                <div class="settings-container">
+                    <!-- Sidebar Tabs -->
+                    <div class="settings-sidebar">
+                        <button class="settings-tab active" data-tab="editor">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-                            </svg> Editor</h3>
-
-                        <div class="setting-row">
-                            <label>Font Size</label>
-                            <div class="setting-control">
-                                <input type="range" id="set-fontSize" min="10" max="24" value="14">
-                                <span class="setting-value" id="val-fontSize">14px</span>
-                            </div>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>Font Family</label>
-                            <select id="set-fontFamily">
-                                <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
-                                <option value="'Fira Code', monospace">Fira Code</option>
-                                <option value="Consolas, monospace">Consolas</option>
-                                <option value="'Cascadia Code', monospace">Cascadia Code</option>
-                            </select>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>Tab Size</label>
-                            <select id="set-tabSize">
-                                <option value="2">2 spaces</option>
-                                <option value="4" selected>4 spaces</option>
-                                <option value="8">8 spaces</option>
-                            </select>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>Minimap</label>
-                            <label class="switch">
-                                <input type="checkbox" id="set-minimap">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>Word Wrap</label>
-                            <label class="switch">
-                                <input type="checkbox" id="set-wordWrap">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Compiler -->
-                    <div class="settings-section">
-                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            </svg>
+                            Editor
+                        </button>
+                        <button class="settings-tab" data-tab="compiler">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path
                                     d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-                            </svg> Compiler</h3>
-
-                        <div class="setting-row">
-                            <label>C++ Standard</label>
-                            <select id="set-cppStandard">
-                                <option value="c++11">C++11</option>
-                                <option value="c++14">C++14</option>
-                                <option value="c++17" selected>C++17</option>
-                                <option value="c++20">C++20</option>
-                            </select>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>
-                                Optimization
-                                <span class="tooltip"
-                                    title="None: Không tối ưu, build nhanh, debug dễ&#10;Fast: Cân bằng, chương trình nhanh hơn 2-3x&#10;Fastest: Nhanh nhất, đôi khi lỗi lạ">?</span>
-                            </label>
-                            <select id="set-optimization">
-                                <option value="">None (-O0)</option>
-                                <option value="-O2" selected>Fast (-O2)</option>
-                                <option value="-O3">Fastest (-O3)</option>
-                            </select>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>
-                                Warnings
-                                <span class="tooltip" title="Bật -Wall -Wextra để thấy cảnh báo lỗi tiềm năng">?</span>
-                            </label>
-                            <label class="switch">
-                                <input type="checkbox" id="set-warnings" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Execution -->
-                    <div class="settings-section">
-                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            </svg>
+                            Compiler
+                        </button>
+                        <button class="settings-tab" data-tab="execution">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg> Execution</h3>
-
-                        <div class="setting-row">
-                            <label>
-                                Time Limit
-                                <span class="tooltip"
-                                    title="Tự động dừng chương trình sau X giây.&#10;TẮT nếu làm game hoặc chương trình chạy liên tục.">?</span>
-                            </label>
-                            <div class="setting-control">
-                                <label class="switch">
-                                    <input type="checkbox" id="set-timeLimitEnabled">
-                                    <span class="slider"></span>
-                                </label>
-                                <input type="number" id="set-timeLimitSeconds" min="1" max="60" value="3"
-                                    style="width:50px;margin-left:10px">
-                                <span>seconds</span>
-                            </div>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>Clear Terminal on Run</label>
-                            <label class="switch">
-                                <input type="checkbox" id="set-clearTerminal" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>Auto-send Input</label>
-                            <label class="switch">
-                                <input type="checkbox" id="set-autoSendInput" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Theme -->
-                    <div class="settings-section">
-                        <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            </svg>
+                            Execution
+                        </button>
+                        <button class="settings-tab" data-tab="appearance">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="M12 2a10 10 0 0110 10" />
-                            </svg> Appearance</h3>
+                            </svg>
+                            Appearance
+                        </button>
+                    </div>
 
-                        <div class="setting-row">
-                            <label>Theme</label>
-                            <select id="set-theme">
-                                <option value="kawaii-dark" selected>Kawaii Dark</option>
-                                <option value="kawaii-light">Kawaii Light</option>
-                                <option value="dracula">Dracula</option>
-                                <option value="monokai">Monokai</option>
-                                <option value="nord">Nord</option>
-                                <option value="one-dark">One Dark Pro</option>
-                            </select>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>
-                                Performance Mode
-                                <span class="tooltip"
-                                    title="Tắt blur effects và giảm shadows để chạy mượt trên máy yếu (Core 2 Duo, RAM thấp). UI vẫn giữ nguyên.">?</span>
-                            </label>
-                            <label class="switch">
-                                <input type="checkbox" id="set-performanceMode">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="setting-row">
-                            <label>Accent Color</label>
-                            <input type="color" id="set-accentColor" value="#b48ead">
-                        </div>
-
-                        <div class="setting-row">
-                            <label>
-                                Background Opacity
-                                <span class="tooltip"
-                                    title="Độ mờ của lớp phủ. Thấp = thấy rõ ảnh nền. Cao = tối hơn dễ đọc code.">?</span>
-                            </label>
-                            <div class="setting-control">
-                                <input type="range" id="set-bgOpacity" min="20" max="90" value="50">
-                                <span class="setting-value" id="val-bgOpacity">50%</span>
+                    <!-- Tab Content -->
+                    <div class="settings-content">
+                        <!-- Editor Tab -->
+                        <div class="settings-panel active" id="panel-editor">
+                            <h3>Editor Settings</h3>
+                            <div class="setting-row">
+                                <label>Font Size</label>
+                                <div class="setting-control">
+                                    <input type="range" id="set-fontSize" min="10" max="24" value="14">
+                                    <span class="setting-value" id="val-fontSize">14px</span>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <label>Font Family</label>
+                                <select id="set-fontFamily">
+                                    <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                                    <option value="'Fira Code', monospace">Fira Code</option>
+                                    <option value="Consolas, monospace">Consolas</option>
+                                    <option value="'Cascadia Code', monospace">Cascadia Code</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label>Tab Size</label>
+                                <select id="set-tabSize">
+                                    <option value="2">2 spaces</option>
+                                    <option value="4" selected>4 spaces</option>
+                                    <option value="8">8 spaces</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label>Minimap</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-minimap">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
+                                <label>Word Wrap</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-wordWrap">
+                                    <span class="slider"></span>
+                                </label>
                             </div>
                         </div>
 
-                        <div class="setting-row">
-                            <label>
-                                Custom Background
-                                <span class="tooltip" title="Nhập URL ảnh hoặc upload file từ máy">?</span>
-                            </label>
-                            <div class="setting-control" style="flex-direction:column;align-items:flex-end;gap:6px">
-                                <input type="text" id="set-bgUrl" placeholder="https://..."
-                                    style="width:180px;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px">
-                                <div style="display:flex;gap:6px">
-                                    <label class="btn-upload">
-                                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                                        </svg>
-                                        Upload
-                                        <input type="file" id="set-bgFile" accept="image/*" style="display:none">
+                        <!-- Compiler Tab -->
+                        <div class="settings-panel" id="panel-compiler">
+                            <h3>Compiler Settings</h3>
+                            <div class="setting-row">
+                                <label>C++ Standard</label>
+                                <select id="set-cppStandard">
+                                    <option value="c++11">C++11</option>
+                                    <option value="c++14">C++14</option>
+                                    <option value="c++17" selected>C++17</option>
+                                    <option value="c++20">C++20</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label>Optimization <span class="tooltip"
+                                        title="None: Fast build, easy debug&#10;Fast: 2-3x faster runtime&#10;Fastest: Maximum speed">?</span></label>
+                                <select id="set-optimization">
+                                    <option value="">None (-O0)</option>
+                                    <option value="-O2" selected>Fast (-O2)</option>
+                                    <option value="-O3">Fastest (-O3)</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label>Warnings <span class="tooltip"
+                                        title="Enable -Wall -Wextra for potential issues">?</span></label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-warnings" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Execution Tab -->
+                        <div class="settings-panel" id="panel-execution">
+                            <h3>Execution Settings</h3>
+                            <div class="setting-row">
+                                <label>Time Limit <span class="tooltip"
+                                        title="Auto-stop after X seconds&#10;Disable for games/long-running programs">?</span></label>
+                                <div class="setting-control">
+                                    <label class="switch">
+                                        <input type="checkbox" id="set-timeLimitEnabled">
+                                        <span class="slider"></span>
                                     </label>
-                                    <button class="btn-reset-bg" id="btn-reset-bg"
-                                        title="Reset to default">Reset</button>
+                                    <input type="number" id="set-timeLimitSeconds" min="1" max="60" value="3"
+                                        style="width:50px;margin-left:10px">
+                                    <span>sec</span>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <label>Clear Terminal on Run</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-clearTerminal" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
+                                <label>Auto-send Input</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-autoSendInput" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
+                                <label>Terminal Colors <span class="tooltip"
+                                        title="ANSI 16: Show colored output&#10;Disabled: Plain text only">?</span></label>
+                                <select id="set-terminalColorScheme">
+                                    <option value="ansi-16" selected>ANSI 16 Colors</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Appearance Tab with Preview -->
+                        <div class="settings-panel" id="panel-appearance">
+                            <div class="appearance-layout">
+                                <div class="appearance-controls">
+                                    <h3>Theme</h3>
+                                    <div class="setting-row">
+                                        <label>Color Theme</label>
+                                        <select id="set-theme">
+                                            <option value="kawaii-dark">Kawaii Dark</option>
+                                            <option value="kawaii-light">Kawaii Light</option>
+                                            <option value="dracula">Dracula</option>
+                                            <option value="monokai">Monokai</option>
+                                            <option value="nord">Nord</option>
+                                            <option value="one-dark">One Dark Pro</option>
+                                        </select>
+                                    </div>
+
+                                    <h3 style="margin-top:20px">Background</h3>
+                                    <div class="setting-row">
+                                        <label>Opacity</label>
+                                        <div class="setting-control">
+                                            <input type="range" id="set-bgOpacity" min="20" max="90" value="50">
+                                            <span class="setting-value" id="val-bgOpacity">50%</span>
+                                        </div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <label>Image URL</label>
+                                        <input type="text" id="set-bgUrl" placeholder="https://..." class="bg-url-input"
+                                            style="width:140px">
+                                    </div>
+                                    <div class="setting-row">
+                                        <label></label>
+                                        <div style="display:flex;gap:6px">
+                                            <label class="btn-upload">
+                                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path
+                                                        d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                                                </svg>
+                                                Upload
+                                                <input type="file" id="set-bgFile" accept="image/*"
+                                                    style="display:none">
+                                            </label>
+                                            <button class="btn-reset-bg" id="btn-reset-bg">Reset</button>
+                                        </div>
+                                    </div>
+
+                                    <h3 style="margin-top:20px">Options</h3>
+                                    <div class="setting-row">
+                                        <label>Performance Mode</label>
+                                        <label class="switch">
+                                            <input type="checkbox" id="set-performanceMode">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Enhanced Live Preview -->
+                                <div class="appearance-preview">
+                                    <div class="preview-label">Live Preview</div>
+                                    <div class="preview-window" id="theme-preview">
+                                        <!-- Header with tabs -->
+                                        <div class="preview-header">
+                                            <span class="preview-dot red"></span>
+                                            <span class="preview-dot yellow"></span>
+                                            <span class="preview-dot green"></span>
+                                            <span class="preview-tab active">main.cpp</span>
+                                        </div>
+
+                                        <!-- Main content area -->
+                                        <div class="preview-body">
+                                            <!-- Editor section -->
+                                            <div class="preview-editor">
+                                                <div class="preview-line"><span class="ln">1</span><span
+                                                        class="kw">#include</span> <span
+                                                        class="str">&lt;iostream&gt;</span></div>
+                                                <div class="preview-line"><span class="ln">2</span><span
+                                                        class="kw">using</span> std;</div>
+                                                <div class="preview-line"><span class="ln">3</span></div>
+                                                <div class="preview-line"><span class="ln">4</span><span
+                                                        class="type">int</span> <span class="fn">main</span>() {</div>
+                                                <div class="preview-line"><span class="ln">5</span> cout << <span
+                                                        class="str">"Hi"</span>;</div>
+                                                <div class="preview-line"><span class="ln">6</span>}</div>
+                                            </div>
+
+                                            <!-- IO panels -->
+                                            <div class="preview-io-section">
+                                                <div class="preview-io-panel">
+                                                    <div class="preview-io-header">INPUT</div>
+                                                    <div class="preview-io-body">5</div>
+                                                </div>
+                                                <div class="preview-io-panel">
+                                                    <div class="preview-io-header">EXPECTED</div>
+                                                    <div class="preview-io-body">Hi</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Terminal section -->
+                                            <div class="preview-terminal">
+                                                <div class="preview-term-header">TERMINAL</div>
+                                                <div class="preview-term-content">
+                                                    <span class="term-success">✓ Build OK</span><br>
+                                                    <span class="term-output">Hi</span><br>
+                                                    <span class="term-info">Exit: 0</span>
+                                                </div>
+                                                <div class="preview-term-input">
+                                                    <span class="term-prompt">&gt;</span>
+                                                    <span class="term-cursor">_</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Status bar -->
+                                        <div class="preview-statusbar">
+                                            <span class="status-dot"></span>
+                                            <span>Ready</span>
+                                            <span class="status-right">Ln 1, Col 1</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

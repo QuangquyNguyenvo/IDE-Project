@@ -1,6 +1,6 @@
 {
     "name": "cpp-ide",
-    "version": "1.0.0",
+    "version": "1.0.0-beta.1",
     "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
     "main": "main.js",
     "author": "QuangquyNguyenvo",
@@ -26,6 +26,8 @@
     "scripts": {
         "start": "electron .",
         "dev": "electron . --enable-logging",
+        "clean": "powershell -Command \"Remove-Item -Recurse -Force $env:APPDATA/cpp-ide -ErrorAction SilentlyContinue\"",
+        "clean-start": "npm run clean && npm start",
         "build": "electron-builder",
         "build:win": "electron-builder --win",
         "build:mac": "electron-builder --mac",
@@ -49,14 +51,24 @@
             "preload.js",
             "src/**/*",
             "node_modules/**/*",
-            "mingw64/**/*"
+            "mingw64/**/*",
+            "!TDM-GCC-64/**/*"
         ],
+        "extraResources": [
+            {
+                "from": "TDM-GCC-64",
+                "to": "TDM-GCC-64",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "asar": false,
         "win": {
             "target": [
-                "nsis",
                 "portable"
             ],
-            "icon": "src/assets/icon.ico"
+            "signAndEditExecutable": false
         },
         "mac": {
             "target": "dmg",

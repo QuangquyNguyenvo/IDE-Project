@@ -25,13 +25,36 @@ let runningProcess = null;
 // ============================================================================
 // COMPILER DETECTION
 // ============================================================================
+// Get the correct base path (handles both dev and packaged app)
+function getBasePath() {
+    // When packaged, __dirname points to app.asar, but unpacked files are in app.asar.unpacked
+    if (__dirname.includes('app.asar')) {
+        return __dirname.replace('app.asar', 'app.asar.unpacked');
+    }
+    return __dirname;
+}
+
+// Get resources path for extraResources (packaged app)
+function getResourcesPath() {
+    if (app.isPackaged) {
+        return path.join(process.resourcesPath);
+    }
+    return __dirname;
+}
+
+const basePath = getBasePath();
+const resourcesPath = getResourcesPath();
+
 // Bundled MinGW path (inside app folder - HIGHEST PRIORITY)
 const BUNDLED_MINGW_PATHS = [
-    path.join(__dirname, 'mingw64', 'bin', 'g++.exe'),
-    path.join(__dirname, 'mingw32', 'bin', 'g++.exe'),
-    path.join(__dirname, 'MinGW', 'bin', 'g++.exe'),
-    path.join(__dirname, 'TDM-GCC-64', 'bin', 'g++.exe'),
-    path.join(__dirname, 'compiler', 'bin', 'g++.exe'),
+    // Check extraResources location first (for packaged app)
+    path.join(resourcesPath, 'TDM-GCC-64', 'bin', 'g++.exe'),
+    // Then check app folder (for development)
+    path.join(basePath, 'TDM-GCC-64', 'bin', 'g++.exe'),
+    path.join(basePath, 'mingw64', 'bin', 'g++.exe'),
+    path.join(basePath, 'mingw32', 'bin', 'g++.exe'),
+    path.join(basePath, 'MinGW', 'bin', 'g++.exe'),
+    path.join(basePath, 'compiler', 'bin', 'g++.exe'),
 ];
 
 // System-installed compiler paths (fallback)
@@ -229,6 +252,33 @@ ipcMain.handle('save-file-dialog', async (event, content) => {
     return { success: false, canceled: true };
 });
 
+// Settings persistence
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+
+ipcMain.handle('save-settings', async (event, settings) => {
+    try {
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to save settings:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.on('load-settings', (event) => {
+    try {
+        if (fs.existsSync(settingsPath)) {
+            const data = fs.readFileSync(settingsPath, 'utf-8');
+            event.returnValue = JSON.parse(data);
+        } else {
+            event.returnValue = null;
+        }
+    } catch (error) {
+        console.error('Failed to load settings:', error);
+        event.returnValue = null;
+    }
+});
+
 // Global PCH cache path
 const pchDir = path.join(app.getPath('userData'), 'pch');
 let pchReady = false;
@@ -393,12 +443,42 @@ ipcMain.handle('run', async (event, exePath) => {
         }
 
         const dir = path.dirname(exePath);
+        const runStartTime = Date.now();
+        let peakMemoryKB = 0;
+        let memoryPollInterval = null;
 
         // Run the executable
         runningProcess = spawn(exePath, [], {
             cwd: dir,
             stdio: ['pipe', 'pipe', 'pipe']
         });
+
+        const pid = runningProcess.pid;
+
+        // Function to poll memory
+        const pollMemory = () => {
+            if (!runningProcess || !pid) return;
+            // Use tasklist to get memory (Working Set)
+            exec(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, (err, stdout) => {
+                if (!err && stdout) {
+                    // Parse CSV - handle different locales (comma/dot/space as separators)
+                    // Format: "process.exe","1234","Console","1","12,345 K" or "12.345 K" or "12 345 K"
+                    const match = stdout.match(/"([0-9][0-9.,\s]*)\s*K"/i);
+                    if (match) {
+                        const memKB = parseInt(match[1].replace(/[,.\s]/g, ''), 10);
+                        if (memKB > peakMemoryKB) {
+                            peakMemoryKB = memKB;
+                        }
+                    }
+                }
+            });
+        };
+
+        // Poll memory usage (Windows only) - poll immediately and every 50ms
+        if (pid && process.platform === 'win32') {
+            pollMemory(); // Immediate first poll
+            memoryPollInterval = setInterval(pollMemory, 50);
+        }
 
         let output = '';
         let errorOutput = '';
@@ -414,17 +494,30 @@ ipcMain.handle('run', async (event, exePath) => {
         });
 
         runningProcess.on('close', (code) => {
+            if (memoryPollInterval) {
+                clearInterval(memoryPollInterval);
+            }
+            const executionTime = Date.now() - runStartTime;
             runningProcess = null;
-            mainWindow.webContents.send('process-exit', code);
+            mainWindow.webContents.send('process-exit', {
+                code,
+                executionTime,
+                peakMemoryKB
+            });
             resolve({
                 success: true,
                 output: output,
                 error: errorOutput,
-                exitCode: code
+                exitCode: code,
+                executionTime: executionTime,
+                peakMemoryKB: peakMemoryKB
             });
         });
 
         runningProcess.on('error', (err) => {
+            if (memoryPollInterval) {
+                clearInterval(memoryPollInterval);
+            }
             runningProcess = null;
             resolve({ success: false, error: err.message });
         });

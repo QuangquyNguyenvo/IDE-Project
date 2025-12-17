@@ -53,14 +53,12 @@
 body {
     font-family: 'Nunito', 'Segoe UI', sans-serif;
     background-color: var(--bg-ocean-light);
-    /* Bubbles Background Pattern */
-    background-image:
-        url('../assets/bubble.svg'),
-        url('../assets/bubble.svg'),
-        url('../assets/heart.svg');
+    /* Default Background Image */
+    background-image: url('../assets/background.jpg');
     background-repeat: no-repeat;
-    background-position: 10% 20%, 90% 10%, 85% 85%;
-    background-size: 150px, 80px, 60px;
+    background-position: center center;
+    background-size: cover;
+    background-attachment: fixed;
     color: var(--text-primary);
     height: 100vh;
     overflow: hidden;

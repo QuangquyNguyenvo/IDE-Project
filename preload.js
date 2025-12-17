@@ -23,6 +23,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveFileDialog: (content) => ipcRenderer.invoke('save-file-dialog', content),
     getCurrentFile: () => ipcRenderer.invoke('get-current-file'),
 
+    // Settings operations
+    saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+    loadSettings: () => ipcRenderer.sendSync('load-settings'),
+
     // Build operations
     compile: (data) => ipcRenderer.invoke('compile', data),
     run: (exePath) => ipcRenderer.invoke('run', exePath),
@@ -48,6 +52,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onProcessStarted: (callback) => ipcRenderer.on('process-started', () => callback()),
     onProcessOutput: (callback) => ipcRenderer.on('process-output', (event, data) => callback(data)),
     onProcessError: (callback) => ipcRenderer.on('process-error', (event, data) => callback(data)),
-    onProcessExit: (callback) => ipcRenderer.on('process-exit', (event, code) => callback(code)),
+    onProcessExit: (callback) => ipcRenderer.on('process-exit', (event, data) => callback(data)),
     onProcessStopped: (callback) => ipcRenderer.on('process-stopped', () => callback())
 });
