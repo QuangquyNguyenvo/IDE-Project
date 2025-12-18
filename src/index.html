@@ -283,7 +283,7 @@
                                         <span class="slider"></span>
                                     </label>
                                     <input type="number" id="set-timeLimitSeconds" min="1" max="60" value="3"
-                                        style="width:50px;margin-left:10px">
+                                        style="width:60px;margin-left:10px">
                                     <span>sec</span>
                                 </div>
                             </div>
@@ -334,27 +334,6 @@
                                         <div class="setting-control">
                                             <input type="range" id="set-bgOpacity" min="20" max="90" value="50">
                                             <span class="setting-value" id="val-bgOpacity">50%</span>
-                                        </div>
-                                    </div>
-                                    <div class="setting-row">
-                                        <label>Image URL</label>
-                                        <input type="text" id="set-bgUrl" placeholder="https://..." class="bg-url-input"
-                                            style="width:140px">
-                                    </div>
-                                    <div class="setting-row">
-                                        <label></label>
-                                        <div style="display:flex;gap:6px">
-                                            <label class="btn-upload">
-                                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
-                                                    stroke="currentColor" stroke-width="2">
-                                                    <path
-                                                        d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                                                </svg>
-                                                Upload
-                                                <input type="file" id="set-bgFile" accept="image/*"
-                                                    style="display:none">
-                                            </label>
-                                            <button class="btn-reset-bg" id="btn-reset-bg">Reset</button>
                                         </div>
                                     </div>
 
@@ -429,6 +408,28 @@
                                             <span class="status-dot"></span>
                                             <span>Ready</span>
                                             <span class="status-right">Ln 1, Col 1</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Image URL and Upload below preview -->
+                                    <div class="preview-bg-controls">
+                                        <div class="bg-control-row">
+                                            <label>Image URL</label>
+                                            <input type="text" id="set-bgUrl" placeholder="https://..."
+                                                class="bg-url-input">
+                                        </div>
+                                        <div class="bg-control-buttons">
+                                            <label class="btn-upload">
+                                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path
+                                                        d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                                                </svg>
+                                                Upload
+                                                <input type="file" id="set-bgFile" accept="image/*"
+                                                    style="display:none">
+                                            </label>
+                                            <button class="btn-reset-bg" id="btn-reset-bg">Reset</button>
                                         </div>
                                     </div>
                                 </div>

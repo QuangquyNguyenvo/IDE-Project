@@ -145,9 +145,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--bg-ocean-deep);
-    border: 3px solid var(--bg-ocean-light);
-    border-radius: 10px;
+    background: rgba(100, 120, 140, 0.4);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 120, 140, 0.6);
 }
 
 ::-webkit-scrollbar-corner {
@@ -798,8 +801,34 @@ body {
     background: white;
     border-radius: 35px 40px 38px 42px;
     padding: 24px;
+    padding-right: 16px;
     overflow-y: auto;
+    overflow-x: hidden;
     border: 3px solid #b8e2f5;
+}
+
+/* Hide default scrollbar, add custom thin one */
+.settings-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+.settings-content::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 35px 0;
+    border-radius: 3px;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+    background: #d4eef8;
+    border-radius: 3px;
+}
+
+.settings-content::-webkit-scrollbar-thumb:hover {
+    background: #b8e2f5;
+}
+
+.settings-content::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 .settings-panel {
@@ -872,6 +901,41 @@ body {
 .appearance-preview {
     width: 260px;
     flex-shrink: 0;
+}
+
+/* Background controls below preview */
+.preview-bg-controls {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f5fafd;
+    border-radius: 16px;
+    border: 2px dashed #d4eef8;
+}
+
+.bg-control-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.bg-control-row label {
+    font-size: 11px;
+    color: #5a9fc8;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bg-control-row .bg-url-input {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+.bg-control-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
 }
 
 /* Color Grid */
@@ -1890,34 +1954,58 @@ input[type="color"] {
     display: none !important;
 }
 
-/* VSCode-like scrollbar styling - simple rectangle, semi-transparent */
-.monaco-editor .scrollbar.vertical .slider {
-    background: rgba(121, 121, 121, 0.4) !important;
-    border-radius: 0 !important;
-    width: 100% !important;
-}
-
-.monaco-editor .scrollbar.horizontal .slider {
-    background: rgba(121, 121, 121, 0.4) !important;
-    border-radius: 0 !important;
-    height: 100% !important;
-}
-
-/* Hover state - slightly more visible */
-.monaco-editor .scrollbar.vertical .slider:hover,
-.monaco-editor .scrollbar.horizontal .slider:hover {
-    background: rgba(100, 100, 100, 0.7) !important;
-}
-
-/* Scrollbar track - transparent */
-.monaco-editor .scrollbar {
+/* VSCode-like scrollbar styling for Monaco Editor */
+/* Vertical scrollbar */
+.monaco-editor .scrollbar.vertical {
+    width: 14px !important;
     background: transparent !important;
 }
 
-/* Remove any circular elements on scrollbar */
+.monaco-editor .scrollbar.vertical .slider {
+    width: 10px !important;
+    left: 2px !important;
+    background: rgba(121, 121, 121, 0.4) !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Horizontal scrollbar */
+.monaco-editor .scrollbar.horizontal {
+    height: 14px !important;
+    background: transparent !important;
+}
+
+.monaco-editor .scrollbar.horizontal .slider {
+    height: 10px !important;
+    top: 2px !important;
+    background: rgba(121, 121, 121, 0.4) !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Hover state - more visible */
+.monaco-editor .scrollbar .slider:hover {
+    background: rgba(100, 100, 100, 0.7) !important;
+}
+
+/* Active/dragging state */
+.monaco-editor .scrollbar .slider.active,
+.monaco-editor .scrollbar .slider:active {
+    background: rgba(90, 90, 90, 0.8) !important;
+}
+
+/* Scrollbar corner */
+.monaco-editor .scrollbar-corner {
+    background: transparent !important;
+}
+
+/* Remove any decorations */
 .monaco-editor .scrollbar .slider::before,
 .monaco-editor .scrollbar .slider::after {
     display: none !important;
+    content: none !important;
 }
 
 /* ===== RESPONSIVE LAYOUT FIXES ===== */
