@@ -103,9 +103,12 @@ body::after {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--bg-ocean-deep);
-    border: 3px solid var(--bg-ocean-light);
-    border-radius: 10px;
+    background: rgba(100, 120, 140, 0.4);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 120, 140, 0.6);
 }
 
 ::-webkit-scrollbar-corner {

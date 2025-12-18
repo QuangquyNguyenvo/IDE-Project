@@ -79,9 +79,7 @@ const DEFAULT_CODE = `#include <iostream>
 using namespace std;
 
 int main() {
-    int n;
-    cin >> n;
-    cout << "Result: " << n * 2 << endl;
+    cout << "Toi yeu gai alimi";
     return 0;
 }
 `;
@@ -179,6 +177,9 @@ function defineMonacoThemes() {
             'editorCursor.foreground': '#88c9ea',
             'editorLineNumber.foreground': '#4a6a7a',
             'editorLineNumber.activeForeground': '#88c9ea',
+            'scrollbarSlider.background': '#4a6a7a50',
+            'scrollbarSlider.hoverBackground': '#6a8a9a70',
+            'scrollbarSlider.activeBackground': '#88c9ea80',
         }
     });
 
@@ -202,6 +203,9 @@ function defineMonacoThemes() {
             'editorCursor.foreground': '#88c9ea',
             'editorLineNumber.foreground': '#4a6a7a',
             'editorLineNumber.activeForeground': '#88c9ea',
+            'scrollbarSlider.background': '#4a6a7a50',
+            'scrollbarSlider.hoverBackground': '#6a8a9a70',
+            'scrollbarSlider.activeBackground': '#88c9ea80',
         }
     });
 
@@ -227,6 +231,9 @@ function defineMonacoThemes() {
             'editorCursor.foreground': '#f8f8f2',
             'editorLineNumber.foreground': '#6272a4',
             'editorLineNumber.activeForeground': '#f8f8f2',
+            'scrollbarSlider.background': '#6272a450',
+            'scrollbarSlider.hoverBackground': '#6272a470',
+            'scrollbarSlider.activeBackground': '#bd93f980',
         }
     });
 
@@ -252,6 +259,9 @@ function defineMonacoThemes() {
             'editorCursor.foreground': '#f8f8f0',
             'editorLineNumber.foreground': '#75715e',
             'editorLineNumber.activeForeground': '#f8f8f2',
+            'scrollbarSlider.background': '#75715e50',
+            'scrollbarSlider.hoverBackground': '#75715e70',
+            'scrollbarSlider.activeBackground': '#a6e22e80',
         }
     });
 
@@ -277,6 +287,9 @@ function defineMonacoThemes() {
             'editorCursor.foreground': '#d8dee9',
             'editorLineNumber.foreground': '#4c566a',
             'editorLineNumber.activeForeground': '#d8dee9',
+            'scrollbarSlider.background': '#4c566a50',
+            'scrollbarSlider.hoverBackground': '#4c566a70',
+            'scrollbarSlider.activeBackground': '#88c0d080',
         }
     });
 
@@ -302,6 +315,9 @@ function defineMonacoThemes() {
             'editorCursor.foreground': '#528bff',
             'editorLineNumber.foreground': '#495162',
             'editorLineNumber.activeForeground': '#abb2bf',
+            'scrollbarSlider.background': '#4b516050',
+            'scrollbarSlider.hoverBackground': '#5c637070',
+            'scrollbarSlider.activeBackground': '#61afef80',
         }
     });
 }
