@@ -53,5 +53,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onProcessOutput: (callback) => ipcRenderer.on('process-output', (event, data) => callback(data)),
     onProcessError: (callback) => ipcRenderer.on('process-error', (event, data) => callback(data)),
     onProcessExit: (callback) => ipcRenderer.on('process-exit', (event, data) => callback(data)),
-    onProcessStopped: (callback) => ipcRenderer.on('process-stopped', () => callback())
+    onProcessStopped: (callback) => ipcRenderer.on('process-stopped', () => callback()),
+
+    // Competitive Companion
+    ccStartServer: () => ipcRenderer.invoke('cc-start-server'),
+    ccStopServer: () => ipcRenderer.invoke('cc-stop-server'),
+    ccGetStatus: () => ipcRenderer.invoke('cc-get-status'),
+    ccOpenExtensionPage: () => ipcRenderer.invoke('cc-open-extension-page'),
+    onProblemReceived: (callback) => ipcRenderer.on('problem-received', (event, data) => callback(data))
 });
+

@@ -26,7 +26,7 @@
     --bg-ocean-dark: #152535;
 
     --bg-glass: rgba(26, 37, 48, 0.92);
-    --bg-glass-heavy: rgba(21, 37, 53, 0.97);
+    --bg-glass-heavy: rgba(37, 64, 90, 0.97);
     --bg-glass-border: rgba(40, 60, 80, 0.9);
 
     --accent: #ff8fb8;
@@ -54,6 +54,10 @@
 
     --editor-bg: #1a2530;
     --terminal-bg: #1e2933;
+
+    /* Settings label text */
+    --settings-label-color: #e0f0ff;
+    --settings-section-color: #88c9ea;
 }
 
 /* ============================================================================
@@ -99,6 +103,10 @@
 
     --editor-bg: #282a36;
     --terminal-bg: #21222c;
+
+    /* Settings label text */
+    --settings-label-color: #f8f8f2;
+    --settings-section-color: #bd93f9;
 }
 
 /* ============================================================================
@@ -139,6 +147,10 @@
 
     --editor-bg: #272822;
     --terminal-bg: #1e1f1c;
+
+    /* Settings label text */
+    --settings-label-color: #f8f8f2;
+    --settings-section-color: #a6e22e;
 }
 
 /* ============================================================================
@@ -158,18 +170,18 @@
     --accent-hover: #d08770;
     --text-primary: #eceff4;
     --text-secondary: #88c0d0;
-    --text-muted: #4c566a;
+    --text-muted: #9eabc7;
 
     --success: #a3be8c;
     --error: #bf616a;
     --warning: #ebcb8b;
 
-    --border: #3b4252;
-    --border-strong: #4c566a;
+    --border: #727f9c;
+    --border-strong: #b0bace;
 
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --glow: 0 0 15px rgba(136, 192, 208, 0.3);
+    --glow: 0 0 15px rgba(154, 204, 218, 0.3);
 
     --bg-header: rgba(36, 41, 51, 0.97);
     --bg-panel: rgba(46, 52, 64, 0.95);
@@ -179,6 +191,10 @@
 
     --editor-bg: #2e3440;
     --terminal-bg: #242931;
+
+    /* Settings label text */
+    --settings-label-color: #eceff4;
+    --settings-section-color: #88c0d0;
 }
 
 /* ============================================================================
@@ -219,6 +235,10 @@
 
     --editor-bg: #282c34;
     --terminal-bg: #21252b;
+
+    /* Settings label text */
+    --settings-label-color: #abb2bf;
+    --settings-section-color: #61afef;
 }
 
 /* ============================================================================
@@ -348,8 +368,8 @@
 [data-theme="monokai"] .toggle-btn.active,
 [data-theme="nord"] .toggle-btn.active,
 [data-theme="one-dark"] .toggle-btn.active {
-    background: var(--bg-ocean-medium);
-    color: var(--text-primary);
+    background: var(--bg-ocean-deep);
+    color: var(--bg-ocean-dark);
 }
 
 [data-theme="kawaii-dark"] .action-btn,
@@ -640,14 +660,6 @@
 [data-theme="nord"] .settings-section h3,
 [data-theme="one-dark"] .settings-section h3 {
     color: var(--bg-ocean-deep);
-}
-
-[data-theme="kawaii-dark"] .setting-row label,
-[data-theme="dracula"] .setting-row label,
-[data-theme="monokai"] .setting-row label,
-[data-theme="nord"] .setting-row label,
-[data-theme="one-dark"] .setting-row label {
-    color: var(--text-secondary);
 }
 
 [data-theme="kawaii-dark"] .settings-footer,
@@ -954,4 +966,423 @@
 [data-theme="nord"] .prompt,
 [data-theme="one-dark"] .prompt {
     color: var(--bg-ocean-deep);
+}
+
+/* Tab close button - softer color */
+[data-theme="kawaii-dark"] .tab-x,
+[data-theme="dracula"] .tab-x,
+[data-theme="monokai"] .tab-x,
+[data-theme="nord"] .tab-x,
+[data-theme="one-dark"] .tab-x {
+    color: var(--text-muted);
+}
+
+[data-theme="kawaii-dark"] .tab:hover .tab-x,
+[data-theme="dracula"] .tab:hover .tab-x,
+[data-theme="monokai"] .tab:hover .tab-x,
+[data-theme="nord"] .tab:hover .tab-x,
+[data-theme="one-dark"] .tab:hover .tab-x {
+    color: var(--text-secondary);
+}
+
+/* ============================================================================
+   SETTINGS POPUP - DARK THEME OVERRIDES
+   ============================================================================ */
+/* Settings sidebar */
+[data-theme="kawaii-dark"] .settings-sidebar,
+[data-theme="dracula"] .settings-sidebar,
+[data-theme="monokai"] .settings-sidebar,
+[data-theme="nord"] .settings-sidebar,
+[data-theme="one-dark"] .settings-sidebar {
+    background: var(--bg-button);
+    border-color: var(--border);
+}
+
+/* Settings container background */
+[data-theme="kawaii-dark"] .settings-container,
+[data-theme="dracula"] .settings-container,
+[data-theme="monokai"] .settings-container,
+[data-theme="nord"] .settings-container,
+[data-theme="one-dark"] .settings-container {
+    background: var(--bg-panel);
+}
+
+/* Settings header background */
+[data-theme="kawaii-dark"] .settings-header,
+[data-theme="dracula"] .settings-header,
+[data-theme="monokai"] .settings-header,
+[data-theme="nord"] .settings-header,
+[data-theme="one-dark"] .settings-header {
+    background: var(--bg-panel);
+}
+
+/* Settings tab buttons */
+[data-theme="kawaii-dark"] .settings-tab,
+[data-theme="dracula"] .settings-tab,
+[data-theme="monokai"] .settings-tab,
+[data-theme="nord"] .settings-tab,
+[data-theme="one-dark"] .settings-tab {
+    color: var(--text-secondary);
+}
+
+[data-theme="kawaii-dark"] .settings-tab:hover,
+[data-theme="dracula"] .settings-tab:hover,
+[data-theme="monokai"] .settings-tab:hover,
+[data-theme="nord"] .settings-tab:hover,
+[data-theme="one-dark"] .settings-tab:hover {
+    background: var(--bg-button-hover);
+    color: var(--text-primary);
+}
+
+[data-theme="kawaii-dark"] .settings-tab.active,
+[data-theme="dracula"] .settings-tab.active,
+[data-theme="monokai"] .settings-tab.active,
+[data-theme="nord"] .settings-tab.active,
+[data-theme="one-dark"] .settings-tab.active {
+    background: var(--bg-ocean-deep) !important;
+    color: var(--bg-ocean-dark) !important;
+}
+
+/* Settings content area */
+[data-theme="kawaii-dark"] .settings-content,
+[data-theme="dracula"] .settings-content,
+[data-theme="monokai"] .settings-content,
+[data-theme="nord"] .settings-content,
+[data-theme="one-dark"] .settings-content {
+    background: var(--bg-button);
+    border-color: var(--border);
+}
+
+/* Settings panel h3 titles */
+[data-theme="kawaii-dark"] .settings-panel h3 {
+    color: #88c9ea !important;
+    border-bottom-color: var(--border);
+}
+
+[data-theme="dracula"] .settings-panel h3 {
+    color: #bd93f9 !important;
+    border-bottom-color: var(--border);
+}
+
+[data-theme="monokai"] .settings-panel h3 {
+    color: #a6e22e !important;
+    border-bottom-color: var(--border);
+}
+
+[data-theme="nord"] .settings-panel h3 {
+    color: #88c0d0 !important;
+    border-bottom-color: var(--border);
+}
+
+[data-theme="one-dark"] .settings-panel h3 {
+    color: #61afef !important;
+    border-bottom-color: var(--border);
+}
+
+/* Setting row background */
+[data-theme="kawaii-dark"] .setting-row,
+[data-theme="dracula"] .setting-row,
+[data-theme="monokai"] .setting-row,
+[data-theme="nord"] .setting-row,
+[data-theme="one-dark"] .setting-row {
+    background: var(--bg-input);
+    border-color: var(--border);
+}
+
+[data-theme="kawaii-dark"] .setting-row:hover,
+[data-theme="dracula"] .setting-row:hover,
+[data-theme="monokai"] .setting-row:hover,
+[data-theme="nord"] .setting-row:hover,
+[data-theme="one-dark"] .setting-row:hover {
+    background: var(--bg-button);
+    border-color: var(--border-strong);
+}
+
+/* Setting row labels - ensure text is readable */
+html[data-theme="kawaii-dark"] .setting-row label:first-child,
+html[data-theme="kawaii-dark"] .setting-row>label:not(.switch) {
+    color: #e0f0ff !important;
+}
+
+html[data-theme="dracula"] .setting-row label:first-child,
+html[data-theme="dracula"] .setting-row>label:not(.switch) {
+    color: #f8f8f2 !important;
+}
+
+html[data-theme="monokai"] .setting-row label:first-child,
+html[data-theme="monokai"] .setting-row>label:not(.switch) {
+    color: #f8f8f2 !important;
+}
+
+html[data-theme="nord"] .setting-row label:first-child,
+html[data-theme="nord"] .setting-row>label:not(.switch) {
+    color: #eceff4 !important;
+}
+
+html[data-theme="one-dark"] .setting-row label:first-child,
+html[data-theme="one-dark"] .setting-row>label:not(.switch) {
+    color: #abb2bf !important;
+}
+
+/* Appearance controls h3 */
+[data-theme="kawaii-dark"] .appearance-controls h3,
+[data-theme="dracula"] .appearance-controls h3,
+[data-theme="monokai"] .appearance-controls h3,
+[data-theme="nord"] .appearance-controls h3,
+[data-theme="one-dark"] .appearance-controls h3 {
+    color: var(--text-secondary);
+}
+
+/* Preview bg controls */
+[data-theme="kawaii-dark"] .preview-bg-controls,
+[data-theme="dracula"] .preview-bg-controls,
+[data-theme="monokai"] .preview-bg-controls,
+[data-theme="nord"] .preview-bg-controls,
+[data-theme="one-dark"] .preview-bg-controls {
+    background: var(--bg-input);
+    border-color: var(--border);
+}
+
+[data-theme="kawaii-dark"] .bg-control-row label,
+[data-theme="dracula"] .bg-control-row label,
+[data-theme="monokai"] .bg-control-row label,
+[data-theme="nord"] .bg-control-row label,
+[data-theme="one-dark"] .bg-control-row label {
+    color: var(--text-secondary);
+}
+
+/* Settings footer */
+[data-theme="kawaii-dark"] .settings-footer,
+[data-theme="dracula"] .settings-footer,
+[data-theme="monokai"] .settings-footer,
+[data-theme="nord"] .settings-footer,
+[data-theme="one-dark"] .settings-footer {
+    background: var(--bg-panel);
+}
+
+/* Settings close button */
+[data-theme="kawaii-dark"] .settings-close,
+[data-theme="dracula"] .settings-close,
+[data-theme="monokai"] .settings-close,
+[data-theme="nord"] .settings-close,
+[data-theme="one-dark"] .settings-close {
+    background: var(--bg-button);
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+
+[data-theme="kawaii-dark"] .settings-close:hover,
+[data-theme="dracula"] .settings-close:hover,
+[data-theme="monokai"] .settings-close:hover,
+[data-theme="nord"] .settings-close:hover,
+[data-theme="one-dark"] .settings-close:hover {
+    background: var(--error);
+    border-color: var(--error);
+    color: white;
+}
+
+/* ============================================================================
+   CC POPUP DARK THEME STYLES
+   ============================================================================ */
+[data-theme="kawaii-dark"] .cc-overlay,
+[data-theme="dracula"] .cc-overlay,
+[data-theme="monokai"] .cc-overlay,
+[data-theme="nord"] .cc-overlay,
+[data-theme="one-dark"] .cc-overlay {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="kawaii-dark"] .cc-popup,
+[data-theme="dracula"] .cc-popup,
+[data-theme="monokai"] .cc-popup,
+[data-theme="nord"] .cc-popup,
+[data-theme="one-dark"] .cc-popup {
+    background: var(--bg-panel);
+    border-color: var(--border-strong);
+}
+
+[data-theme="kawaii-dark"] .cc-header,
+[data-theme="dracula"] .cc-header,
+[data-theme="monokai"] .cc-header,
+[data-theme="nord"] .cc-header,
+[data-theme="one-dark"] .cc-header {
+    background: var(--bg-panel);
+    border-bottom-color: var(--border);
+}
+
+[data-theme="kawaii-dark"] .cc-header h2,
+[data-theme="dracula"] .cc-header h2,
+[data-theme="monokai"] .cc-header h2,
+[data-theme="nord"] .cc-header h2,
+[data-theme="one-dark"] .cc-header h2 {
+    color: var(--text-primary);
+}
+
+[data-theme="kawaii-dark"] .cc-header h2 svg,
+[data-theme="dracula"] .cc-header h2 svg,
+[data-theme="monokai"] .cc-header h2 svg,
+[data-theme="nord"] .cc-header h2 svg,
+[data-theme="one-dark"] .cc-header h2 svg {
+    color: var(--bg-ocean-deep);
+}
+
+[data-theme="kawaii-dark"] .cc-close,
+[data-theme="dracula"] .cc-close,
+[data-theme="monokai"] .cc-close,
+[data-theme="nord"] .cc-close,
+[data-theme="one-dark"] .cc-close {
+    background: var(--bg-button);
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+
+[data-theme="kawaii-dark"] .cc-close:hover,
+[data-theme="dracula"] .cc-close:hover,
+[data-theme="monokai"] .cc-close:hover,
+[data-theme="nord"] .cc-close:hover,
+[data-theme="one-dark"] .cc-close:hover {
+    background: var(--error);
+    border-color: var(--error);
+    color: white;
+}
+
+[data-theme="kawaii-dark"] .cc-body,
+[data-theme="dracula"] .cc-body,
+[data-theme="monokai"] .cc-body,
+[data-theme="nord"] .cc-body,
+[data-theme="one-dark"] .cc-body {
+    background: var(--bg-input);
+}
+
+[data-theme="kawaii-dark"] .cc-step-num,
+[data-theme="dracula"] .cc-step-num,
+[data-theme="monokai"] .cc-step-num,
+[data-theme="nord"] .cc-step-num,
+[data-theme="one-dark"] .cc-step-num {
+    background: var(--bg-ocean-deep);
+    color: var(--bg-ocean-dark);
+    box-shadow: none;
+}
+
+[data-theme="kawaii-dark"] .cc-step-text,
+[data-theme="dracula"] .cc-step-text,
+[data-theme="monokai"] .cc-step-text,
+[data-theme="nord"] .cc-step-text,
+[data-theme="one-dark"] .cc-step-text {
+    color: var(--text-primary);
+}
+
+[data-theme="kawaii-dark"] .cc-step-text strong,
+[data-theme="dracula"] .cc-step-text strong,
+[data-theme="monokai"] .cc-step-text strong,
+[data-theme="nord"] .cc-step-text strong,
+[data-theme="one-dark"] .cc-step-text strong {
+    color: var(--bg-ocean-deep);
+}
+
+[data-theme="kawaii-dark"] .cc-footer,
+[data-theme="dracula"] .cc-footer,
+[data-theme="monokai"] .cc-footer,
+[data-theme="nord"] .cc-footer,
+[data-theme="one-dark"] .cc-footer {
+    background: var(--bg-panel);
+    border-top-color: var(--border);
+}
+
+[data-theme="kawaii-dark"] .cc-btn.secondary,
+[data-theme="dracula"] .cc-btn.secondary,
+[data-theme="monokai"] .cc-btn.secondary,
+[data-theme="nord"] .cc-btn.secondary,
+[data-theme="one-dark"] .cc-btn.secondary {
+    background: var(--bg-button);
+    border-color: var(--border);
+    color: var(--text-secondary);
+}
+
+[data-theme="kawaii-dark"] .cc-btn.secondary:hover,
+[data-theme="dracula"] .cc-btn.secondary:hover,
+[data-theme="monokai"] .cc-btn.secondary:hover,
+[data-theme="nord"] .cc-btn.secondary:hover,
+[data-theme="one-dark"] .cc-btn.secondary:hover {
+    background: var(--bg-button-hover);
+    color: var(--text-primary);
+}
+
+[data-theme="kawaii-dark"] .cc-btn.primary,
+[data-theme="dracula"] .cc-btn.primary,
+[data-theme="monokai"] .cc-btn.primary,
+[data-theme="nord"] .cc-btn.primary,
+[data-theme="one-dark"] .cc-btn.primary {
+    background: var(--bg-ocean-deep);
+    border-color: var(--bg-ocean-deep);
+    color: var(--bg-ocean-dark);
+    box-shadow: none;
+}
+
+[data-theme="kawaii-dark"] .cc-btn.primary:hover,
+[data-theme="dracula"] .cc-btn.primary:hover,
+[data-theme="monokai"] .cc-btn.primary:hover,
+[data-theme="nord"] .cc-btn.primary:hover,
+[data-theme="one-dark"] .cc-btn.primary:hover {
+    filter: brightness(1.1);
+}
+
+/* CC Step dark theme overrides */
+[data-theme="kawaii-dark"] .cc-step,
+[data-theme="dracula"] .cc-step,
+[data-theme="monokai"] .cc-step,
+[data-theme="nord"] .cc-step,
+[data-theme="one-dark"] .cc-step {
+    background: var(--bg-button);
+    border-color: var(--border);
+}
+
+[data-theme="kawaii-dark"] .cc-step:hover,
+[data-theme="dracula"] .cc-step:hover,
+[data-theme="monokai"] .cc-step:hover,
+[data-theme="nord"] .cc-step:hover,
+[data-theme="one-dark"] .cc-step:hover {
+    background: var(--bg-button-hover);
+    border-color: var(--border-strong);
+}
+
+/* ============================================================================
+   TEST NAVIGATION DARK THEME STYLES
+   ============================================================================ */
+[data-theme="kawaii-dark"] .test-nav,
+[data-theme="dracula"] .test-nav,
+[data-theme="monokai"] .test-nav,
+[data-theme="nord"] .test-nav,
+[data-theme="one-dark"] .test-nav {
+    background: var(--bg-button);
+    border-color: var(--border);
+    box-shadow: none;
+}
+
+[data-theme="kawaii-dark"] .test-nav-btn,
+[data-theme="dracula"] .test-nav-btn,
+[data-theme="monokai"] .test-nav-btn,
+[data-theme="nord"] .test-nav-btn,
+[data-theme="one-dark"] .test-nav-btn {
+    background: var(--bg-input);
+    border-color: var(--border);
+    color: var(--text-secondary);
+}
+
+[data-theme="kawaii-dark"] .test-nav-btn:hover,
+[data-theme="dracula"] .test-nav-btn:hover,
+[data-theme="monokai"] .test-nav-btn:hover,
+[data-theme="nord"] .test-nav-btn:hover,
+[data-theme="one-dark"] .test-nav-btn:hover {
+    background: var(--bg-ocean-deep);
+    border-color: var(--bg-ocean-deep);
+    color: var(--bg-ocean-dark);
+}
+
+[data-theme="kawaii-dark"] .test-nav-label,
+[data-theme="dracula"] .test-nav-label,
+[data-theme="monokai"] .test-nav-label,
+[data-theme="nord"] .test-nav-label,
+[data-theme="one-dark"] .test-nav-label {
+    color: var(--text-primary);
 }

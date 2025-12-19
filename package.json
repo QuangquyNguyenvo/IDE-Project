@@ -34,6 +34,7 @@
         "build:linux": "electron-builder --linux"
     },
     "dependencies": {
+        "golden-layout": "^2.6.0",
         "monaco-editor": "^0.45.0"
     },
     "devDependencies": {
@@ -68,6 +69,7 @@
             "target": [
                 "portable"
             ],
+            "icon": "src/assets/icon.png",
             "signAndEditExecutable": false
         },
         "mac": {
