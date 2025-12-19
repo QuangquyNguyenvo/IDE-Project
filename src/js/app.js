@@ -18,14 +18,14 @@
 const DEFAULT_SETTINGS = {
     editor: {
         fontSize: 14,
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: "'Consolas', monospace",
         tabSize: 4,
         minimap: true,
         wordWrap: false
     },
     compiler: {
         cppStandard: 'c++17',
-        optimization: '-O2',
+        optimization: '',
         warnings: true
     },
     execution: {
@@ -47,6 +47,9 @@ const DEFAULT_SETTINGS = {
         showIO: false,
         showTerm: true,
         showProblems: false
+    },
+    oj: {
+        verified: false  // True when user has successfully received at least one problem
     }
 };
 
@@ -99,7 +102,18 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabsScroll();
     initSettings();
     initTabDrag();
+    initCompetitiveCompanion();
     updateUI();
+
+    // Refresh editor layout on window resize (maximize/restore)
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (App.editor) App.editor.layout();
+            if (App.editor2) App.editor2.layout();
+        }, 100);
+    });
 });
 
 function initMonaco() {
@@ -421,10 +435,14 @@ function openSplit() {
     if (App.isSplit || App.tabs.length < 1) return;
 
     App.isSplit = true;
+    document.body.classList.add('split-active');
 
     // Show split pane
-    document.getElementById('editor-pane-2').style.display = 'flex';
-    document.getElementById('resizer-split').style.display = 'block';
+    const pane2 = document.getElementById('editor-pane-2');
+    const resizer = document.getElementById('resizer-split');
+
+    pane2.style.display = 'flex';
+    resizer.style.display = 'block';
 
     // Create second editor if not exists
     if (!App.editor2) {
@@ -433,6 +451,10 @@ function openSplit() {
             App.activeEditor = 2;
         });
     }
+
+    // Disable minimap when split is active to save space
+    if (App.editor) App.editor.updateOptions({ minimap: { enabled: false } });
+    if (App.editor2) App.editor2.updateOptions({ minimap: { enabled: false } });
 
     // Set same content or pick another tab
     if (App.tabs.length > 1) {
@@ -449,7 +471,11 @@ function openSplit() {
         if (tab) App.editor2.setValue(tab.content);
     }
 
-    log('Split editor opened', 'info');
+    // Force layout update for both editors after a short delay
+    setTimeout(() => {
+        if (App.editor) App.editor.layout();
+        if (App.editor2) App.editor2.layout();
+    }, 100);
 }
 
 function closeSplit() {
@@ -464,11 +490,46 @@ function closeSplit() {
     App.isSplit = false;
     App.splitTabId = null;
     App.activeEditor = 1;
+    document.body.classList.remove('split-active');
 
     document.getElementById('editor-pane-2').style.display = 'none';
     document.getElementById('resizer-split').style.display = 'none';
 
-    log('Split editor closed', 'info');
+    // Re-enable minimap based on user settings
+    const minimapEnabled = App.settings?.editor?.minimap !== false;
+    if (App.editor) App.editor.updateOptions({ minimap: { enabled: minimapEnabled } });
+
+    // Refresh layout
+    setTimeout(() => {
+        if (App.editor) App.editor.layout();
+    }, 50);
+}
+
+// Swap files between left and right editors
+function swapSplitEditors() {
+    if (!App.isSplit || !App.editor2) return;
+
+    // Save current content to tabs
+    const leftTab = App.tabs.find(t => t.id === App.activeTabId);
+    const rightTab = App.tabs.find(t => t.id === App.splitTabId);
+
+    if (leftTab) leftTab.content = App.editor.getValue();
+    if (rightTab) rightTab.content = App.editor2.getValue();
+
+    // Swap tab IDs
+    const tempId = App.activeTabId;
+    App.activeTabId = App.splitTabId;
+    App.splitTabId = tempId;
+
+    // Swap editor content
+    const leftContent = App.editor.getValue();
+    const rightContent = App.editor2.getValue();
+
+    App.editor.setValue(rightContent);
+    App.editor2.setValue(leftContent);
+
+    // Update tabs UI
+    renderTabs();
 }
 
 function initTabDrag() {
@@ -1084,7 +1145,8 @@ function initShortcuts() {
         if (e.ctrlKey && e.key === 'w') { e.preventDefault(); if (App.activeTabId) closeTab(App.activeTabId); }
         if (e.ctrlKey && e.key === 'j') { e.preventDefault(); toggleProblems(); }
         if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettings(); }
-        if (e.ctrlKey && e.key === '\\') { e.preventDefault(); toggleSplit(); }
+        if (e.ctrlKey && !e.shiftKey && e.key === '\\') { e.preventDefault(); toggleSplit(); }
+        if (e.ctrlKey && e.shiftKey && e.key === '|') { e.preventDefault(); swapSplitEditors(); }
         if (e.key === 'F11') { e.preventDefault(); buildRun(); }
         if (e.key === 'F10') { e.preventDefault(); run(); }
         if (e.key === 'F5' && e.shiftKey) { e.preventDefault(); stop(); }
@@ -1159,6 +1221,11 @@ function toggleIO() {
     App.settings.panels.showIO = App.showIO;
     saveSettings();
     updateUI();
+    // Refresh editor layout after panel visibility changes
+    setTimeout(() => {
+        if (App.editor) App.editor.layout();
+        if (App.editor2) App.editor2.layout();
+    }, 50);
 }
 function toggleTerm() {
     App.showTerm = !App.showTerm;
@@ -1166,6 +1233,11 @@ function toggleTerm() {
     App.settings.panels.showTerm = App.showTerm;
     saveSettings();
     updateUI();
+    // Refresh editor layout after panel visibility changes
+    setTimeout(() => {
+        if (App.editor) App.editor.layout();
+        if (App.editor2) App.editor2.layout();
+    }, 50);
 }
 function toggleProblems() {
     App.showProblems = !App.showProblems;
@@ -1173,6 +1245,11 @@ function toggleProblems() {
     App.settings.panels.showProblems = App.showProblems;
     saveSettings();
     updateUI();
+    // Refresh editor layout after panel visibility changes
+    setTimeout(() => {
+        if (App.editor) App.editor.layout();
+        if (App.editor2) App.editor2.layout();
+    }, 50);
 }
 
 // ============================================================================
@@ -1385,6 +1462,7 @@ function doAction(action) {
         toggleterm: toggleTerm,
         toggleproblems: toggleProblems,
         spliteditor: openSplit,
+        swapsplit: swapSplitEditors,
         closesplit: closeSplit,
         settings: openSettings
     };
@@ -1432,11 +1510,15 @@ async function saveAs() {
 async function buildRun() {
     const tab = App.tabs.find(t => t.id === App.activeTabId);
     if (!tab) { log('No file open', 'warning'); return; }
-    if (!tab.path) { log('Save file first', 'warning'); await saveAs(); if (!tab.path) return; }
 
+    // Get current content from editor
     tab.content = App.editor.getValue();
-    await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
-    tab.original = tab.content; tab.modified = false; renderTabs();
+
+    // If file has a path, save it first (optional auto-save)
+    if (tab.path) {
+        await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
+        tab.original = tab.content; tab.modified = false; renderTabs();
+    }
 
     // Auto-show terminal when building
     if (!App.showTerm) {
@@ -1951,4 +2033,205 @@ if (window.electronAPI) {
         setRunning(false);
         setStatus('Stopped', '');
     });
+}
+
+// ============================================================================
+// COMPETITIVE COMPANION
+// ============================================================================
+let ccConnected = false;
+let ccProblem = null;
+let ccTestIndex = 0;
+let ccHasReceivedProblem = false; // Track if we ever received a problem
+
+function initCompetitiveCompanion() {
+    const btn = document.getElementById('btn-cc');
+    if (!btn) return;
+
+    // Load verified status from settings
+    ccHasReceivedProblem = App.settings?.oj?.verified || false;
+
+    // Auto-start CC server on app load (silent mode)
+    startCCServer(true);
+
+    // Button click handler - show popup with guide
+    btn.onclick = () => {
+        showCCPopup();
+    };
+
+    // Test navigation buttons
+    document.getElementById('btn-prev-test')?.addEventListener('click', prevTestCase);
+    document.getElementById('btn-next-test')?.addEventListener('click', nextTestCase);
+
+    // CC Popup handlers
+    document.getElementById('cc-close')?.addEventListener('click', hideCCPopup);
+    document.getElementById('cc-cancel')?.addEventListener('click', hideCCPopup);
+    document.getElementById('cc-install')?.addEventListener('click', () => {
+        window.electronAPI?.ccOpenExtensionPage?.();
+        hideCCPopup();
+    });
+
+    // Close popup on overlay click
+    document.getElementById('cc-overlay')?.addEventListener('click', (e) => {
+        if (e.target.id === 'cc-overlay') hideCCPopup();
+    });
+
+    // Listen for incoming problems
+    window.electronAPI?.onProblemReceived?.(handleProblemReceived);
+}
+
+function showCCPopup() {
+    document.getElementById('cc-overlay')?.classList.add('show');
+    document.getElementById('btn-cc')?.classList.add('active');
+}
+
+function hideCCPopup() {
+    document.getElementById('cc-overlay')?.classList.remove('show');
+    document.getElementById('btn-cc')?.classList.remove('active');
+}
+
+async function startCCServer(silent = false) {
+    const btn = document.getElementById('btn-cc');
+    if (!btn || !window.electronAPI?.ccStartServer) return;
+
+    try {
+        const result = await window.electronAPI.ccStartServer();
+
+        if (result?.success) {
+            ccConnected = true;
+            btn.title = 'Lấy test từ OJ - Đang lắng nghe';
+
+            if (!silent) {
+                log('OJ: Sẵn sàng nhận test cases', 'success');
+
+                // Only show extension guide if never received a problem before
+                if (!ccHasReceivedProblem) {
+                    log('    Cài extension: Chrome Web Store > "Competitive Companion"', 'info');
+                    log('    Sau đó vào VNOI/Codeforces và click icon extension', 'info');
+                }
+            }
+        } else if (!silent) {
+            ccConnected = false;
+            log('OJ: Không thể khởi động (port 27121 đang dùng)', 'warning');
+        }
+    } catch (e) {
+        console.error('CC Server error:', e);
+    }
+}
+
+function handleProblemReceived(problem) {
+    console.log('Received problem:', problem);
+
+    // Mark that we have received at least one problem and save to settings
+    if (!ccHasReceivedProblem) {
+        ccHasReceivedProblem = true;
+        if (!App.settings.oj) App.settings.oj = {};
+        App.settings.oj.verified = true;
+        saveSettings();
+    }
+
+    // Store problem data
+    ccProblem = problem;
+    ccTestIndex = 0;
+
+    // Create filename from problem name
+    const safeName = problem.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .substring(0, 50);
+    const fileName = safeName + '.cpp';
+
+    // Create new tab with template
+    const id = 'tab_' + Date.now();
+    const template = DEFAULT_CODE;
+
+    App.tabs.push({
+        id,
+        name: fileName,
+        path: null,
+        content: template,
+        original: template,
+        modified: false
+    });
+
+    setActive(id);
+
+    // Fill in test cases
+    const testCount = problem.tests?.length || 0;
+    if (testCount > 0) {
+        const inputArea = document.getElementById('input-area');
+        const expectedArea = document.getElementById('expected-area');
+
+        if (inputArea) inputArea.value = problem.tests[0].input || '';
+        if (expectedArea) expectedArea.value = problem.tests[0].output || '';
+    }
+
+    // Show/hide test navigation based on test count
+    updateTestNavUI();
+
+    // Show IO panel if hidden
+    if (!App.showIO) toggleIO();
+
+    // Log success - clean format without emojis
+    const timeLimit = problem.timeLimit ? `${problem.timeLimit}ms` : '-';
+    const memLimit = problem.memoryLimit ? `${problem.memoryLimit}MB` : '-';
+
+    log(`[OJ] ${problem.name}`, 'success');
+    log(`     ${testCount} test | ${timeLimit} | ${memLimit}`, 'info');
+
+    // Update status
+    setStatus(`${problem.name}`, 'success');
+
+    // Flash the CC button to indicate success
+    const btn = document.getElementById('btn-cc');
+    if (btn) {
+        btn.classList.add('cc-flash');
+        setTimeout(() => btn.classList.remove('cc-flash'), 1000);
+    }
+}
+
+// Update test navigation UI
+function updateTestNavUI() {
+    const testNav = document.getElementById('test-nav');
+    const testLabel = document.getElementById('test-nav-label');
+
+    if (!testNav || !testLabel) return;
+
+    const testCount = ccProblem?.tests?.length || 0;
+
+    if (testCount > 1) {
+        testNav.style.display = 'flex';
+        testLabel.textContent = `${ccTestIndex + 1}/${testCount}`;
+    } else {
+        testNav.style.display = 'none';
+    }
+}
+
+// Helper: Switch between test cases (if multiple)
+function switchTestCase(index) {
+    if (!ccProblem || !ccProblem.tests || index < 0 || index >= ccProblem.tests.length) return;
+
+    ccTestIndex = index;
+    const test = ccProblem.tests[index];
+
+    const inputArea = document.getElementById('input-area');
+    const expectedArea = document.getElementById('expected-area');
+
+    if (inputArea) inputArea.value = test.input || '';
+    if (expectedArea) expectedArea.value = test.output || '';
+
+    // Update nav UI
+    updateTestNavUI();
+}
+
+function nextTestCase() {
+    if (ccProblem && ccProblem.tests) {
+        switchTestCase((ccTestIndex + 1) % ccProblem.tests.length);
+    }
+}
+
+function prevTestCase() {
+    if (ccProblem && ccProblem.tests) {
+        switchTestCase((ccTestIndex - 1 + ccProblem.tests.length) % ccProblem.tests.length);
+    }
 }

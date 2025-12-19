@@ -13,9 +13,11 @@
  * @license MIT
  */
 
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const net = require('net');
+const http = require('http');
 const { exec, spawn } = require('child_process');
 
 let mainWindow;
@@ -149,7 +151,7 @@ function createWindow() {
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js')
         },
-        icon: path.join(__dirname, 'src/assets/appicon.jpg'),
+        icon: path.join(__dirname, 'src/assets/icon.png'),
         backgroundColor: '#1e1e1e'
     });
 
@@ -361,17 +363,25 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
             await new Promise(r => setTimeout(r, 50));
         }
 
-        // Save file first if needed
+        // Use temp file if no filePath provided (unsaved file)
+        let actualFilePath = filePath;
+        let usingTempFile = false;
+
         if (!filePath) {
-            resolve({ success: false, error: 'Please save the file first' });
-            return;
+            // Create temp directory if not exists
+            const tempDir = path.join(app.getPath('temp'), 'cpp-ide');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+            actualFilePath = path.join(tempDir, 'temp_code.cpp');
+            usingTempFile = true;
         }
 
         // Save current content
-        fs.writeFileSync(filePath, content, 'utf-8');
+        fs.writeFileSync(actualFilePath, content, 'utf-8');
 
-        const dir = path.dirname(filePath);
-        const baseName = path.basename(filePath, path.extname(filePath));
+        const dir = path.dirname(actualFilePath);
+        const baseName = path.basename(actualFilePath, path.extname(actualFilePath));
         const outputPath = path.join(dir, baseName + '.exe');
 
         // Check if file uses bits/stdc++.h and PCH is ready
@@ -379,7 +389,7 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
 
         // Build args - optimized for speed without breaking STL
         const args = [
-            filePath,
+            actualFilePath,
             '-o', outputPath,
             '-O0',      // No optimization (fastest compile)
             '-w',       // Suppress warnings
@@ -573,4 +583,103 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
+});
+
+// ============================================================================
+// COMPETITIVE COMPANION SERVER
+// ============================================================================
+let ccServer = null;
+let ccServerStatus = 'stopped'; // 'stopped', 'starting', 'running', 'error'
+
+function startCompetitiveCompanionServer() {
+    if (ccServer) {
+        console.log('[CC] Server already running');
+        return Promise.resolve({ success: true, status: 'already_running' });
+    }
+
+    return new Promise((resolve) => {
+        ccServerStatus = 'starting';
+
+        // Use HTTP server (Competitive Companion sends HTTP POST)
+        ccServer = http.createServer((req, res) => {
+            if (req.method === 'POST') {
+                let body = '';
+
+                req.on('data', chunk => {
+                    body += chunk.toString();
+                });
+
+                req.on('end', () => {
+                    try {
+                        const problem = JSON.parse(body);
+                        console.log(`[CC] Received problem: ${problem.name}`);
+
+                        // Send to renderer
+                        if (mainWindow && !mainWindow.isDestroyed()) {
+                            mainWindow.webContents.send('problem-received', {
+                                name: problem.name,
+                                group: problem.group,
+                                url: problem.url,
+                                timeLimit: problem.timeLimit,
+                                memoryLimit: problem.memoryLimit,
+                                tests: problem.tests || []
+                            });
+                        }
+
+                        res.writeHead(200);
+                        res.end('OK');
+                    } catch (e) {
+                        console.error('[CC] Parse error:', e.message);
+                        res.writeHead(400);
+                        res.end('Parse Error');
+                    }
+                });
+            } else {
+                res.writeHead(405);
+                res.end('Method Not Allowed');
+            }
+        });
+
+        ccServer.on('error', (err) => {
+            console.error('[CC] Server error:', err.message);
+            ccServerStatus = 'error';
+            ccServer = null;
+            resolve({ success: false, error: err.message });
+        });
+
+        ccServer.listen(27121, '127.0.0.1', () => {
+            console.log('[CC] Competitive Companion server listening on port 27121');
+            ccServerStatus = 'running';
+            resolve({ success: true, status: 'running' });
+        });
+    });
+}
+
+function stopCompetitiveCompanionServer() {
+    if (ccServer) {
+        ccServer.close();
+        ccServer = null;
+        ccServerStatus = 'stopped';
+        console.log('[CC] Server stopped');
+    }
+    return { success: true, status: 'stopped' };
+}
+
+// IPC Handlers for Competitive Companion
+ipcMain.handle('cc-start-server', async () => {
+    return await startCompetitiveCompanionServer();
+});
+
+ipcMain.handle('cc-stop-server', async () => {
+    return stopCompetitiveCompanionServer();
+});
+
+ipcMain.handle('cc-get-status', async () => {
+    return { status: ccServerStatus, running: ccServer !== null };
+});
+
+ipcMain.handle('cc-open-extension-page', async () => {
+    // Open Chrome Web Store page for Competitive Companion
+    shell.openExternal('https://chromewebstore.google.com/detail/competitive-companion/cjnmckjndlpiamhfimnnjmnckgghkjbl');
+    return { success: true };
 });

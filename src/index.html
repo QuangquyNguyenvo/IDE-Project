@@ -36,7 +36,7 @@
 
             <div class="header-actions">
                 <!-- Toggle buttons -->
-                <button class="toggle-btn" id="btn-toggle-io" title="Input/Output">
+                <button class="toggle-btn" id="btn-toggle-io" title="Hiện Input/Expected">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                         stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="8" rx="1.5" />
@@ -44,36 +44,44 @@
                         <path d="M14 7h6M14 12h4M14 17h5" />
                     </svg>
                 </button>
-                <button class="toggle-btn active" id="btn-toggle-term" title="Terminal">
+                <button class="toggle-btn active" id="btn-toggle-term" title="Hiện Terminal">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                         stroke-linejoin="round">
                         <path d="M4 17l6-5-6-5" />
                         <path d="M12 19h8" />
                     </svg>
                 </button>
-                <button class="toggle-btn" id="btn-toggle-problems" title="Problems (Ctrl+J)">
+                <button class="toggle-btn" id="btn-toggle-problems" title="Hiện khung lỗi (Ctrl+J)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                         stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10" />
                         <path d="M12 8v4M12 16h.01" />
                     </svg>
                 </button>
+                <button class="toggle-btn" id="btn-cc" title="Lấy test case tự động từ OJ">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                        <rect x="9" y="3" width="6" height="4" rx="1" />
+                        <path d="M9 12l2 2 4-4" />
+                    </svg>
+                </button>
 
                 <span class="sep"></span>
 
                 <!-- Run buttons -->
-                <button class="action-btn primary" id="btn-buildrun" title="Build & Run (F11)">
+                <button class="action-btn primary" id="btn-buildrun" title="Biên dịch và chạy (F11)">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5v14l11-7z" />
                     </svg>
                     <span>Run</span>
                 </button>
-                <button class="action-btn" id="btn-run-only" title="Run Only (F10)">
+                <button class="action-btn" id="btn-run-only" title="Chỉ chạy (F10)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M5 4l12 8-12 8V4z" />
                     </svg>
                 </button>
-                <button class="action-btn danger" id="btn-stop" title="Stop" disabled>
+                <button class="action-btn danger" id="btn-stop" title="Dừng chương trình" disabled>
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <rect x="5" y="5" width="14" height="14" rx="2" />
                     </svg>
@@ -82,7 +90,7 @@
                 <span class="sep"></span>
 
                 <!-- Settings button -->
-                <button class="toggle-btn" id="btn-settings" title="Settings (Ctrl+,)">
+                <button class="toggle-btn" id="btn-settings" title="Cài đặt (Ctrl+,)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                         stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3" />
@@ -134,8 +142,8 @@
             <div class="dropdown-item" data-action="toggleproblems"><span>Problems</span><span class="key">Ctrl+J</span>
             </div>
             <div class="dropdown-sep"></div>
-            <div class="dropdown-item" data-action="spliteditor"><span>Split Editor</span><span
-                    class="key">Ctrl+\</span></div>
+            <div class="dropdown-item" data-action="spliteditor"><span>Split</span><span class="key">Ctrl+\</span></div>
+            <div class="dropdown-item" data-action="swapsplit"><span>Swap</span><span class="key">Ctrl+⇧+\</span></div>
             <div class="dropdown-item" data-action="closesplit"><span>Close Split</span></div>
             <div class="dropdown-sep"></div>
             <div class="dropdown-item" data-action="settings"><span>Settings</span><span class="key">Ctrl+,</span></div>
@@ -145,6 +153,50 @@
             <div class="dropdown-item" data-action="run"><span>Run</span><span class="key">F10</span></div>
             <div class="dropdown-sep"></div>
             <div class="dropdown-item" data-action="stop"><span>Stop</span><span class="key">Shift+F5</span></div>
+        </div>
+
+        <!-- ===== COMPETITIVE COMPANION POPUP ===== -->
+        <div class="cc-overlay" id="cc-overlay">
+            <div class="cc-popup">
+                <div class="cc-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path
+                                d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                        </svg>
+                        Lấy test từ OJ
+                    </h2>
+                    <button class="cc-close" id="cc-close">×</button>
+                </div>
+                <div class="cc-body">
+                    <div class="cc-steps">
+                        <div class="cc-step">
+                            <span class="cc-step-num">1</span>
+                            <span class="cc-step-text">Cài extension <strong>Competitive Companion</strong> vào
+                                Chrome/Firefox</span>
+                        </div>
+                        <div class="cc-step">
+                            <span class="cc-step-num">2</span>
+                            <span class="cc-step-text">Mở bài tập trên trang OJ bất kỳ</span>
+                        </div>
+                        <div class="cc-step">
+                            <span class="cc-step-num">3</span>
+                            <span class="cc-step-text">Click icon <strong>+</strong> của extension trên trình
+                                duyệt</span>
+                        </div>
+                        <div class="cc-step">
+                            <span class="cc-step-num">4</span>
+                            <span class="cc-step-text">Test cases sẽ <strong>tự động tải</strong> vào IDE!</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cc-footer">
+                    <button class="cc-btn secondary" id="cc-cancel">Đóng</button>
+                    <button class="cc-btn primary" id="cc-install">Cài Extension</button>
+                </div>
+            </div>
         </div>
 
         <!-- ===== SETTINGS POPUP ===== -->
@@ -256,8 +308,8 @@
                                 <label>Optimization <span class="tooltip"
                                         title="None: Fast build, easy debug&#10;Fast: 2-3x faster runtime&#10;Fastest: Maximum speed">?</span></label>
                                 <select id="set-optimization">
-                                    <option value="">None (-O0)</option>
-                                    <option value="-O2" selected>Fast (-O2)</option>
+                                    <option value="" selected>None (-O0)</option>
+                                    <option value="-O2">Fast (-O2)</option>
                                     <option value="-O3">Fastest (-O3)</option>
                                 </select>
                             </div>
@@ -508,7 +560,23 @@
                 <div class="io-panel">
                     <div class="panel-head">
                         <span class="panel-title input">INPUT</span>
-                        <button class="clear-btn" id="clear-input" title="Clear">
+                        <!-- Test case navigation (hidden by default, shown when problem loaded) -->
+                        <div class="test-nav" id="test-nav" style="display:none">
+                            <button class="test-nav-btn" id="btn-prev-test" title="Test trước">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                            </button>
+                            <span class="test-nav-label" id="test-nav-label">1/1</span>
+                            <button class="test-nav-btn" id="btn-next-test" title="Test tiếp theo">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                        </div>
+                        <button class="clear-btn" id="clear-input" title="Xóa">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path
@@ -516,12 +584,12 @@
                             </svg>
                         </button>
                     </div>
-                    <textarea class="panel-textarea" id="input-area" placeholder="Test input..."></textarea>
+                    <textarea class="panel-textarea" id="input-area" placeholder="Nhập dữ liệu test..."></textarea>
                 </div>
                 <div class="io-panel">
                     <div class="panel-head">
                         <span class="panel-title output">EXPECTED</span>
-                        <button class="clear-btn" id="clear-output" title="Clear">
+                        <button class="clear-btn" id="clear-output" title="Xóa">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path
@@ -529,7 +597,7 @@
                             </svg>
                         </button>
                     </div>
-                    <textarea class="panel-textarea" id="expected-area" placeholder="Expected output..."></textarea>
+                    <textarea class="panel-textarea" id="expected-area" placeholder="Kết quả mong đợi..."></textarea>
                     <div class="diff-display" id="expected-diff" style="display:none"></div>
                 </div>
             </div>
