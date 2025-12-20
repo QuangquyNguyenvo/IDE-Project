@@ -180,7 +180,7 @@ ipcMain.handle('window-close', () => {
 
 async function openFile() {
     const result = await dialog.showOpenDialog(mainWindow, {
-        properties: ['openFile'],
+        properties: ['openFile', 'multiSelections'],
         filters: [
             { name: 'C++ Files', extensions: ['cpp', 'c', 'h', 'hpp', 'cc', 'cxx'] },
             { name: 'All Files', extensions: ['*'] }
@@ -188,10 +188,12 @@ async function openFile() {
     });
 
     if (!result.canceled && result.filePaths.length > 0) {
-        const filePath = result.filePaths[0];
-        const content = fs.readFileSync(filePath, 'utf-8');
-        currentFile = filePath;
-        mainWindow.webContents.send('file-opened', { path: filePath, content: content });
+        // Send each file to the renderer
+        for (const filePath of result.filePaths) {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            currentFile = filePath;
+            mainWindow.webContents.send('file-opened', { path: filePath, content: content });
+        }
     }
 }
 

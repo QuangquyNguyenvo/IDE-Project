@@ -1,6 +1,6 @@
 {
     "name": "cpp-ide",
-    "version": "1.0.0-beta.1",
+    "version": "1.0.0-beta.3",
     "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
     "main": "main.js",
     "author": "QuangquyNguyenvo",
@@ -45,7 +45,7 @@
         "appId": "com.quangquy.cppide",
         "productName": "C++ IDE",
         "directories": {
-            "output": "dist"
+            "output": "release_build"
         },
         "files": [
             "main.js",
@@ -67,10 +67,10 @@
         "asar": false,
         "win": {
             "target": [
-                "portable"
+                "portable",
+                "dir"
             ],
-            "icon": "src/assets/icon.png",
-            "signAndEditExecutable": false
+            "icon": "src/assets/icon.png"
         },
         "mac": {
             "target": "dmg",

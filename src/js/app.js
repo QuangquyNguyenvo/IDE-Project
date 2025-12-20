@@ -127,9 +127,11 @@ function initMonaco() {
         // Apply initial theme
         applyTheme(App.settings.appearance.theme);
 
-        // Track active editor on focus
+        // Track active editor on focus and switch to corresponding tab
         document.getElementById('editor-container').addEventListener('mousedown', () => {
             App.activeEditor = 1;
+            // Re-render tabs to show focus indicator on primary tab
+            renderTabs();
         });
 
         // Ctrl + Wheel zoom in/out
@@ -449,6 +451,8 @@ function openSplit() {
         App.editor2 = createEditor('editor-container-2');
         document.getElementById('editor-container-2').addEventListener('mousedown', () => {
             App.activeEditor = 2;
+            // Re-render tabs to show focus indicator on split tab
+            renderTabs();
         });
     }
 
@@ -533,19 +537,33 @@ function swapSplitEditors() {
 }
 
 function initTabDrag() {
-    // Make tabs draggable to split
+    // Make tabs draggable for reordering and split
     const container = document.getElementById('tabs-container');
     const editorPane1 = document.getElementById('editor-pane-1');
     const editorPane2 = document.getElementById('editor-pane-2');
 
     let draggedTabId = null;
+    let draggedTabEl = null;
+    let dropIndicator = null;
+
+    // Create drop indicator element
+    function createDropIndicator() {
+        if (!dropIndicator) {
+            dropIndicator = document.createElement('div');
+            dropIndicator.className = 'tab-drop-indicator';
+        }
+        return dropIndicator;
+    }
 
     container.addEventListener('dragstart', e => {
         const tab = e.target.closest('.tab');
         if (tab) {
             draggedTabId = tab.dataset.id;
+            draggedTabEl = tab;
             e.dataTransfer.effectAllowed = 'move';
             tab.classList.add('dragging');
+            // Set drag image
+            e.dataTransfer.setDragImage(tab, tab.offsetWidth / 2, tab.offsetHeight / 2);
         }
     });
 
@@ -553,9 +571,104 @@ function initTabDrag() {
         const tab = e.target.closest('.tab');
         if (tab) tab.classList.remove('dragging');
         draggedTabId = null;
+        draggedTabEl = null;
+        // Remove drop indicator
+        if (dropIndicator && dropIndicator.parentNode) {
+            dropIndicator.parentNode.removeChild(dropIndicator);
+        }
+        // Remove all drag-over classes
+        container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
     });
 
-    // Drop zones on editor panes
+    // Tab reordering within container
+    container.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        if (!draggedTabEl) return;
+
+        const afterElement = getDragAfterElement(container, e.clientX);
+        const indicator = createDropIndicator();
+
+        // Remove previous indicators
+        container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
+
+        if (afterElement) {
+            // Show indicator before the target tab
+            afterElement.classList.add('drag-over-left');
+        } else {
+            // Show at the end
+            const lastTab = container.querySelector('.tab:last-of-type');
+            if (lastTab && lastTab !== draggedTabEl) {
+                lastTab.classList.add('drag-over-right');
+            }
+        }
+    });
+
+    container.addEventListener('dragleave', e => {
+        // Only handle leaf elements
+        if (e.target === container) {
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
+        }
+    });
+
+    container.addEventListener('drop', e => {
+        e.preventDefault();
+
+        if (!draggedTabId) return;
+
+        // Check if dropping in the tab bar (not on editor pane)
+        const droppedOnTab = e.target.closest('.tab');
+        const droppedOnContainer = e.target.closest('.tabs-container');
+
+        if (droppedOnContainer || droppedOnTab) {
+            // Reorder tabs
+            const draggedIndex = App.tabs.findIndex(t => t.id === draggedTabId);
+            if (draggedIndex === -1) return;
+
+            const afterElement = getDragAfterElement(container, e.clientX);
+            let targetIndex;
+
+            if (afterElement) {
+                const afterId = afterElement.dataset.id;
+                targetIndex = App.tabs.findIndex(t => t.id === afterId);
+            } else {
+                targetIndex = App.tabs.length;
+            }
+
+            // Only reorder if position changed
+            if (draggedIndex !== targetIndex && draggedIndex !== targetIndex - 1) {
+                const [draggedTab] = App.tabs.splice(draggedIndex, 1);
+                // Adjust target index if dragged from before target
+                if (draggedIndex < targetIndex) {
+                    targetIndex--;
+                }
+                App.tabs.splice(targetIndex, 0, draggedTab);
+                renderTabs();
+            }
+        }
+
+        // Clean up
+        container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
+    });
+
+    // Helper function to find the element after which to insert
+    function getDragAfterElement(container, x) {
+        const draggableElements = [...container.querySelectorAll('.tab:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = x - box.left - box.width / 2;
+
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Drop zones on editor panes (for split editor)
     [editorPane1, editorPane2].forEach((pane, idx) => {
         pane.addEventListener('dragover', e => {
             e.preventDefault();
@@ -572,6 +685,9 @@ function initTabDrag() {
             pane.classList.remove('drop-target');
 
             if (!draggedTabId) return;
+
+            // Only handle if not dropped on tab bar
+            if (e.target.closest('.tabs-container')) return;
 
             const tab = App.tabs.find(t => t.id === draggedTabId);
             if (!tab) return;
@@ -1212,6 +1328,33 @@ function initHeader() {
         }
     };
 
+    // Hamburger menu toggle for small screens
+    const hamburgerBtn = document.getElementById('btn-hamburger');
+    const menuGroup = document.getElementById('menu-group');
+    if (hamburgerBtn && menuGroup) {
+        hamburgerBtn.onclick = (e) => {
+            e.stopPropagation();
+            hamburgerBtn.classList.toggle('active');
+            menuGroup.classList.toggle('show');
+        };
+
+        // Close hamburger menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menuGroup.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                hamburgerBtn.classList.remove('active');
+                menuGroup.classList.remove('show');
+            }
+        });
+
+        // Close hamburger menu when menu item is clicked
+        menuGroup.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                hamburgerBtn.classList.remove('active');
+                menuGroup.classList.remove('show');
+            });
+        });
+    }
+
     setupSplitResizer();
 }
 
@@ -1228,6 +1371,20 @@ function toggleIO() {
     }, 50);
 }
 function toggleTerm() {
+    // If terminal is docked to problems, toggle the problems panel and switch to terminal tab
+    if (DockingState.terminalDocked) {
+        if (!App.showProblems) {
+            App.showProblems = true;
+            if (!App.settings.panels) App.settings.panels = {};
+            App.settings.panels.showProblems = true;
+            saveSettings();
+            updateUI();
+        }
+        // Switch to terminal tab
+        switchDockedPanel('terminal');
+        return;
+    }
+
     App.showTerm = !App.showTerm;
     if (!App.settings.panels) App.settings.panels = {};
     App.settings.panels.showTerm = App.showTerm;
@@ -1271,7 +1428,502 @@ function initPanels() {
 
     // Click on diff display to go back to edit mode
     document.getElementById('expected-diff').onclick = switchToExpectedEdit;
+
+    // Initialize dockable panels
+    initDockablePanels();
 }
+
+// ============================================================================
+// SIMPLE DOCKING SYSTEM - Dock Terminal and I/O into Problems panel
+// ============================================================================
+
+// Docking state
+const DockingState = {
+    draggedPanel: null,
+    terminalDocked: false,
+    ioDocked: false
+};
+
+function initDockablePanels() {
+    // Simple docking: allow dragging Terminal and IO panel headers to dock with Problems panel
+    const terminalSection = document.getElementById('terminal-section');
+    const ioSection = document.getElementById('io-section');
+    const problemsPanel = document.getElementById('problems-panel');
+    const terminalHead = terminalSection?.querySelector('.panel-head');
+    const ioHead = ioSection?.querySelector('.panel-head');
+
+    if (!problemsPanel) return;
+
+    // Make terminal header draggable
+    if (terminalHead) {
+        terminalHead.setAttribute('draggable', 'true');
+        terminalHead.style.cursor = 'grab';
+
+        terminalHead.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'terminal');
+            e.dataTransfer.effectAllowed = 'move';
+            terminalSection.classList.add('panel-dragging');
+            DockingState.draggedPanel = 'terminal';
+        });
+
+        terminalHead.addEventListener('dragend', () => {
+            terminalSection.classList.remove('panel-dragging');
+            DockingState.draggedPanel = null;
+            document.querySelectorAll('.dock-drop-target').forEach(el => {
+                el.classList.remove('dock-drop-target');
+            });
+        });
+    }
+
+    // Make IO header draggable
+    if (ioHead) {
+        ioHead.setAttribute('draggable', 'true');
+        ioHead.style.cursor = 'grab';
+
+        ioHead.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'io');
+            e.dataTransfer.effectAllowed = 'move';
+            ioSection.classList.add('panel-dragging');
+            DockingState.draggedPanel = 'io';
+        });
+
+        ioHead.addEventListener('dragend', () => {
+            ioSection.classList.remove('panel-dragging');
+            DockingState.draggedPanel = null;
+            document.querySelectorAll('.dock-drop-target').forEach(el => {
+                el.classList.remove('dock-drop-target');
+            });
+        });
+    }
+
+    // Problems panel as drop target
+    problemsPanel.addEventListener('dragover', (e) => {
+        if (DockingState.draggedPanel !== 'terminal' && DockingState.draggedPanel !== 'io') return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        problemsPanel.classList.add('dock-drop-target');
+    });
+
+    problemsPanel.addEventListener('dragleave', (e) => {
+        if (!problemsPanel.contains(e.relatedTarget)) {
+            problemsPanel.classList.remove('dock-drop-target');
+        }
+    });
+
+    problemsPanel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        problemsPanel.classList.remove('dock-drop-target');
+        if (DockingState.draggedPanel === 'terminal') {
+            dockTerminalToProblems();
+        } else if (DockingState.draggedPanel === 'io') {
+            dockIOToProblems();
+        }
+    });
+
+    // Load saved state
+    if (App.settings?.panels?.terminalDocked) {
+        setTimeout(() => dockTerminalToProblems(), 100);
+    }
+    if (App.settings?.panels?.ioDocked) {
+        setTimeout(() => dockIOToProblems(), 150);
+    }
+}
+
+function dockTerminalToProblems() {
+    if (DockingState.terminalDocked) return;
+
+    const terminalSection = document.getElementById('terminal-section');
+    const problemsPanel = document.getElementById('problems-panel');
+    const resizerTerm = document.getElementById('resizer-term');
+
+    if (!terminalSection || !problemsPanel) return;
+
+    // Hide terminal section
+    terminalSection.classList.add('docked-away');
+    if (resizerTerm) resizerTerm.classList.add('docked-away');
+
+    // Add Terminal tab to the panel-head, right after PROBLEMS
+    const panelHead = problemsPanel.querySelector('.panel-head');
+    if (panelHead) {
+        // Create Terminal tab that looks like PROBLEMS title
+        const terminalTab = document.createElement('span');
+        terminalTab.className = 'panel-title terminal docked-tab';
+        terminalTab.id = 'docked-terminal-tab';
+        terminalTab.innerHTML = 'TERMINAL <span class="dock-undock" title="Kéo để tách">×</span>';
+        terminalTab.setAttribute('draggable', 'true');
+
+        // Insert after problem-count
+        const problemCount = panelHead.querySelector('.problem-count');
+        if (problemCount) {
+            problemCount.after(terminalTab);
+        } else {
+            const problemsTitle = panelHead.querySelector('.panel-title');
+            if (problemsTitle) {
+                problemsTitle.after(terminalTab);
+            }
+        }
+
+        // Mark PROBLEMS as active
+        const problemsTitle = panelHead.querySelector('.panel-title.problems');
+        if (problemsTitle) {
+            problemsTitle.classList.add('active');
+        }
+
+        // Click to switch tabs
+        terminalTab.onclick = (e) => {
+            if (e.target.classList.contains('dock-undock')) {
+                undockTerminal();
+                return;
+            }
+            switchDockedPanel('terminal');
+        };
+
+        // Click on PROBLEMS to switch back
+        const problemsTitleEl = panelHead.querySelector('.panel-title.problems');
+        if (problemsTitleEl) {
+            problemsTitleEl.onclick = () => switchDockedPanel('problems');
+        }
+
+        // Drag to undock
+        terminalTab.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'undock-terminal');
+            e.dataTransfer.effectAllowed = 'move';
+            terminalTab.classList.add('dragging');
+        });
+
+        terminalTab.addEventListener('dragend', () => {
+            terminalTab.classList.remove('dragging');
+            // Undock when dropped anywhere outside
+            undockTerminal();
+        });
+    }
+
+    DockingState.terminalDocked = true;
+
+    // Save state
+    if (!App.settings.panels) App.settings.panels = {};
+    App.settings.panels.terminalDocked = true;
+    saveSettings();
+
+    // Show problems if hidden
+    if (!App.showProblems) {
+        App.showProblems = true;
+        updateUI();
+    }
+
+    log('Terminal docked to Problems', 'info');
+    refreshEditorLayout();
+}
+
+function switchDockedPanel(panelId) {
+    const problemsPanel = document.getElementById('problems-panel');
+    if (!problemsPanel) return;
+
+    const problemsTitle = problemsPanel.querySelector('.panel-title.problems');
+    const terminalTab = document.getElementById('docked-terminal-tab');
+    const ioTab = document.getElementById('docked-io-tab');
+    const problemsBody = problemsPanel.querySelector('.problems-body');
+    let terminalView = problemsPanel.querySelector('.docked-terminal-view');
+    let ioView = problemsPanel.querySelector('.docked-io-view');
+
+    // Remove all active states
+    problemsTitle?.classList.remove('active');
+    terminalTab?.classList.remove('active');
+    ioTab?.classList.remove('active');
+
+    // Hide all views
+    if (problemsBody) problemsBody.style.display = 'none';
+    if (terminalView) terminalView.style.display = 'none';
+    if (ioView) ioView.style.display = 'none';
+
+    if (panelId === 'problems') {
+        problemsTitle?.classList.add('active');
+        if (problemsBody) problemsBody.style.display = '';
+    } else if (panelId === 'terminal') {
+        terminalTab?.classList.add('active');
+        if (!terminalView) {
+            createDockedTerminalView(problemsPanel);
+            terminalView = problemsPanel.querySelector('.docked-terminal-view');
+        }
+        if (terminalView) terminalView.style.display = 'flex';
+        syncTerminalContent();
+    } else if (panelId === 'io') {
+        ioTab?.classList.add('active');
+        if (!ioView) {
+            createDockedIOView(problemsPanel);
+            ioView = problemsPanel.querySelector('.docked-io-view');
+        }
+        if (ioView) ioView.style.display = 'flex';
+        syncIOContent();
+    }
+}
+
+function createDockedTerminalView(container) {
+    const view = document.createElement('div');
+    view.className = 'docked-terminal-view';
+    view.innerHTML = `
+        <div class="docked-terminal-body" id="docked-terminal-output"></div>
+        <div class="docked-terminal-input">
+            <span class="prompt">></span>
+            <input type="text" id="docked-terminal-in" placeholder="Input...">
+            <button class="send-btn" id="docked-send-btn">➤</button>
+        </div>
+    `;
+    container.appendChild(view);
+
+    // Wire up input
+    const input = view.querySelector('#docked-terminal-in');
+    const sendBtn = view.querySelector('#docked-send-btn');
+
+    const sendDockedInput = () => {
+        if (input.value && App.isRunning) {
+            log('> ' + input.value, '');
+            window.electronAPI?.sendInput(input.value);
+            input.value = '';
+        }
+    };
+
+    input.onkeypress = (e) => { if (e.key === 'Enter') sendDockedInput(); };
+    sendBtn.onclick = sendDockedInput;
+
+    syncTerminalContent();
+}
+
+function syncTerminalContent() {
+    const original = document.getElementById('terminal');
+    const docked = document.getElementById('docked-terminal-output');
+    if (original && docked) {
+        docked.innerHTML = original.innerHTML;
+        // Scroll to bottom
+        scrollDockedTerminalToBottom();
+    }
+}
+
+function scrollDockedTerminalToBottom() {
+    const docked = document.getElementById('docked-terminal-output');
+    if (docked) {
+        docked.scrollTop = docked.scrollHeight;
+    }
+}
+
+function undockTerminal() {
+    if (!DockingState.terminalDocked) return;
+
+    const terminalSection = document.getElementById('terminal-section');
+    const problemsPanel = document.getElementById('problems-panel');
+    const resizerTerm = document.getElementById('resizer-term');
+
+    // Show terminal section again
+    terminalSection?.classList.remove('docked-away');
+    resizerTerm?.classList.remove('docked-away');
+
+    // Remove terminal tab from panel-head
+    const terminalTab = document.getElementById('docked-terminal-tab');
+    terminalTab?.remove();
+
+    // Remove docked terminal view
+    const dockedView = problemsPanel?.querySelector('.docked-terminal-view');
+    dockedView?.remove();
+
+    // Show problems body
+    const problemsBody = problemsPanel?.querySelector('.problems-body');
+    if (problemsBody) problemsBody.style.display = '';
+
+    // Remove active state from problems title
+    const problemsTitle = problemsPanel?.querySelector('.panel-title.problems');
+    if (problemsTitle) {
+        problemsTitle.classList.remove('active');
+        problemsTitle.onclick = null; // Remove click handler
+    }
+
+    DockingState.terminalDocked = false;
+
+    // Save state
+    if (App.settings.panels) {
+        App.settings.panels.terminalDocked = false;
+        saveSettings();
+    }
+
+    log('Terminal undocked', 'info');
+    refreshEditorLayout();
+}
+
+// ============================================================================
+// I/O DOCKING FUNCTIONS
+// ============================================================================
+
+function dockIOToProblems() {
+    if (DockingState.ioDocked) return;
+
+    const ioSection = document.getElementById('io-section');
+    const problemsPanel = document.getElementById('problems-panel');
+    const resizerIO = document.getElementById('resizer-io');
+
+    if (!ioSection || !problemsPanel) return;
+
+    // Hide IO section
+    ioSection.classList.add('docked-away');
+    if (resizerIO) resizerIO.classList.add('docked-away');
+
+    // Add I/O tab to the panel-head
+    const panelHead = problemsPanel.querySelector('.panel-head');
+    if (panelHead) {
+        const ioTab = document.createElement('span');
+        ioTab.className = 'panel-title io docked-tab';
+        ioTab.id = 'docked-io-tab';
+        ioTab.innerHTML = 'I/O <span class="dock-undock" title="Kéo để tách">×</span>';
+        ioTab.setAttribute('draggable', 'true');
+
+        // Insert after problem-count or terminal tab
+        const terminalTab = document.getElementById('docked-terminal-tab');
+        const problemCount = panelHead.querySelector('.problem-count');
+        if (terminalTab) {
+            terminalTab.after(ioTab);
+        } else if (problemCount) {
+            problemCount.after(ioTab);
+        } else {
+            const problemsTitle = panelHead.querySelector('.panel-title');
+            if (problemsTitle) problemsTitle.after(ioTab);
+        }
+
+        // Click to switch tabs
+        ioTab.onclick = (e) => {
+            if (e.target.classList.contains('dock-undock')) {
+                undockIO();
+                return;
+            }
+            switchDockedPanel('io');
+        };
+
+        // Drag to undock
+        ioTab.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'undock-io');
+            e.dataTransfer.effectAllowed = 'move';
+            ioTab.classList.add('dragging');
+        });
+
+        ioTab.addEventListener('dragend', () => {
+            ioTab.classList.remove('dragging');
+            undockIO();
+        });
+    }
+
+    DockingState.ioDocked = true;
+
+    // Save state
+    if (!App.settings.panels) App.settings.panels = {};
+    App.settings.panels.ioDocked = true;
+    saveSettings();
+
+    // Show problems if hidden
+    if (!App.showProblems) {
+        App.showProblems = true;
+        updateUI();
+    }
+
+    log('I/O docked to Problems', 'info');
+    refreshEditorLayout();
+}
+
+function undockIO() {
+    if (!DockingState.ioDocked) return;
+
+    const ioSection = document.getElementById('io-section');
+    const problemsPanel = document.getElementById('problems-panel');
+    const resizerIO = document.getElementById('resizer-io');
+
+    // Show IO section again
+    ioSection?.classList.remove('docked-away');
+    resizerIO?.classList.remove('docked-away');
+
+    // Remove IO tab from panel-head
+    const ioTab = document.getElementById('docked-io-tab');
+    ioTab?.remove();
+
+    // Remove docked IO view
+    const dockedView = problemsPanel?.querySelector('.docked-io-view');
+    dockedView?.remove();
+
+    // Show problems body if no other docked panels are active
+    if (!DockingState.terminalDocked) {
+        const problemsBody = problemsPanel?.querySelector('.problems-body');
+        if (problemsBody) problemsBody.style.display = '';
+    }
+
+    DockingState.ioDocked = false;
+
+    // Save state
+    if (App.settings.panels) {
+        App.settings.panels.ioDocked = false;
+        saveSettings();
+    }
+
+    log('I/O undocked', 'info');
+    refreshEditorLayout();
+}
+
+function createDockedIOView(container) {
+    // Create docked IO view with split INPUT and EXPECTED
+    let dockedIOView = container.querySelector('.docked-io-view');
+    if (!dockedIOView) {
+        dockedIOView = document.createElement('div');
+        dockedIOView.className = 'docked-io-view';
+        dockedIOView.innerHTML = `
+            <div class="docked-io-split">
+                <div class="docked-io-panel">
+                    <div class="docked-io-header">INPUT</div>
+                    <textarea class="docked-io-textarea" id="docked-input" placeholder="Nhập dữ liệu test..."></textarea>
+                </div>
+                <div class="docked-io-divider"></div>
+                <div class="docked-io-panel">
+                    <div class="docked-io-header">EXPECTED</div>
+                    <textarea class="docked-io-textarea" id="docked-expected" placeholder="Kết quả mong đợi..."></textarea>
+                </div>
+            </div>
+        `;
+        container.appendChild(dockedIOView);
+
+        // Sync content from original inputs
+        syncIOContent();
+
+        // Two-way sync: docked -> original
+        const dockedInput = document.getElementById('docked-input');
+        const dockedExpected = document.getElementById('docked-expected');
+
+        dockedInput?.addEventListener('input', () => {
+            const original = document.getElementById('input-area');
+            if (original) original.value = dockedInput.value;
+        });
+
+        dockedExpected?.addEventListener('input', () => {
+            const original = document.getElementById('expected-area');
+            if (original) original.value = dockedExpected.value;
+        });
+    }
+    return dockedIOView;
+}
+
+function syncIOContent() {
+    const originalInput = document.getElementById('input-area');
+    const originalExpected = document.getElementById('expected-area');
+    const dockedInput = document.getElementById('docked-input');
+    const dockedExpected = document.getElementById('docked-expected');
+
+    if (originalInput && dockedInput) {
+        dockedInput.value = originalInput.value;
+    }
+    if (originalExpected && dockedExpected) {
+        dockedExpected.value = originalExpected.value;
+    }
+}
+
+function refreshEditorLayout() {
+    setTimeout(() => {
+        if (App.editor) App.editor.layout();
+        if (App.editor2) App.editor2.layout();
+    }, 50);
+}
+
 
 // ============================================================================
 // RESIZERS
@@ -1400,20 +2052,41 @@ function renderTabs() {
     const c = document.getElementById('tabs-container');
     c.innerHTML = '';
     App.tabs.forEach(t => {
+        const isActiveTab = t.id === App.activeTabId;
+        const isSplitTab = App.isSplit && t.id === App.splitTabId;
+        const isFocused = (App.activeEditor === 1 && isActiveTab) || (App.activeEditor === 2 && isSplitTab);
+
         const el = document.createElement('div');
-        el.className = 'tab' + (t.id === App.activeTabId ? ' active' : '') + (t.modified ? ' modified' : '');
+        let className = 'tab';
+        if (isActiveTab) className += ' active';
+        if (isSplitTab) className += ' split';
+        if (isFocused) className += ' focused';
+        if (t.modified) className += ' modified';
+
+        el.className = className;
         el.dataset.id = t.id;
         el.draggable = true;
         el.innerHTML = `<span class="tab-name">${t.name}</span><span class="tab-dot"></span><span class="tab-x">×</span>`;
-        el.onclick = e => { if (!e.target.classList.contains('tab-x')) setActive(t.id); };
+        el.onclick = e => {
+            if (!e.target.classList.contains('tab-x')) {
+                if (App.isSplit && isSplitTab) {
+                    // Clicking on split tab - switch focus to split editor
+                    App.activeEditor = 2;
+                    renderTabs();
+                } else {
+                    setActive(t.id);
+                    App.activeEditor = 1;
+                }
+            }
+        };
         el.querySelector('.tab-x').onclick = e => { e.stopPropagation(); closeTab(t.id); };
         c.appendChild(el);
     });
-    // Auto-scroll to active tab
+    // Auto-scroll to focused tab
     setTimeout(() => {
-        const activeTab = c.querySelector('.tab.active');
-        if (activeTab) {
-            activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const focusedTab = c.querySelector('.tab.focused') || c.querySelector('.tab.active');
+        if (focusedTab) {
+            focusedTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
     }, 10);
 }
@@ -1479,20 +2152,28 @@ function getActiveEditor() {
 async function openFile() { await window.electronAPI.openFile(); }
 
 async function save() {
-    const tab = App.tabs.find(t => t.id === App.activeTabId);
+    // Save the tab that's currently being edited based on active editor
+    const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
+    const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
+
+    const tab = App.tabs.find(t => t.id === tabId);
     if (!tab) return;
-    tab.content = App.editor.getValue();
+    tab.content = editor.getValue();
 
     if (tab.path) {
         const r = await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
-        if (r.success) { tab.original = tab.content; tab.modified = false; renderTabs(); setStatus('Saved', 'success'); }
-    } else await saveAs();
+        if (r.success) { tab.original = tab.content; tab.modified = false; renderTabs(); setStatus(`Saved ${tab.name}`, 'success'); }
+    } else await saveAs(tabId);
 }
 
-async function saveAs() {
-    const tab = App.tabs.find(t => t.id === App.activeTabId);
+async function saveAs(tabIdOverride = null) {
+    // Save As for the specified tab or current active tab
+    const tabId = tabIdOverride || (App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId);
+    const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
+
+    const tab = App.tabs.find(t => t.id === tabId);
     if (!tab) return;
-    tab.content = App.editor.getValue();
+    tab.content = editor.getValue();
     const r = await window.electronAPI.saveFileDialog(tab.content);
     if (r.success) {
         tab.path = r.path;
@@ -1508,11 +2189,15 @@ async function saveAs() {
 // BUILD & RUN
 // ============================================================================
 async function buildRun() {
-    const tab = App.tabs.find(t => t.id === App.activeTabId);
+    // Get tab based on which editor is focused (for split mode support)
+    const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
+    const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
+
+    const tab = App.tabs.find(t => t.id === tabId);
     if (!tab) { log('No file open', 'warning'); return; }
 
-    // Get current content from editor
-    tab.content = App.editor.getValue();
+    // Get current content from the focused editor
+    tab.content = editor.getValue();
 
     // If file has a path, save it first (optional auto-save)
     if (tab.path) {
@@ -1557,7 +2242,7 @@ async function buildRun() {
             parseProblems(r.warnings, 'warning');
         }
         setStatus(`Build: ${ms}ms`, 'success');
-        await run();
+        await run(false); // Don't clear terminal - keep build info visible
     } else {
         log('Build failed', 'error');
         log(r.error, 'error');
@@ -1565,16 +2250,24 @@ async function buildRun() {
         highlightErrorLines();
         setStatus('Build failed', 'error');
         App.exePath = null;
+
+        // If terminal docked, switch to Problems tab to show errors
+        if (DockingState.terminalDocked) {
+            switchDockedPanel('problems');
+        }
     }
 }
 
-async function run() {
+async function run(clearTerminal = true) {
     if (!App.exePath) { log('Build first (F11)', 'warning'); return; }
 
     if (!App.showTerm) {
         App.showTerm = true;
         updateUI();
     }
+
+    // Clear terminal before running (only when called directly, not from buildRun)
+    if (clearTerminal) clearTerm();
 
     const inputText = document.getElementById('input-area').value.trim();
     if (App.settings.execution.autoSendInput) {
@@ -1584,9 +2277,15 @@ async function run() {
     }
     App.inputIndex = 0;
 
-    log('\n--- Running ---', 'system');
+    log('--- Running ---', 'system');
     setStatus('Running...', '');
     setRunning(true);
+
+    // If terminal is docked, switch to terminal tab and scroll to bottom
+    if (DockingState.terminalDocked) {
+        switchDockedPanel('terminal');
+        scrollDockedTerminalToBottom();
+    }
 
     if (App.settings.execution.timeLimitEnabled && App.settings.execution.timeLimitSeconds > 0) {
         App.runTimeout = setTimeout(() => {
@@ -1843,6 +2542,11 @@ function log(msg, type = '') {
 
     t.appendChild(l);
     t.scrollTop = t.scrollHeight;
+
+    // Sync to docked terminal if docked
+    if (DockingState.terminalDocked) {
+        syncTerminalContent();
+    }
 }
 
 function clearTerm() { document.getElementById('terminal').innerHTML = ''; }
@@ -1894,43 +2598,48 @@ function compareOutput() {
         }
     }
 
-    // Tokenize: split by whitespace, keeping structure
-    const expectedTokens = expectedText.split(/(\s+)/);
-    const actualTokens = actualText.split(/(\s+)/);
-
     const diffDisplay = document.getElementById('expected-diff');
     const textarea = document.getElementById('expected-area');
 
-    // Build diff HTML - compare token by token
+    // Normalize: split into lines, trim each, filter empty
+    const expectedLines = expectedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const actualLines = actualText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    // Find where expected starts in actual (suffix matching)
+    // This handles cases where program outputs menu/prompts before the actual answer
+    let startIdx = 0;
+    if (actualLines.length > expectedLines.length) {
+        // Try to find expected lines at the end of actual
+        for (let i = actualLines.length - expectedLines.length; i >= 0; i--) {
+            let match = true;
+            for (let j = 0; j < expectedLines.length; j++) {
+                if (actualLines[i + j] !== expectedLines[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                startIdx = i;
+                break;
+            }
+        }
+        // If no exact match found, use the last N lines
+        if (startIdx === 0 && actualLines.length > expectedLines.length) {
+            startIdx = actualLines.length - expectedLines.length;
+        }
+    }
+
+    // Compare expected lines with corresponding actual lines
     let html = '';
-    let actualIdx = 0;
+    for (let i = 0; i < expectedLines.length; i++) {
+        const expLine = expectedLines[i];
+        const actLine = actualLines[startIdx + i] || '';
+        const isMatch = expLine === actLine;
 
-    for (let i = 0; i < expectedTokens.length; i++) {
-        const expToken = expectedTokens[i];
-
-        // Whitespace tokens - just render
-        if (/^\s+$/.test(expToken)) {
-            html += expToken.includes('\n') ? '<br>' : ' ';
-            continue;
-        }
-
-        // Find corresponding actual token (skip whitespace)
-        while (actualIdx < actualTokens.length && /^\s+$/.test(actualTokens[actualIdx])) {
-            actualIdx++;
-        }
-
-        const actToken = actualIdx < actualTokens.length ? actualTokens[actualIdx] : null;
-        actualIdx++;
-
-        if (actToken === null) {
-            // Missing in actual
-            html += `<span class="diff-token incorrect">${escapeHtml(expToken)}</span>`;
-        } else if (expToken === actToken) {
-            // Match
-            html += `<span class="diff-token correct">${escapeHtml(expToken)}</span>`;
+        if (isMatch) {
+            html += `<span class="diff-token correct">${escapeHtml(expLine)}</span><br>`;
         } else {
-            // Mismatch
-            html += `<span class="diff-token incorrect">${escapeHtml(expToken)}</span>`;
+            html += `<span class="diff-token incorrect">${escapeHtml(expLine)}</span><br>`;
         }
     }
 
@@ -1962,7 +2671,8 @@ if (window.electronAPI) {
         const exists = App.tabs.find(t => t.path === data.path);
         if (exists) setActive(exists.id);
         else {
-            const id = 'tab_' + Date.now();
+            // Use timestamp + random suffix to ensure uniqueness when opening multiple files rapidly
+            const id = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
             App.tabs.push({ id, name: data.path.split(/[/\\]/).pop(), path: data.path, content: data.content, original: data.content, modified: false });
             setActive(id);
             updateUI();
@@ -2098,7 +2808,7 @@ async function startCCServer(silent = false) {
 
         if (result?.success) {
             ccConnected = true;
-            btn.title = 'Lấy test từ OJ - Đang lắng nghe';
+            btn.title = 'Lấy test từ OJ';
 
             if (!silent) {
                 log('OJ: Sẵn sàng nhận test cases', 'success');
@@ -2133,8 +2843,16 @@ function handleProblemReceived(problem) {
     ccProblem = problem;
     ccTestIndex = 0;
 
-    // Create filename from problem name
-    const safeName = problem.name
+    // Remove Vietnamese diacritics and create safe filename
+    const removeVietnameseDiacritics = (str) => {
+        return str
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'D');
+    };
+
+    const safeName = removeVietnameseDiacritics(problem.name)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_+|_+$/g, '')
@@ -2154,7 +2872,16 @@ function handleProblemReceived(problem) {
         modified: false
     });
 
-    setActive(id);
+    // Set active and force UI update
+    App.activeTabId = id;
+
+    // Ensure editor displays the content
+    if (App.editor && App.ready) {
+        App.editor.setValue(template);
+    }
+
+    renderTabs();
+    updateUI();
 
     // Fill in test cases
     const testCount = problem.tests?.length || 0;
@@ -2188,6 +2915,14 @@ function handleProblemReceived(problem) {
         btn.classList.add('cc-flash');
         setTimeout(() => btn.classList.remove('cc-flash'), 1000);
     }
+
+    // Force editor focus after a short delay to ensure it's ready
+    setTimeout(() => {
+        if (App.editor) {
+            App.editor.focus();
+            App.editor.layout();
+        }
+    }, 100);
 }
 
 // Update test navigation UI

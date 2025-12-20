@@ -184,6 +184,7 @@ body {
     -webkit-app-region: no-drag;
     letter-spacing: 0.5px;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
 .menu-group {
@@ -193,6 +194,39 @@ body {
     background: white;
     padding: 4px;
     border-radius: 12px;
+    flex-shrink: 0;
+}
+
+/* Hamburger Menu Button (hidden by default, shown on small screens) */
+.hamburger-btn {
+    display: none;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 2px solid var(--bg-ocean-medium);
+    border-radius: 12px;
+    color: var(--bg-ocean-deep);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
+}
+
+.hamburger-btn:hover {
+    background: var(--bg-ocean-light);
+    transform: scale(1.05);
+}
+
+.hamburger-btn.active {
+    background: var(--bg-ocean-medium);
+    color: var(--text-primary);
+}
+
+.hamburger-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
 .menu-btn {
@@ -235,7 +269,7 @@ body {
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    padding: 4px 0;
+    padding: 6px 4px;
 }
 
 .tabs-container::-webkit-scrollbar {
@@ -436,7 +470,7 @@ body {
     flex-direction: column;
     min-width: 300px;
     background: var(--bg-glass);
-    border: 2px solid white;
+    border: 2px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-soft);
     backdrop-filter: var(--blur-filter);
@@ -481,10 +515,11 @@ body {
 }
 
 .panel-head {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 8px 16px;
+    padding: 8px 16px 8px 28px;
     background: rgba(239, 248, 254, 0.8);
     border-bottom: 2px solid white;
 }
@@ -858,12 +893,12 @@ body {
     margin-bottom: 10px;
     background: #f5fafd;
     border-radius: 18px 22px 20px 24px;
-    border: 2px dashed #d4eef8;
+    border: 2px dashed var(--border, #d4eef8);
 }
 
 .setting-row:hover {
     background: #eef7fc;
-    border-color: #b8e2f5;
+    border-color: var(--border-strong, #b8e2f5);
 }
 
 .setting-row:last-child {
@@ -990,10 +1025,10 @@ html[data-theme="kawaii-light"] .setting-row>label:not(.switch) {
 .preview-window {
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(136, 201, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     font-family: 'JetBrains Mono', monospace;
     font-size: 8px;
-    border: 2px solid rgba(255, 255, 255, 0.8);
+    border: 2px solid var(--border, rgba(255, 255, 255, 0.8));
     background: linear-gradient(135deg, #e8f4fc 0%, #d4ecf9 100%);
 }
 
@@ -1898,6 +1933,112 @@ body.split-active .editor-pane {
     text-overflow: ellipsis;
 }
 
+/* ===== TAB DRAG AND DROP REORDERING ===== */
+.tab.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    box-shadow: 0 8px 20px rgba(136, 201, 234, 0.4);
+}
+
+.tab.drag-over-left {
+    position: relative;
+}
+
+.tab.drag-over-left::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 4px;
+    bottom: 4px;
+    width: 4px;
+    background: var(--bg-ocean-deep);
+    border-radius: 2px;
+    animation: dropIndicatorPulse 0.5s ease-in-out infinite alternate;
+}
+
+.tab.drag-over-right {
+    position: relative;
+}
+
+.tab.drag-over-right::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 4px;
+    bottom: 4px;
+    width: 4px;
+    background: var(--bg-ocean-deep);
+    border-radius: 2px;
+    animation: dropIndicatorPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes dropIndicatorPulse {
+    from {
+        opacity: 0.6;
+        transform: scaleY(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+/* Cursor feedback during drag */
+.tabs-container.dragging-over {
+    cursor: grab;
+}
+
+/* ===== SPLIT AND FOCUSED TAB INDICATORS ===== */
+/* Split tab - tab shown in split editor (secondary) */
+.tab.split {
+    border-style: dashed;
+    border-color: var(--bg-ocean-deep);
+}
+
+.tab.split:not(.focused) {
+    opacity: 0.85;
+}
+
+/* Focused tab - the tab being actively edited (either active or split) */
+.tab.focused {
+    box-shadow: 0 0 0 2px var(--bg-ocean-deep), 0 4px 12px rgba(136, 201, 234, 0.35);
+    transform: translateY(-1px);
+}
+
+/* Focused indicator icon */
+.tab.focused::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--bg-ocean-deep);
+    border-radius: 50%;
+    animation: focusPulse 1.5s ease-in-out infinite;
+}
+
+.tab.focused {
+    padding-left: 20px;
+    position: relative;
+}
+
+@keyframes focusPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: translateY(-50%) scale(0.85);
+    }
+}
+
 /* ===== WELCOME BUTTONS ===== */
 .welcome-btns {
     display: flex;
@@ -1963,6 +2104,113 @@ body.split-active .editor-pane {
 .diff-token.incorrect {
     background: rgba(255, 100, 100, 0.45);
     color: #a8071a;
+}
+
+/* ===== CHARACTER-LEVEL DIFF COMPARISON ===== */
+.char-correct {
+    background: rgba(104, 211, 145, 0.4);
+    color: #1b7d3f;
+}
+
+.char-incorrect {
+    background: rgba(255, 100, 100, 0.5);
+    color: #a8071a;
+}
+
+/* ===== LINE-LEVEL DIFF COMPARISON ===== */
+.line-correct {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    background: rgba(104, 211, 145, 0.35);
+    color: #1b7d3f;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 12px;
+}
+
+.line-incorrect {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    background: rgba(255, 100, 100, 0.4);
+    color: #a8071a;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 12px;
+}
+
+/* ===== LEETCODE-STYLE DIFF COMPARISON ===== */
+.diff-verdict {
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    text-align: center;
+}
+
+.diff-verdict.verdict-pass {
+    background: linear-gradient(135deg, rgba(163, 217, 165, 0.3) 0%, rgba(104, 211, 145, 0.3) 100%);
+    color: #1b7d3f;
+    border: 2px solid #a3d9a5;
+}
+
+.diff-verdict.verdict-fail {
+    background: linear-gradient(135deg, rgba(255, 143, 171, 0.3) 0%, rgba(255, 100, 100, 0.3) 100%);
+    color: #a8071a;
+    border: 2px solid #ff8fab;
+}
+
+.diff-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 10px;
+    margin: 2px 0;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 13px;
+}
+
+.diff-line.correct {
+    background: rgba(163, 217, 165, 0.15);
+    border-left: 3px solid #68d391;
+}
+
+.diff-line.incorrect {
+    background: rgba(255, 143, 171, 0.15);
+    border-left: 3px solid #ff8fab;
+}
+
+.diff-line-num {
+    min-width: 24px;
+    color: var(--text-muted);
+    font-size: 11px;
+    text-align: right;
+    opacity: 0.7;
+}
+
+.diff-line-content {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.diff-line.correct .diff-line-content {
+    color: #1b7d3f;
+}
+
+.diff-line.incorrect .diff-line-content {
+    color: #a8071a;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.diff-actual {
+    font-size: 12px;
+    color: #e06c75;
+    padding: 2px 8px;
+    background: rgba(255, 100, 100, 0.15);
+    border-radius: 4px;
+    margin-left: auto;
 }
 
 /* ===== MONACO EDITOR CUSTOMIZATIONS ===== */
@@ -2381,4 +2629,443 @@ body.split-active .editor-pane {
     border-color: #5aa8d0;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(107, 184, 224, 0.4);
+}
+
+/* ===== DOCK TABS SYSTEM ===== */
+
+/* Hide docked-away elements */
+.docked-away {
+    display: none !important;
+}
+
+/* Panel dragging state */
+.panel-dragging {
+    opacity: 0.6;
+    transform: scale(0.98);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+    z-index: 100;
+}
+
+/* Drop target indicator */
+.dock-drop-target {
+    outline: 3px dashed var(--accent) !important;
+    outline-offset: -3px;
+    background: rgba(136, 201, 234, 0.15) !important;
+}
+
+/* Docked tab in panel-head (Terminal docked with Problems) */
+.docked-tab {
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent !important;
+}
+
+.docked-tab:active {
+    cursor: grabbing;
+}
+
+.docked-tab.dragging {
+    opacity: 0.5;
+}
+
+/* When terminal is docked, increase problems panel height */
+.problems-panel:has(.docked-tab) {
+    min-height: 280px;
+}
+
+/* Panel head with docked tabs - better spacing */
+.problems-panel:has(.docked-tab) .panel-head {
+    gap: 6px;
+    padding: 6px 12px 6px 16px;
+}
+
+/* Base style for all tabs in docked mode */
+.problems-panel:has(.docked-tab) .panel-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid transparent;
+    background: var(--bg-glass, rgba(255, 255, 255, 0.5));
+}
+
+.problems-panel:has(.docked-tab) .panel-title:hover {
+    background: var(--bg-ocean-light, rgba(136, 201, 234, 0.3));
+    transform: translateY(-1px);
+}
+
+.problems-panel:has(.docked-tab) .panel-title.active {
+    background: var(--bg-ocean-medium, rgba(136, 201, 234, 0.5));
+    color: var(--bg-ocean-dark, #1e4a5f);
+    border-color: var(--bg-ocean-deep, #5ba3d0);
+    box-shadow: 0 2px 8px rgba(136, 201, 234, 0.3);
+}
+
+/* Problem count badge */
+.problems-panel:has(.docked-tab) .problem-count {
+    background: var(--bg-ocean-deep, #5ba3d0);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: -4px;
+}
+
+/* Undock button - cleaner design */
+.dock-undock {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    margin-left: 4px;
+    transition: all 0.15s ease;
+    opacity: 0.6;
+}
+
+.dock-undock:hover {
+    color: white;
+    background: var(--error, #e06c75);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+
+/* Docked terminal view - VS Code style */
+.docked-terminal-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: var(--terminal-bg, #1e2933);
+    overflow: hidden;
+    min-height: 120px;
+}
+
+.docked-terminal-body {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--terminal-text, #e0f0ff);
+    overflow-y: auto;
+    user-select: text;
+    line-height: 1.5;
+}
+
+/* Inline input at bottom of terminal - VS Code style */
+.docked-terminal-input {
+    display: flex;
+    align-items: center;
+    padding: 4px 12px 8px;
+    background: transparent;
+    border: none;
+}
+
+.docked-terminal-input .prompt {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin-right: 8px;
+}
+
+.docked-terminal-input input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--terminal-text, #e0f0ff);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+}
+
+.docked-terminal-input input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Hide send button for cleaner look */
+.docked-terminal-input .send-btn {
+    display: none;
+}
+
+/* Make terminal header grabbable */
+.terminal-section .panel-head {
+    cursor: grab;
+}
+
+.terminal-section .panel-head:active {
+    cursor: grabbing;
+}
+
+/* Make IO header grabbable */
+.io-section .panel-head {
+    cursor: grab;
+}
+
+.io-section .panel-head:active {
+    cursor: grabbing;
+}
+
+/* Docked I/O view - Split layout with INPUT and EXPECTED */
+.docked-io-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: var(--bg-panel, #1e2933);
+    overflow: hidden;
+    min-height: 120px;
+}
+
+.docked-io-split {
+    display: flex;
+    flex: 1;
+    gap: 0;
+    overflow: hidden;
+}
+
+.docked-io-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.docked-io-divider {
+    width: 2px;
+    background: var(--border, rgba(255, 255, 255, 0.2));
+    flex-shrink: 0;
+}
+
+.docked-io-header {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted, #6c8aa0);
+    background: var(--bg-glass-heavy, rgba(255, 255, 255, 0.05));
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    flex-shrink: 0;
+}
+
+.docked-io-textarea {
+    flex: 1;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary, #e0f0ff);
+    background: var(--editor-bg, #1a2530);
+    border: none;
+    resize: none;
+    outline: none;
+}
+
+.docked-io-textarea::placeholder {
+    color: var(--text-muted, #6c8aa0);
+    opacity: 0.6;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+/* Medium screens (< 1400px) */
+@media (max-width: 1400px) {
+    .header-bar {
+        padding: 0 10px;
+        gap: 10px;
+    }
+
+    .action-btn span {
+        display: none;
+    }
+
+    .action-btn {
+        padding: 8px 12px;
+    }
+}
+
+/* Small screens (< 1100px) - Hamburger menu activates */
+@media (max-width: 1100px) {
+    .header-bar {
+        padding: 0 8px;
+        gap: 6px;
+    }
+
+    /* Show hamburger button */
+    .hamburger-btn {
+        display: flex !important;
+    }
+
+    /* Hide menu group by default, show as dropdown when active */
+    .menu-group {
+        display: none;
+        position: absolute;
+        top: calc(var(--header-height) - 4px);
+        left: 60px;
+        flex-direction: column;
+        background: var(--bg-glass-heavy, rgba(255, 255, 255, 0.95));
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 8px;
+        gap: 4px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+    }
+
+    .menu-group.show {
+        display: flex;
+    }
+
+    .menu-group .menu-btn {
+        width: 100%;
+        text-align: left;
+        padding: 10px 16px;
+    }
+
+    .logo {
+        padding: 6px 12px;
+        font-size: 16px;
+    }
+
+    .toggle-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .toggle-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .action-btn {
+        padding: 6px 10px;
+    }
+
+    .action-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .win-btn {
+        width: 38px;
+    }
+
+    .sep {
+        display: none;
+    }
+
+    .tab {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+
+    .tab-add {
+        width: 26px;
+        height: 26px;
+        font-size: 14px;
+    }
+}
+
+/* Very small screens (< 850px) */
+@media (max-width: 850px) {
+    .header-bar {
+        padding: 0 6px;
+        gap: 4px;
+    }
+
+    .logo {
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+
+    /* Hide some toggle buttons, keep only essential ones */
+    .header-actions .toggle-btn:not(#btn-settings):not(#btn-toggle-term) {
+        display: none;
+    }
+
+    .toggle-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .action-btn.primary {
+        padding: 6px 8px;
+    }
+
+    .action-btn:not(.primary):not(.danger) {
+        display: none;
+    }
+
+    .win-btn {
+        width: 32px;
+    }
+
+    .win-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .tab {
+        padding: 4px 8px;
+        font-size: 11px;
+        gap: 4px;
+    }
+
+    .tab-x {
+        width: 14px;
+        height: 14px;
+        font-size: 10px;
+    }
+
+    .tabs-wrap {
+        gap: 6px;
+        padding-left: 4px;
+    }
+
+    .tab-add {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
+}
+
+/* Ensure header doesn't overflow */
+.header-bar {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    -webkit-app-region: no-drag;
+    flex-shrink: 0;
+}
+
+.win-btns {
+    flex-shrink: 0;
 }

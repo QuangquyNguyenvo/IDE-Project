@@ -251,7 +251,7 @@
 [data-theme="nord"] .header-bar,
 [data-theme="one-dark"] .header-bar {
     background: var(--bg-header);
-    border-bottom-color: var(--border);
+    border-bottom: 2px solid var(--border);
 }
 
 [data-theme="kawaii-dark"] .logo,
@@ -260,7 +260,7 @@
 [data-theme="nord"] .logo,
 [data-theme="one-dark"] .logo {
     background: var(--bg-ocean-deep);
-    border-color: var(--border);
+    border: 2px solid var(--border);
     color: var(--bg-ocean-dark);
 }
 
@@ -305,7 +305,7 @@
 [data-theme="nord"] .tab,
 [data-theme="one-dark"] .tab {
     background: var(--bg-button);
-    border-color: var(--border);
+    border: 2px solid var(--border);
     color: var(--text-secondary);
 }
 
@@ -342,6 +342,83 @@
 [data-theme="monokai"] .tab-add:hover,
 [data-theme="nord"] .tab-add:hover,
 [data-theme="one-dark"] .tab-add:hover {
+    background: var(--bg-ocean-medium);
+}
+
+/* Tab drag and drop indicators for dark themes */
+[data-theme="kawaii-dark"] .tab.dragging,
+[data-theme="dracula"] .tab.dragging,
+[data-theme="monokai"] .tab.dragging,
+[data-theme="nord"] .tab.dragging,
+[data-theme="one-dark"] .tab.dragging {
+    opacity: 0.5;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="kawaii-dark"] .tab.drag-over-left::before,
+[data-theme="kawaii-dark"] .tab.drag-over-right::after,
+[data-theme="dracula"] .tab.drag-over-left::before,
+[data-theme="dracula"] .tab.drag-over-right::after,
+[data-theme="monokai"] .tab.drag-over-left::before,
+[data-theme="monokai"] .tab.drag-over-right::after,
+[data-theme="nord"] .tab.drag-over-left::before,
+[data-theme="nord"] .tab.drag-over-right::after,
+[data-theme="one-dark"] .tab.drag-over-left::before,
+[data-theme="one-dark"] .tab.drag-over-right::after {
+    background: var(--bg-ocean-deep);
+}
+
+/* Split tab indicator for dark themes */
+[data-theme="kawaii-dark"] .tab.split,
+[data-theme="dracula"] .tab.split,
+[data-theme="monokai"] .tab.split,
+[data-theme="nord"] .tab.split,
+[data-theme="one-dark"] .tab.split {
+    border-style: dashed;
+    border-color: var(--bg-ocean-deep);
+}
+
+/* Focused tab indicator for dark themes */
+[data-theme="kawaii-dark"] .tab.focused,
+[data-theme="dracula"] .tab.focused,
+[data-theme="monokai"] .tab.focused,
+[data-theme="nord"] .tab.focused,
+[data-theme="one-dark"] .tab.focused {
+    box-shadow: 0 0 0 2px var(--bg-ocean-deep), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="kawaii-dark"] .tab.focused::before,
+[data-theme="dracula"] .tab.focused::before,
+[data-theme="monokai"] .tab.focused::before,
+[data-theme="nord"] .tab.focused::before,
+[data-theme="one-dark"] .tab.focused::before {
+    background: var(--bg-ocean-deep);
+}
+
+/* Hamburger button for dark themes */
+[data-theme="kawaii-dark"] .hamburger-btn,
+[data-theme="dracula"] .hamburger-btn,
+[data-theme="monokai"] .hamburger-btn,
+[data-theme="nord"] .hamburger-btn,
+[data-theme="one-dark"] .hamburger-btn {
+    background: var(--bg-button);
+    border-color: var(--border);
+    color: var(--bg-ocean-deep);
+}
+
+[data-theme="kawaii-dark"] .hamburger-btn:hover,
+[data-theme="dracula"] .hamburger-btn:hover,
+[data-theme="monokai"] .hamburger-btn:hover,
+[data-theme="nord"] .hamburger-btn:hover,
+[data-theme="one-dark"] .hamburger-btn:hover {
+    background: var(--bg-button-hover);
+}
+
+[data-theme="kawaii-dark"] .hamburger-btn.active,
+[data-theme="dracula"] .hamburger-btn.active,
+[data-theme="monokai"] .hamburger-btn.active,
+[data-theme="nord"] .hamburger-btn.active,
+[data-theme="one-dark"] .hamburger-btn.active {
     background: var(--bg-ocean-medium);
 }
 
@@ -425,7 +502,7 @@
 [data-theme="nord"] .editor-section,
 [data-theme="one-dark"] .editor-section {
     background: var(--bg-glass);
-    border-color: var(--border);
+    border: 2px solid var(--border) !important;
 }
 
 [data-theme="kawaii-dark"] .editor-area,
@@ -443,7 +520,7 @@
 [data-theme="nord"] .terminal-section,
 [data-theme="one-dark"] .terminal-section {
     background: var(--bg-panel);
-    border-color: var(--border);
+    border: 2px solid var(--border);
 }
 
 [data-theme="kawaii-dark"] .terminal-body,
@@ -487,7 +564,7 @@
 [data-theme="nord"] .io-panel,
 [data-theme="one-dark"] .io-panel {
     background: var(--bg-panel);
-    border-color: var(--border);
+    border: 2px solid var(--border);
 }
 
 [data-theme="kawaii-dark"] .panel-head,
@@ -496,7 +573,7 @@
 [data-theme="nord"] .panel-head,
 [data-theme="one-dark"] .panel-head {
     background: var(--bg-glass-heavy);
-    border-bottom-color: var(--border);
+    border-bottom: 2px solid var(--border);
 }
 
 [data-theme="kawaii-dark"] .panel-title,
@@ -540,7 +617,7 @@
 [data-theme="nord"] .problems-panel,
 [data-theme="one-dark"] .problems-panel {
     background: var(--bg-panel);
-    border-top-color: var(--border);
+    border-top: 2px solid var(--border);
 }
 
 [data-theme="kawaii-dark"] .problem-item:hover,
@@ -1151,6 +1228,33 @@ html[data-theme="one-dark"] .setting-row>label:not(.switch) {
     color: var(--text-secondary);
 }
 
+/* Preview window for dark themes - remove glow, use theme colors */
+[data-theme="kawaii-dark"] .preview-window,
+[data-theme="dracula"] .preview-window,
+[data-theme="monokai"] .preview-window,
+[data-theme="nord"] .preview-window,
+[data-theme="one-dark"] .preview-window {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: var(--border);
+    background: var(--bg-panel);
+}
+
+[data-theme="kawaii-dark"] .preview-header,
+[data-theme="dracula"] .preview-header,
+[data-theme="monokai"] .preview-header,
+[data-theme="nord"] .preview-header,
+[data-theme="one-dark"] .preview-header {
+    background: var(--bg-header);
+}
+
+[data-theme="kawaii-dark"] .preview-body,
+[data-theme="dracula"] .preview-body,
+[data-theme="monokai"] .preview-body,
+[data-theme="nord"] .preview-body,
+[data-theme="one-dark"] .preview-body {
+    background: var(--bg-input);
+}
+
 /* Settings footer */
 [data-theme="kawaii-dark"] .settings-footer,
 [data-theme="dracula"] .settings-footer,
@@ -1385,4 +1489,277 @@ html[data-theme="one-dark"] .setting-row>label:not(.switch) {
 [data-theme="nord"] .test-nav-label,
 [data-theme="one-dark"] .test-nav-label {
     color: var(--text-primary);
+}
+
+/* ============================================================================
+   DIFF COMPARISON DARK THEME STYLES
+   ============================================================================ */
+[data-theme="kawaii-dark"] .diff-verdict.verdict-pass,
+[data-theme="dracula"] .diff-verdict.verdict-pass,
+[data-theme="monokai"] .diff-verdict.verdict-pass,
+[data-theme="nord"] .diff-verdict.verdict-pass,
+[data-theme="one-dark"] .diff-verdict.verdict-pass {
+    background: linear-gradient(135deg, rgba(104, 211, 145, 0.2) 0%, rgba(80, 250, 123, 0.2) 100%);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+[data-theme="kawaii-dark"] .diff-verdict.verdict-fail,
+[data-theme="dracula"] .diff-verdict.verdict-fail,
+[data-theme="monokai"] .diff-verdict.verdict-fail,
+[data-theme="nord"] .diff-verdict.verdict-fail,
+[data-theme="one-dark"] .diff-verdict.verdict-fail {
+    background: linear-gradient(135deg, rgba(255, 85, 85, 0.2) 0%, rgba(255, 121, 198, 0.2) 100%);
+    color: var(--error);
+    border-color: var(--error);
+}
+
+[data-theme="kawaii-dark"] .diff-line.correct,
+[data-theme="dracula"] .diff-line.correct,
+[data-theme="monokai"] .diff-line.correct,
+[data-theme="nord"] .diff-line.correct,
+[data-theme="one-dark"] .diff-line.correct {
+    background: rgba(80, 250, 123, 0.1);
+    border-left-color: var(--success);
+}
+
+[data-theme="kawaii-dark"] .diff-line.correct .diff-line-content,
+[data-theme="dracula"] .diff-line.correct .diff-line-content,
+[data-theme="monokai"] .diff-line.correct .diff-line-content,
+[data-theme="nord"] .diff-line.correct .diff-line-content,
+[data-theme="one-dark"] .diff-line.correct .diff-line-content {
+    color: var(--success);
+}
+
+[data-theme="kawaii-dark"] .diff-line.incorrect,
+[data-theme="dracula"] .diff-line.incorrect,
+[data-theme="monokai"] .diff-line.incorrect,
+[data-theme="nord"] .diff-line.incorrect,
+[data-theme="one-dark"] .diff-line.incorrect {
+    background: rgba(255, 85, 85, 0.1);
+    border-left-color: var(--error);
+}
+
+[data-theme="kawaii-dark"] .diff-line.incorrect .diff-line-content,
+[data-theme="dracula"] .diff-line.incorrect .diff-line-content,
+[data-theme="monokai"] .diff-line.incorrect .diff-line-content,
+[data-theme="nord"] .diff-line.incorrect .diff-line-content,
+[data-theme="one-dark"] .diff-line.incorrect .diff-line-content {
+    color: var(--error);
+}
+
+[data-theme="kawaii-dark"] .diff-actual,
+[data-theme="dracula"] .diff-actual,
+[data-theme="monokai"] .diff-actual,
+[data-theme="nord"] .diff-actual,
+[data-theme="one-dark"] .diff-actual {
+    color: var(--error);
+    background: rgba(255, 85, 85, 0.15);
+}
+
+/* Character-level diff for dark themes */
+[data-theme="kawaii-dark"] .char-correct,
+[data-theme="dracula"] .char-correct,
+[data-theme="monokai"] .char-correct,
+[data-theme="nord"] .char-correct,
+[data-theme="one-dark"] .char-correct {
+    background: rgba(80, 250, 123, 0.3);
+    color: var(--success);
+}
+
+[data-theme="kawaii-dark"] .char-incorrect,
+[data-theme="dracula"] .char-incorrect,
+[data-theme="monokai"] .char-incorrect,
+[data-theme="nord"] .char-incorrect,
+[data-theme="one-dark"] .char-incorrect {
+    background: rgba(255, 85, 85, 0.35);
+    color: var(--error);
+}
+
+/* Line-level diff for dark themes */
+[data-theme="kawaii-dark"] .line-correct,
+[data-theme="dracula"] .line-correct,
+[data-theme="monokai"] .line-correct,
+[data-theme="nord"] .line-correct,
+[data-theme="one-dark"] .line-correct {
+    background: rgba(80, 250, 123, 0.25);
+    color: var(--success);
+}
+
+[data-theme="kawaii-dark"] .line-incorrect,
+[data-theme="dracula"] .line-incorrect,
+[data-theme="monokai"] .line-incorrect,
+[data-theme="nord"] .line-incorrect,
+[data-theme="one-dark"] .line-incorrect {
+    background: rgba(255, 85, 85, 0.3);
+    color: var(--error);
+}
+
+/* ===== DOCK TABS - Dark Theme ===== */
+[data-theme="kawaii-dark"] .dock-tabs,
+[data-theme="dracula"] .dock-tabs,
+[data-theme="monokai"] .dock-tabs,
+[data-theme="nord"] .dock-tabs,
+[data-theme="one-dark"] .dock-tabs {
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="kawaii-dark"] .dock-tab,
+[data-theme="dracula"] .dock-tab,
+[data-theme="monokai"] .dock-tab,
+[data-theme="nord"] .dock-tab,
+[data-theme="one-dark"] .dock-tab {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+[data-theme="kawaii-dark"] .dock-tab:hover,
+[data-theme="dracula"] .dock-tab:hover,
+[data-theme="monokai"] .dock-tab:hover,
+[data-theme="nord"] .dock-tab:hover,
+[data-theme="one-dark"] .dock-tab:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+}
+
+[data-theme="kawaii-dark"] .dock-tab.active,
+[data-theme="dracula"] .dock-tab.active,
+[data-theme="monokai"] .dock-tab.active,
+[data-theme="nord"] .dock-tab.active,
+[data-theme="one-dark"] .dock-tab.active {
+    background: var(--bg-primary);
+    border-bottom-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="kawaii-dark"] .dock-drop-indicator,
+[data-theme="dracula"] .dock-drop-indicator,
+[data-theme="monokai"] .dock-drop-indicator,
+[data-theme="nord"] .dock-drop-indicator,
+[data-theme="one-dark"] .dock-drop-indicator {
+    outline-color: var(--accent) !important;
+    background: rgba(136, 201, 234, 0.1) !important;
+}
+
+/* Docked terminal view - dark themes */
+[data-theme="kawaii-dark"] .docked-terminal-view,
+[data-theme="dracula"] .docked-terminal-view,
+[data-theme="monokai"] .docked-terminal-view,
+[data-theme="nord"] .docked-terminal-view,
+[data-theme="one-dark"] .docked-terminal-view {
+    background: var(--bg-secondary, #1e1e1e);
+}
+
+[data-theme="kawaii-dark"] .docked-terminal-body,
+[data-theme="dracula"] .docked-terminal-body,
+[data-theme="monokai"] .docked-terminal-body,
+[data-theme="nord"] .docked-terminal-body,
+[data-theme="one-dark"] .docked-terminal-body {
+    color: var(--text-primary);
+}
+
+/* Docked tabs in dark themes - base style */
+[data-theme="kawaii-dark"] .problems-panel:has(.docked-tab) .panel-title,
+[data-theme="dracula"] .problems-panel:has(.docked-tab) .panel-title,
+[data-theme="monokai"] .problems-panel:has(.docked-tab) .panel-title,
+[data-theme="nord"] .problems-panel:has(.docked-tab) .panel-title,
+[data-theme="one-dark"] .problems-panel:has(.docked-tab) .panel-title {
+    background: var(--bg-button);
+    color: var(--text-secondary);
+    border-color: transparent;
+}
+
+/* Docked tabs hover in dark themes */
+[data-theme="kawaii-dark"] .problems-panel:has(.docked-tab) .panel-title:hover,
+[data-theme="dracula"] .problems-panel:has(.docked-tab) .panel-title:hover,
+[data-theme="monokai"] .problems-panel:has(.docked-tab) .panel-title:hover,
+[data-theme="nord"] .problems-panel:has(.docked-tab) .panel-title:hover,
+[data-theme="one-dark"] .problems-panel:has(.docked-tab) .panel-title:hover {
+    background: var(--bg-button-hover);
+    color: var(--text-primary);
+}
+
+/* Docked tabs active in dark themes */
+[data-theme="kawaii-dark"] .problems-panel:has(.docked-tab) .panel-title.active,
+[data-theme="dracula"] .problems-panel:has(.docked-tab) .panel-title.active,
+[data-theme="monokai"] .problems-panel:has(.docked-tab) .panel-title.active,
+[data-theme="nord"] .problems-panel:has(.docked-tab) .panel-title.active,
+[data-theme="one-dark"] .problems-panel:has(.docked-tab) .panel-title.active {
+    background: var(--bg-ocean-medium);
+    color: var(--text-primary);
+    border-color: var(--bg-ocean-deep);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Problem count badge in dark themes */
+[data-theme="kawaii-dark"] .problems-panel:has(.docked-tab) .problem-count,
+[data-theme="dracula"] .problems-panel:has(.docked-tab) .problem-count,
+[data-theme="monokai"] .problems-panel:has(.docked-tab) .problem-count,
+[data-theme="nord"] .problems-panel:has(.docked-tab) .problem-count,
+[data-theme="one-dark"] .problems-panel:has(.docked-tab) .problem-count {
+    background: var(--bg-ocean-deep);
+    color: var(--bg-ocean-dark);
+}
+
+/* Undock button hover in dark themes */
+[data-theme="kawaii-dark"] .dock-undock,
+[data-theme="dracula"] .dock-undock,
+[data-theme="monokai"] .dock-undock,
+[data-theme="nord"] .dock-undock,
+[data-theme="one-dark"] .dock-undock {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="kawaii-dark"] .dock-undock:hover,
+[data-theme="dracula"] .dock-undock:hover,
+[data-theme="monokai"] .dock-undock:hover,
+[data-theme="nord"] .dock-undock:hover,
+[data-theme="one-dark"] .dock-undock:hover {
+    background: var(--error);
+}
+
+/* Docked I/O view for dark themes */
+[data-theme="kawaii-dark"] .docked-io-view,
+[data-theme="dracula"] .docked-io-view,
+[data-theme="monokai"] .docked-io-view,
+[data-theme="nord"] .docked-io-view,
+[data-theme="one-dark"] .docked-io-view {
+    background: var(--bg-secondary, #1e1e1e);
+}
+
+[data-theme="kawaii-dark"] .docked-io-header,
+[data-theme="dracula"] .docked-io-header,
+[data-theme="monokai"] .docked-io-header,
+[data-theme="nord"] .docked-io-header,
+[data-theme="one-dark"] .docked-io-header {
+    color: var(--text-muted);
+    background: var(--bg-glass-heavy);
+    border-bottom-color: var(--border);
+}
+
+[data-theme="kawaii-dark"] .docked-io-textarea,
+[data-theme="dracula"] .docked-io-textarea,
+[data-theme="monokai"] .docked-io-textarea,
+[data-theme="nord"] .docked-io-textarea,
+[data-theme="one-dark"] .docked-io-textarea {
+    color: var(--text-primary);
+    background: var(--editor-bg);
+}
+
+[data-theme="kawaii-dark"] .docked-io-textarea::placeholder,
+[data-theme="dracula"] .docked-io-textarea::placeholder,
+[data-theme="monokai"] .docked-io-textarea::placeholder,
+[data-theme="nord"] .docked-io-textarea::placeholder,
+[data-theme="one-dark"] .docked-io-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+[data-theme="kawaii-dark"] .docked-io-divider,
+[data-theme="dracula"] .docked-io-divider,
+[data-theme="monokai"] .docked-io-divider,
+[data-theme="nord"] .docked-io-divider,
+[data-theme="one-dark"] .docked-io-divider {
+    background: var(--border);
 }
