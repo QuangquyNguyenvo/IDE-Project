@@ -297,6 +297,19 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
+                            <div class="setting-row">
+                                <label>Editor Colors <span class="tooltip"
+                                        title="Syntax highlighting color scheme">?</span></label>
+                                <select id="set-editorColorScheme">
+                                    <option value="auto">Auto (Match Theme)</option>
+                                    <option value="kawaii-dark">Kawaii Dark</option>
+                                    <option value="kawaii-light">Kawaii Light</option>
+                                    <option value="dracula">Dracula</option>
+                                    <option value="monokai">Monokai</option>
+                                    <option value="nord">Nord</option>
+                                    <option value="one-dark">One Dark</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Compiler Tab -->
@@ -365,7 +378,12 @@
                                         title="ANSI 16: Show colored output&#10;Disabled: Plain text only">?</span></label>
                                 <select id="set-terminalColorScheme">
                                     <option value="ansi-16" selected>ANSI 16 Colors</option>
-                                    <option value="disabled">Disabled</option>
+                                    <option value="ansi-256">ANSI 256 Colors</option>
+                                    <option value="dracula">Dracula</option>
+                                    <option value="monokai">Monokai</option>
+                                    <option value="nord">Nord</option>
+                                    <option value="solarized">Solarized Dark</option>
+                                    <option value="disabled">Disabled (Plain)</option>
                                 </select>
                             </div>
                         </div>

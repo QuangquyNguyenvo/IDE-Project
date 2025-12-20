@@ -62,8 +62,12 @@
 
 /* ============================================================================
    KAWAII LIGHT THEME
-   Note: Uses default styles from theme.css - no overrides needed
+   Terminal still uses dark background for readability
    ============================================================================ */
+[data-theme="kawaii-light"] {
+    --terminal-bg: #1e2933;
+    --terminal-text: #e0f0ff;
+}
 
 /* ============================================================================
    DRACULA THEME

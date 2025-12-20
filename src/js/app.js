@@ -1085,6 +1085,7 @@ function openSettings() {
     document.getElementById('set-tabSize').value = App.settings.editor.tabSize;
     document.getElementById('set-minimap').checked = App.settings.editor.minimap;
     document.getElementById('set-wordWrap').checked = App.settings.editor.wordWrap;
+    document.getElementById('set-editorColorScheme').value = App.settings.editor.colorScheme || 'auto';
 
     document.getElementById('set-cppStandard').value = App.settings.compiler.cppStandard;
     document.getElementById('set-optimization').value = App.settings.compiler.optimization;
@@ -1119,6 +1120,7 @@ function saveSettingsAndClose() {
     App.settings.editor.tabSize = parseInt(document.getElementById('set-tabSize').value);
     App.settings.editor.minimap = document.getElementById('set-minimap').checked;
     App.settings.editor.wordWrap = document.getElementById('set-wordWrap').checked;
+    App.settings.editor.colorScheme = document.getElementById('set-editorColorScheme').value;
 
     App.settings.compiler.cppStandard = document.getElementById('set-cppStandard').value;
     App.settings.compiler.optimization = document.getElementById('set-optimization').value;
@@ -1187,9 +1189,13 @@ function applyTheme(themeName) {
     // Set data-theme attribute on html element for CSS
     document.documentElement.setAttribute('data-theme', theme);
 
+    // Determine editor theme: use separate colorScheme if set, otherwise use UI theme
+    const editorColorScheme = App.settings.editor?.colorScheme || 'auto';
+    const editorTheme = editorColorScheme === 'auto' ? theme : editorColorScheme;
+
     // Update Monaco editor theme if editors exist
     if (typeof monaco !== 'undefined') {
-        monaco.editor.setTheme(theme);
+        monaco.editor.setTheme(editorTheme);
     }
 
     // Apply theme-specific background 
@@ -2438,6 +2444,60 @@ const ANSI_COLORS_16 = {
     47: '#abb2bf'
 };
 
+// Terminal Color Schemes
+const TERMINAL_COLOR_SCHEMES = {
+    'ansi-16': ANSI_COLORS_16,
+    'ansi-256': ANSI_COLORS_16, // Same as 16 for basic colors
+    'dracula': {
+        30: '#21222c', 31: '#ff5555', 32: '#50fa7b', 33: '#f1fa8c',
+        34: '#bd93f9', 35: '#ff79c6', 36: '#8be9fd', 37: '#f8f8f2',
+        90: '#6272a4', 91: '#ff6e6e', 92: '#69ff94', 93: '#ffffa5',
+        94: '#d6acff', 95: '#ff92df', 96: '#a4ffff', 97: '#ffffff',
+        40: '#21222c', 41: '#ff5555', 42: '#50fa7b', 43: '#f1fa8c',
+        44: '#bd93f9', 45: '#ff79c6', 46: '#8be9fd', 47: '#f8f8f2'
+    },
+    'monokai': {
+        30: '#272822', 31: '#f92672', 32: '#a6e22e', 33: '#f4bf75',
+        34: '#66d9ef', 35: '#ae81ff', 36: '#a1efe4', 37: '#f8f8f2',
+        90: '#75715e', 91: '#f92672', 92: '#a6e22e', 93: '#e6db74',
+        94: '#66d9ef', 95: '#ae81ff', 96: '#a1efe4', 97: '#f9f8f5',
+        40: '#272822', 41: '#f92672', 42: '#a6e22e', 43: '#f4bf75',
+        44: '#66d9ef', 45: '#ae81ff', 46: '#a1efe4', 47: '#f8f8f2'
+    },
+    'nord': {
+        30: '#2e3440', 31: '#bf616a', 32: '#a3be8c', 33: '#ebcb8b',
+        34: '#81a1c1', 35: '#b48ead', 36: '#88c0d0', 37: '#eceff4',
+        90: '#4c566a', 91: '#bf616a', 92: '#a3be8c', 93: '#ebcb8b',
+        94: '#81a1c1', 95: '#b48ead', 96: '#8fbcbb', 97: '#eceff4',
+        40: '#2e3440', 41: '#bf616a', 42: '#a3be8c', 43: '#ebcb8b',
+        44: '#81a1c1', 45: '#b48ead', 46: '#88c0d0', 47: '#eceff4'
+    },
+    'solarized': {
+        30: '#073642', 31: '#dc322f', 32: '#859900', 33: '#b58900',
+        34: '#268bd2', 35: '#d33682', 36: '#2aa198', 37: '#eee8d5',
+        90: '#586e75', 91: '#cb4b16', 92: '#859900', 93: '#b58900',
+        94: '#268bd2', 95: '#6c71c4', 96: '#2aa198', 97: '#fdf6e3',
+        40: '#073642', 41: '#dc322f', 42: '#859900', 43: '#b58900',
+        44: '#268bd2', 45: '#d33682', 46: '#2aa198', 47: '#eee8d5'
+    }
+};
+
+// Terminal message colors for different types (success, error, info, warning, system)
+const TERMINAL_MESSAGE_COLORS = {
+    'ansi-16': { success: '#98c379', error: '#e06c75', warning: '#e5c07b', info: '#61afef', system: '#7a8a9a' },
+    'ansi-256': { success: '#98c379', error: '#e06c75', warning: '#e5c07b', info: '#61afef', system: '#7a8a9a' },
+    'dracula': { success: '#50fa7b', error: '#ff5555', warning: '#f1fa8c', info: '#bd93f9', system: '#6272a4' },
+    'monokai': { success: '#a6e22e', error: '#f92672', warning: '#f4bf75', info: '#66d9ef', system: '#75715e' },
+    'nord': { success: '#a3be8c', error: '#bf616a', warning: '#ebcb8b', info: '#81a1c1', system: '#4c566a' },
+    'solarized': { success: '#859900', error: '#dc322f', warning: '#b58900', info: '#268bd2', system: '#586e75' }
+};
+
+// Get current color scheme
+function getTerminalColorScheme() {
+    const scheme = App.settings?.terminal?.colorScheme || 'ansi-16';
+    return TERMINAL_COLOR_SCHEMES[scheme] || ANSI_COLORS_16;
+}
+
 // Parse ANSI escape codes and convert to HTML spans
 function parseAnsiToHtml(text) {
     // Strip or parse ANSI escape sequences
@@ -2485,11 +2545,14 @@ function parseAnsiToHtml(text) {
             } else if (code === 24) {
                 isUnderline = false;
             } else if (code >= 30 && code <= 37) {
-                currentFg = ANSI_COLORS_16[code];
+                const colors = getTerminalColorScheme();
+                currentFg = colors[code];
             } else if (code >= 90 && code <= 97) {
-                currentFg = ANSI_COLORS_16[code];
+                const colors = getTerminalColorScheme();
+                currentFg = colors[code];
             } else if (code >= 40 && code <= 47) {
-                currentBg = ANSI_COLORS_16[code];
+                const colors = getTerminalColorScheme();
+                currentBg = colors[code];
             } else if (code === 39) {
                 currentFg = null; // default foreground
             } else if (code === 49) {
@@ -2538,6 +2601,14 @@ function log(msg, type = '') {
     } else {
         // Plain text - use textContent for safety (no HTML injection)
         l.textContent = msg.replace(/\x1b\[[0-9;]*m/g, '');
+    }
+
+    // Apply message type color from color scheme
+    if (type && colorScheme !== 'disabled') {
+        const messageColors = TERMINAL_MESSAGE_COLORS[colorScheme] || TERMINAL_MESSAGE_COLORS['ansi-16'];
+        if (messageColors[type]) {
+            l.style.color = messageColors[type];
+        }
     }
 
     t.appendChild(l);

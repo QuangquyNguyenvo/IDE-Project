@@ -2782,7 +2782,7 @@ body.split-active .editor-pane {
 }
 
 .docked-terminal-input .prompt {
-    color: var(--accent);
+    color: var(--success, #68d391);
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     margin-right: 8px;
@@ -2805,6 +2805,33 @@ body.split-active .editor-pane {
 /* Hide send button for cleaner look */
 .docked-terminal-input .send-btn {
     display: none;
+}
+
+/* ===== DOCKED TERMINAL LINE TYPES ===== */
+/* Success messages (green) */
+.docked-terminal-body .line.success {
+    color: #98c379;
+}
+
+/* Error messages (red) */
+.docked-terminal-body .line.error {
+    color: #e06c75;
+}
+
+/* Warning messages (yellow) */
+.docked-terminal-body .line.warning {
+    color: #e5c07b;
+}
+
+/* Info messages (blue) - for build/settings info */
+.docked-terminal-body .line.info {
+    color: #61afef;
+}
+
+/* System messages (gray/muted) */
+.docked-terminal-body .line.system {
+    color: #7a8a9a;
+    font-style: italic;
 }
 
 /* Make terminal header grabbable */

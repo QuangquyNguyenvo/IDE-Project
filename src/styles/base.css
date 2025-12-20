@@ -17,32 +17,32 @@
 }
 
 :root {
-    /* Light Theme Color Palette */
-    --bg-ocean-light: #eff8fe;
-    --bg-ocean-medium: #bce2f5;
-    --bg-ocean-deep: #88c9ea;
+    /* Light Theme Color Palette - Dimmed for comfort */
+    --bg-ocean-light: #d0e5f5;
+    --bg-ocean-medium: #a0cce8;
+    --bg-ocean-deep: #6ab0d8;
     --bg-ocean-dark: #3a7ca5;
 
-    --bg-glass: rgba(255, 255, 255, 0.75);
-    --bg-glass-heavy: rgba(255, 255, 255, 0.90);
-    --bg-glass-border: rgba(255, 255, 255, 0.8);
+    --bg-glass: rgba(220, 235, 250, 0.88);
+    --bg-glass-heavy: rgba(210, 230, 248, 0.94);
+    --bg-glass-border: rgba(180, 215, 240, 0.85);
 
     --accent: #eb6b9d;
     --accent-hover: #ff8fb8;
     --text-primary: #2a5a75;
     --text-secondary: #5a8a95;
-    --text-muted: #8abac5;
+    --text-muted: #7aa5b5;
 
-    --success: #a3d9a5;
+    --success: #8cc990;
     --error: #ff8fab;
-    --warning: #fcd5ce;
+    --warning: #f0c8c0;
 
-    --border: #cceeff;
-    --border-strong: #88c9ea;
+    --border: #a0d0ea;
+    --border-strong: #6ab0d8;
 
-    --shadow-soft: 0 8px 32px rgba(136, 201, 234, 0.25);
-    --shadow-card: 0 4px 12px rgba(136, 201, 234, 0.15);
-    --glow: 0 0 15px rgba(136, 201, 234, 0.6);
+    --shadow-soft: 0 8px 32px rgba(100, 160, 200, 0.30);
+    --shadow-card: 0 4px 12px rgba(100, 160, 200, 0.20);
+    --glow: 0 0 15px rgba(100, 160, 200, 0.4);
 
     --header-height: 54px;
     --statusbar-height: 28px;
