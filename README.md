@@ -2,16 +2,16 @@
 
 <div align="center">
   <br />
-  <img src="src/assets/logo.svg" alt="Sameko Logo" width="500" />
+  <img src="src/assets/logo.svg" alt="Sameko Logo" width="420" />
   <br />
 
-  # 🦈 Sameko IDE ⚓
+  # 🐟 Sameko IDE ⚓
   
   **The cutest & fastest C++ IDE for your coding adventures! (≧◡≦) ♡**
   
   <p>
     <a href="https://github.com/QuangquyNguyenvo/IDE-Project">
-      <img src="https://img.shields.io/badge/Version-1.0.0-A2D9F5?style=flat-square&logo=github&logoColor=white&labelColor=5FA8D3" alt="Version" />
+      <img src="https://img.shields.io/badge/Version-1.0.0--beta-A2D9F5?style=flat-square&logo=github&logoColor=white&labelColor=5FA8D3" alt="Version" />
     </a>
     <img src="https://img.shields.io/badge/Made%20with-Electron-A2D9F5?style=flat-square&logo=electron&logoColor=white&labelColor=5FA8D3" alt="Electron" />
     <img src="https://img.shields.io/badge/Theme-Kawaii%20Ocean-A2D9F5?style=flat-square&labelColor=5FA8D3" alt="Theme" />
@@ -38,93 +38,86 @@
 
 ## 🫧 Introduction (o^▽^o)
 
-**Sameko IDE** is a super adorable environment for C++ development! Designed with a **"Kawaii Ocean"** aesthetic, it brings the calm and charm of the sea directly to your workflow. 
+**Sameko IDE** is a super adorable C++ development environment! Designed with a **"Kawaii Ocean"** aesthetic 🌊, Sameko brings the calm and charm of the sea directly to your coding workflow.
 
-Whether you are a competitive programmer or just saying "Hello World", Sameko helps you swim through problems with speed and style! 💙
+Whether you're a competitive programmer or just starting with "Hello World", Sameko helps you swim through problems with speed and style! 💙
 
 <div align="center">
-  <p><i>"Code like a shark, sleep like a cat! ~ Nya!"</i></p>
+  <p><i>"Swim through code like a fish in the sea~ 🐟"</i></p>
 </div>
 
 <br />
 
-## ✨ Features (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
+## ✨ Features ･ﾟ✧
 
-<div align="center">
-  <img src="src/assets/features.svg" width="100%" alt="Features" />
-</div>
+|                             |                                                             |
+| :-------------------------- | :---------------------------------------------------------- |
+| ✦ **Run without saving**    | Press F11 to compile & run, no save needed                  |
+| ✦ **TDM-GCC included**      | No compiler setup, just download and code                   |
+| ✦ **Multi-tab & Split**     | Multiple files, drag to reorder, split view                 |
+| ✦ **Competitive Companion** | Auto-fetch tests from CF, AtCoder, LeetCode                 |
+| ✦ **6 themes**              | Kawaii Light, Kawaii Dark, Dracula, Monokai, Nord, One Dark |
+| ✦ **Customizable**          | Backgrounds, C++11/14/17/20, compiler flags                 |
 
 <br />
 
-## 📸 Snapshots (* >ω<)
+## 📸 Screenshots (* >ω<)
 
 <div align="center">
   
-  <!-- Welcome Screen View -->
-  <img src="src/assets/screenshot_welcome.png" alt="Welcome Screen" width="45%" style="border-radius: 30px; border: 4px solid #FFB7B2; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block;" />
+  <!-- Welcome Screen -->
+  <img src="src/assets/screenshot_welcome.png" alt="Welcome Screen" width="45%" style="border-radius: 20px; border: 3px solid #FFB7B2; margin: 8px;" />
 
-  <!-- Main Editor View -->
-  <img src="src/assets/screenshot_editor.png" alt="Main Interface" width="45%" style="border-radius: 30px; border: 4px solid #89CFF0; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block;" />
+  <!-- Editor -->
+  <img src="src/assets/screenshot_editor.png" alt="Main Interface" width="45%" style="border-radius: 20px; border: 3px solid #89CFF0; margin: 8px;" />
+
 </div>
-
-<br />
 
 <br />
 
 ## ⚓ Getting Started ⸜(｡˃ ᵕ ˂ )⸝♡
 
-Ready to dive in? Follow these simple steps to set up your ocean base!
-
 ### Prerequisites
 *   **Node.js** (v18+)
-*   **A love for sharks and cute things** (Super important!) 💙
+*   **A love for fish and cute things** 🐟
 
 ### Installation
 
-1.  **Clone the treasure map**
+1.  **Clone the repo**
     ```bash
     git clone https://github.com/QuangquyNguyenvo/IDE-Project.git
     cd IDE-Project
     ```
 
-2.  **Summon the crew (Install dependencies)**
+2.  **Install dependencies**
     ```bash
     npm install
     ```
 
-3.  **Set sail! (Run the app)** ⛵
+3.  **Run the app** ⛵
     ```bash
     npm start
     ```
 
 <br />
 
-<br />
+## ⌨️ Shortcuts
 
-## ⌨️ Shortcuts (English Keyboard)
-
-|     Key      | Action ⚓          |
-| :----------: | :---------------- |
-|     `F9`     | **Compile**       |
-|    `F10`     | **Run**           |
-|    `F11`     | **Compile & Run** |
-| `Ctrl` + `N` | New Page          |
-| `Ctrl` + `J` | Toggle Panel      |
-
-<br />
+|              |               |
+| :----------- | :------------ |
+| ✦ `F9`       | Compile       |
+| ✦ `F10`      | Run           |
+| ✦ `F11`      | Compile & Run |
+| ✦ `Ctrl + N` | New file      |
+| ✦ `Ctrl + J` | Toggle Panel  |
+| ✦ `Ctrl + \` | Split Editor  |
+| ✦ `Ctrl + S` | Save file     |
 
 <br />
 
-## 🤝 Join the Crew (´• ω •`)
+## 🤝 Contributing (´• ω •`)
 
-We love new friends! If you want to make **Sameko IDE** even better:
-
-1.  Fork the repo
-2.  Create a branch (`git checkout -b feature/CoolFeature`)
-3.  Commit your changes
-4.  Push to the branch
-5.  Open a Pull Request
-
+We welcome contributions to make Sameko even better! Fork the repo and submit a PR~
 Check out [CONTRIBUTING.md](CONTRIBUTING.md) for more details!
 
 <br />
@@ -136,7 +129,7 @@ This project is protected under the **MIT License**. Free as the ocean! 🌊
 <br />
 
 <div align="center">
-  <p>Made with 💙 and 🦈 by <b>QuangquyNguyenvo</b></p>
+  <p>Made with 💙 and 🐟 by <b>QuangquyNguyenvo</b></p>
   <p><i>"Have a bubbly day!"</i></p>
 </div>
 
