@@ -25,6 +25,89 @@ let currentFile = null;
 let runningProcess = null;
 
 // ============================================================================
+// FILE WATCHER - Detect external file changes
+// ============================================================================
+const fileWatchers = new Map(); // path -> { watcher, mtime }
+
+function watchFile(filePath) {
+    if (!filePath || fileWatchers.has(filePath)) return;
+
+    try {
+        const stats = fs.statSync(filePath);
+        const watcher = fs.watch(filePath, (eventType) => {
+            if (eventType === 'change') {
+                // Debounce to avoid multiple triggers
+                const current = fileWatchers.get(filePath);
+                if (!current) return;
+
+                try {
+                    const newStats = fs.statSync(filePath);
+                    const newMtime = newStats.mtimeMs;
+
+                    // Only notify if mtime actually changed
+                    if (newMtime !== current.mtime) {
+                        current.mtime = newMtime;
+                        // Notify renderer
+                        if (mainWindow && !mainWindow.isDestroyed()) {
+                            mainWindow.webContents.send('file-changed-external', { path: filePath });
+                        }
+                    }
+                } catch (e) {
+                    // File might be deleted
+                }
+            }
+        });
+
+        fileWatchers.set(filePath, { watcher, mtime: stats.mtimeMs });
+        console.log(`[FileWatcher] Watching: ${filePath}`);
+    } catch (e) {
+        console.log(`[FileWatcher] Cannot watch: ${filePath}`, e.message);
+    }
+}
+
+function unwatchFile(filePath) {
+    const entry = fileWatchers.get(filePath);
+    if (entry) {
+        entry.watcher.close();
+        fileWatchers.delete(filePath);
+        console.log(`[FileWatcher] Stopped watching: ${filePath}`);
+    }
+}
+
+function updateFileWatcherMtime(filePath) {
+    // Call this after saving to update mtime and prevent false notifications
+    const entry = fileWatchers.get(filePath);
+    if (entry) {
+        try {
+            const stats = fs.statSync(filePath);
+            entry.mtime = stats.mtimeMs;
+        } catch (e) { }
+    }
+}
+
+// IPC handlers for file watching
+ipcMain.handle('watch-file', async (event, filePath) => {
+    watchFile(filePath);
+    return { success: true };
+});
+
+ipcMain.handle('unwatch-file', async (event, filePath) => {
+    unwatchFile(filePath);
+    return { success: true };
+});
+
+ipcMain.handle('reload-file', async (event, filePath) => {
+    try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        // Update mtime after reload
+        updateFileWatcherMtime(filePath);
+        return { success: true, content };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});
+
+// ============================================================================
 // COMPILER DETECTION
 // ============================================================================
 // Get the correct base path (handles both dev and packaged app)
@@ -229,6 +312,8 @@ ipcMain.handle('save-file', async (event, { path: filePath, content }) => {
     try {
         fs.writeFileSync(filePath, content, 'utf-8');
         currentFile = filePath;
+        // Update watcher mtime to prevent false notifications
+        updateFileWatcherMtime(filePath);
         return { success: true, path: filePath };
     } catch (error) {
         return { success: false, error: error.message };
@@ -381,20 +466,68 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
 
         // Save current content
         fs.writeFileSync(actualFilePath, content, 'utf-8');
+        // Update file watcher mtime to prevent false "file changed" notifications
+        updateFileWatcherMtime(actualFilePath);
 
         const dir = path.dirname(actualFilePath);
         const baseName = path.basename(actualFilePath, path.extname(actualFilePath));
         const outputPath = path.join(dir, baseName + '.exe');
+
+        // ===== MULTI-FILE PROJECT SUPPORT =====
+        // Smart detection: only link .cpp files whose .h headers are #included
+        let sourceFiles = [actualFilePath];
+        let linkedFiles = [];
+
+        if (!usingTempFile) {
+            try {
+                // Extract all #include "..." from the main file
+                const includeRegex = /#include\s*"([^"]+)"/g;
+                let match;
+                const includedHeaders = new Set();
+
+                while ((match = includeRegex.exec(content)) !== null) {
+                    // Get the base name without extension
+                    const headerFile = match[1];
+                    const headerBase = path.basename(headerFile, path.extname(headerFile));
+                    includedHeaders.add(headerBase.toLowerCase());
+                }
+
+                if (includedHeaders.size > 0) {
+                    // Find all .cpp files in the same directory
+                    const allFiles = fs.readdirSync(dir);
+
+                    for (const file of allFiles) {
+                        const ext = path.extname(file).toLowerCase();
+                        if ((ext === '.cpp' || ext === '.c' || ext === '.cc' || ext === '.cxx') && file !== path.basename(actualFilePath)) {
+                            // Check if this .cpp has a matching header that was included
+                            const cppBase = path.basename(file, ext).toLowerCase();
+                            if (includedHeaders.has(cppBase)) {
+                                const fullPath = path.join(dir, file);
+                                sourceFiles.push(fullPath);
+                                linkedFiles.push(file);
+                            }
+                        }
+                    }
+
+                    if (linkedFiles.length > 0) {
+                        console.log(`[Compile] Multi-file project detected. Linking: ${linkedFiles.join(', ')}`);
+                    }
+                }
+            } catch (e) {
+                console.log('[Compile] Could not scan directory:', e.message);
+            }
+        }
 
         // Check if file uses bits/stdc++.h and PCH is ready
         const usesPCH = content.includes('bits/stdc++.h') && pchReady;
 
         // Build args - optimized for speed without breaking STL
         const args = [
-            actualFilePath,
+            ...sourceFiles,  // All source files
             '-o', outputPath,
             '-O0',      // No optimization (fastest compile)
             '-w',       // Suppress warnings
+            '-I', dir,  // Include current directory for local headers
         ];
 
         // PCH optimization - CRITICAL for speed with bits/stdc++.h
@@ -423,7 +556,8 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
                     success: false,
                     error: stderr || `Compilation failed with code ${code}`,
                     outputPath: null,
-                    time: compileTime
+                    time: compileTime,
+                    linkedFiles: linkedFiles
                 });
             } else {
                 resolve({
@@ -432,7 +566,8 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
                     outputPath: outputPath,
                     warnings: stderr || '',
                     compiler: compilerInfo.name,
-                    time: compileTime
+                    time: compileTime,
+                    linkedFiles: linkedFiles
                 });
             }
         });

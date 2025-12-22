@@ -60,6 +60,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ccStopServer: () => ipcRenderer.invoke('cc-stop-server'),
     ccGetStatus: () => ipcRenderer.invoke('cc-get-status'),
     ccOpenExtensionPage: () => ipcRenderer.invoke('cc-open-extension-page'),
-    onProblemReceived: (callback) => ipcRenderer.on('problem-received', (event, data) => callback(data))
+    onProblemReceived: (callback) => ipcRenderer.on('problem-received', (event, data) => callback(data)),
+
+    // File watcher - detect external changes
+    watchFile: (filePath) => ipcRenderer.invoke('watch-file', filePath),
+    unwatchFile: (filePath) => ipcRenderer.invoke('unwatch-file', filePath),
+    reloadFile: (filePath) => ipcRenderer.invoke('reload-file', filePath),
+    onFileChangedExternal: (callback) => ipcRenderer.on('file-changed-external', (event, data) => callback(data))
 });
 

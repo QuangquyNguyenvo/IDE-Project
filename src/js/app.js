@@ -78,7 +78,7 @@ const App = {
     runTimeout: null
 };
 
-const DEFAULT_CODE = `#include <iostream>
+const DEFAULT_CODE = `#include<bits/stdc++.h>
 using namespace std;
 
 int main() {
@@ -2041,6 +2041,9 @@ function closeTab(id) {
     const tab = App.tabs[idx];
     if (tab.modified && !confirm(`"${tab.name}" has unsaved changes. Close?`)) return;
 
+    // Stop watching this file
+    if (tab.path) stopFileWatch(tab.path);
+
     App.tabs.splice(idx, 1);
 
     // Close split if this was the split tab
@@ -2242,6 +2245,10 @@ async function buildRun() {
 
     if (r.success) {
         App.exePath = r.outputPath;
+        // Show linked files if multi-file project
+        if (r.linkedFiles && r.linkedFiles.length > 0) {
+            log(`Linked: ${r.linkedFiles.join(', ')}`, 'system');
+        }
         log(`Build OK (${ms}ms)`, 'success');
         if (r.warnings) {
             log(r.warnings, 'warning');
@@ -2747,6 +2754,8 @@ if (window.electronAPI) {
             App.tabs.push({ id, name: data.path.split(/[/\\]/).pop(), path: data.path, content: data.content, original: data.content, modified: false });
             setActive(id);
             updateUI();
+            // Start watching this file for external changes
+            startFileWatch(data.path);
         }
         log(`Opened: ${data.path}`, 'system');
     });
@@ -3041,3 +3050,119 @@ function prevTestCase() {
         switchTestCase((ccTestIndex - 1 + ccProblem.tests.length) % ccProblem.tests.length);
     }
 }
+
+// ============================================================================
+// FILE WATCHER - Detect external changes
+// ============================================================================
+let pendingReloadNotifications = new Set(); // Track which files have pending notifications
+
+// Start watching a file when it's opened
+function startFileWatch(filePath) {
+    if (!filePath || !window.electronAPI?.watchFile) return;
+    window.electronAPI.watchFile(filePath);
+}
+
+// Stop watching a file when tab is closed
+function stopFileWatch(filePath) {
+    if (!filePath || !window.electronAPI?.unwatchFile) return;
+    window.electronAPI.unwatchFile(filePath);
+}
+
+// Handle external file change notification
+function handleExternalFileChange(filePath) {
+    // Don't show duplicate notifications
+    if (pendingReloadNotifications.has(filePath)) return;
+
+    // Find the tab for this file
+    const tab = App.tabs.find(t => t.path === filePath);
+    if (!tab) return;
+
+    pendingReloadNotifications.add(filePath);
+
+    // Show notification popup
+    showReloadNotification(tab);
+}
+
+// Show reload notification popup (similar to Dev-C++)
+function showReloadNotification(tab) {
+    // Remove any existing notification for this file
+    const existingNotif = document.querySelector(`.reload-notification[data-path="${CSS.escape(tab.path)}"]`);
+    if (existingNotif) existingNotif.remove();
+
+    const notification = document.createElement('div');
+    notification.className = 'reload-notification';
+    notification.dataset.path = tab.path;
+
+    notification.innerHTML = `
+        <div class="reload-notification-content">
+            <div class="reload-notification-icon">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <div class="reload-notification-text">
+                <div class="reload-notification-title">File đã thay đổi</div>
+                <div class="reload-notification-file">${tab.name}</div>
+                <div class="reload-notification-desc">File đã được thay đổi bên ngoài. Bạn có muốn tải lại?</div>
+            </div>
+            <div class="reload-notification-actions">
+                <button class="reload-btn reload-btn-yes" title="Tải lại từ disk">Tải lại</button>
+                <button class="reload-btn reload-btn-no" title="Giữ nguyên">Bỏ qua</button>
+            </div>
+        </div>
+    `;
+
+    // Yes - Reload from disk
+    notification.querySelector('.reload-btn-yes').onclick = async () => {
+        const result = await window.electronAPI?.reloadFile?.(tab.path);
+        if (result?.success) {
+            tab.content = result.content;
+            tab.original = result.content;
+            tab.modified = false;
+
+            // Update editor if this tab is currently active
+            if (tab.id === App.activeTabId && App.editor) {
+                const position = App.editor.getPosition();
+                App.editor.setValue(result.content);
+                if (position) App.editor.setPosition(position);
+            }
+            if (tab.id === App.splitTabId && App.editor2) {
+                const position = App.editor2.getPosition();
+                App.editor2.setValue(result.content);
+                if (position) App.editor2.setPosition(position);
+            }
+
+            renderTabs();
+            log(`Reloaded: ${tab.name}`, 'system');
+        }
+        pendingReloadNotifications.delete(tab.path);
+        notification.remove();
+    };
+
+    // No - Keep current content
+    notification.querySelector('.reload-btn-no').onclick = () => {
+        pendingReloadNotifications.delete(tab.path);
+        notification.remove();
+        log(`Kept local version: ${tab.name}`, 'system');
+    };
+
+    document.body.appendChild(notification);
+
+    // Auto-dismiss after 30 seconds if no action taken
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            pendingReloadNotifications.delete(tab.path);
+            notification.remove();
+        }
+    }, 30000);
+}
+
+// Initialize file watcher listener
+if (window.electronAPI?.onFileChangedExternal) {
+    window.electronAPI.onFileChangedExternal(data => {
+        handleExternalFileChange(data.path);
+    });
+}
+
