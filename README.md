@@ -55,6 +55,8 @@ Whether you're a competitive programmer or just starting with "Hello World", Sam
 | ✦ **Run without saving**    | Press F11 to compile & run, no save needed                  |
 | ✦ **TDM-GCC included**      | No compiler setup, just download and code                   |
 | ✦ **Multi-tab & Split**     | Multiple files, drag to reorder, split view                 |
+| ✦ **Smart Header Linking**  | Auto-links .cpp files when you #include their headers       |
+| ✦ **File Watcher**          | Detects external changes, prompts to reload from disk       |
 | ✦ **Competitive Companion** | Auto-fetch tests from CF, AtCoder, LeetCode                 |
 | ✦ **6 themes**              | Kawaii Light, Kawaii Dark, Dracula, Monokai, Nord, One Dark |
 | ✦ **Customizable**          | Backgrounds, C++11/14/17/20, compiler flags                 |
