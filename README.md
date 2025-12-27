@@ -54,56 +54,28 @@
 
 ## 🎯 About
 
-**Sameko IDE** is a lightweight, beautiful C++ development environment designed specifically for **competitive programmers** and students. Built with Electron and Monaco Editor, it combines the simplicity of Dev-C++ with a modern, customizable interface.
-
-> 💡 **Why Sameko?** No complex setup. No bloated features. Just download, extract, and start coding.
+<table>
+  <tr>
+    <td width="70%">
+      <p><strong>Sameko IDE</strong> is a lightweight, beautiful C++ development environment designed specifically for <strong>competitive programmers</strong> and students. Built with Electron and Monaco Editor, it combines the simplicity of Dev-C++ with a modern, customizable interface.</p>
+      <blockquote>💡 <strong>Why Sameko?</strong> No complex setup. No bloated features. Just download, extract, and start coding.</blockquote>
+    </td>
+    <td width="30%" align="center">
+      <img src="src/assets/fish.png" alt="Sameko Fish" width="180" />
+    </td>
+  </tr>
+</table>
 
 <br />
 
 ## ✨ Features
 
-<table>
-  <tr>
-    <td width="50%">
-      <h3>🚀 Zero Setup</h3>
-      <p>TDM-GCC 9.2.0 bundled. No MinGW installation needed.</p>
-    </td>
-    <td width="50%">
-      <h3>⚡ Instant Run</h3>
-      <p>Press F11 to compile & run without saving.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <h3>🔗 Smart Header Linking</h3>
-      <p>Auto-links .cpp files when you #include headers. No project needed.</p>
-    </td>
-    <td width="50%">
-      <h3>👁️ File Watcher</h3>
-      <p>Detects external changes and prompts to reload.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <h3>🏆 Competitive Companion</h3>
-      <p>Auto-fetch test cases from Codeforces, AtCoder, LeetCode.</p>
-    </td>
-    <td width="50%">
-      <h3>📑 Multi-tab & Split View</h3>
-      <p>Open multiple files, drag to reorder, split editor.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <h3>🎨 6 Beautiful Themes</h3>
-      <p>Kawaii Light/Dark, Dracula, Monokai, Nord, One Dark.</p>
-    </td>
-    <td width="50%">
-      <h3>⚙️ Highly Customizable</h3>
-      <p>Custom backgrounds, C++11/14/17/20, compiler flags.</p>
-    </td>
-  </tr>
-</table>
+|                                                                     |                                                                |
+| :------------------------------------------------------------------ | :------------------------------------------------------------- |
+| 🚀 **Zero Setup** — TDM-GCC 9.2.0 bundled, no MinGW needed           | ⚡ **Instant Run** — F11 to compile & run without saving        |
+| 🔗 **Smart Header Linking** — Auto-links .cpp when #include headers  | 👁️ **File Watcher** — Detects external changes, prompts reload  |
+| 🏆 **Competitive Companion** — Auto-fetch tests from CF, AtCoder, LC | 📑 **Multi-tab & Split View** — Drag to reorder, split editor   |
+| 🎨 **6 Beautiful Themes** — Kawaii, Dracula, Monokai, Nord, One Dark | ⚙️ **Highly Customizable** — Backgrounds, C++11/14/17/20, flags |
 
 <br />
 
@@ -169,6 +141,12 @@ npm run build:win
 <br />
 
 ## 🤝 Contributing
+
+**💖 Contributors**
+
+- **Yunchan** (Special thanks for designing the logo!)
+
+**📝 Want to contribute?**
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a PR.
 
