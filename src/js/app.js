@@ -21,12 +21,13 @@ const DEFAULT_SETTINGS = {
         fontFamily: "'Consolas', monospace",
         tabSize: 4,
         minimap: true,
-        wordWrap: false
+        wordWrap: false,
+        colorScheme: 'auto'
     },
     compiler: {
-        cppStandard: 'c++17',
+        cppStandard: '',
         optimization: '',
-        warnings: true
+        warnings: false
     },
     execution: {
         timeLimitEnabled: false,
@@ -49,7 +50,7 @@ const DEFAULT_SETTINGS = {
         showProblems: false
     },
     oj: {
-        verified: false  // True when user has successfully received at least one problem
+        verified: false
     }
 };
 
@@ -409,8 +410,9 @@ function createEditor(containerId) {
     });
 
     // Shortcuts
-    editor.addCommand(monaco.KeyCode.F11, buildRun);
-    editor.addCommand(monaco.KeyCode.F10, run);
+    editor.addCommand(monaco.KeyCode.F9, compileOnly);  // Compile only
+    editor.addCommand(monaco.KeyCode.F11, buildRun);     // Compile & Run
+    editor.addCommand(monaco.KeyCode.F10, run);          // Run only
     editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.F5, stop);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, save);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyN, newFile);
@@ -757,14 +759,14 @@ function loadSettings() {
         }
 
         if (saved) {
-            // Deep merge each section to preserve new defaults
             App.settings = {
                 editor: { ...DEFAULT_SETTINGS.editor, ...saved.editor },
                 compiler: { ...DEFAULT_SETTINGS.compiler, ...saved.compiler },
                 execution: { ...DEFAULT_SETTINGS.execution, ...saved.execution },
                 appearance: { ...DEFAULT_SETTINGS.appearance, ...saved.appearance },
                 terminal: { ...DEFAULT_SETTINGS.terminal, ...saved.terminal },
-                panels: { ...DEFAULT_SETTINGS.panels, ...saved.panels }
+                panels: { ...DEFAULT_SETTINGS.panels, ...saved.panels },
+                oj: { ...DEFAULT_SETTINGS.oj, ...saved.oj }
             };
         }
 
@@ -2197,6 +2199,77 @@ async function saveAs(tabIdOverride = null) {
 // ============================================================================
 // BUILD & RUN
 // ============================================================================
+
+// Compile only (F9) - compile without running
+async function compileOnly() {
+    const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
+    const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
+
+    const tab = App.tabs.find(t => t.id === tabId);
+    if (!tab) { log('No file open', 'warning'); return; }
+
+    tab.content = editor.getValue();
+
+    // Auto-save if file has path
+    if (tab.path) {
+        await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
+        tab.original = tab.content; tab.modified = false; renderTabs();
+    }
+
+    // Show terminal for build output
+    if (!App.showTerm) {
+        App.showTerm = true;
+        if (App.settings.panels) App.settings.panels.showTerm = true;
+        saveSettings();
+        updateUI();
+    }
+
+    if (App.settings.execution.clearTerminal) clearTerm();
+    clearProblems();
+    clearErrorDecorations();
+
+    log('Compiling...', 'info');
+    setStatus('Compiling...', 'building');
+
+    const t0 = Date.now();
+
+    const flags = [];
+    if (App.settings.compiler.cppStandard) flags.push(`-std=${App.settings.compiler.cppStandard}`);
+    if (App.settings.compiler.optimization) flags.push(App.settings.compiler.optimization);
+    if (App.settings.compiler.warnings) flags.push('-Wall', '-Wextra');
+
+    const r = await window.electronAPI.compile({
+        filePath: tab.path,
+        content: tab.content,
+        flags: flags.join(' ')
+    });
+    const ms = Date.now() - t0;
+
+    if (r.success) {
+        App.exePath = r.outputPath;
+        if (r.linkedFiles && r.linkedFiles.length > 0) {
+            log(`Linked: ${r.linkedFiles.join(', ')}`, 'system');
+        }
+        log(`Compile OK (${ms}ms)`, 'success');
+        if (r.warnings) {
+            log(r.warnings, 'warning');
+            parseProblems(r.warnings, 'warning');
+        }
+        setStatus(`Compile: ${ms}ms`, 'success');
+    } else {
+        log('Compile failed', 'error');
+        log(r.error, 'error');
+        parseProblems(r.error, 'error');
+        highlightErrorLines();
+        setStatus('Compile failed', 'error');
+        App.exePath = null;
+
+        if (DockingState.terminalDocked) {
+            switchDockedPanel('problems');
+        }
+    }
+}
+
 async function buildRun() {
     // Get tab based on which editor is focused (for split mode support)
     const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
@@ -2823,6 +2896,10 @@ if (window.electronAPI) {
         setRunning(false);
         setStatus('Stopped', '');
     });
+
+    window.electronAPI.onSystemMessage?.(data => {
+        log(data.message, data.type || 'system');
+    });
 }
 
 // ============================================================================
@@ -2831,7 +2908,7 @@ if (window.electronAPI) {
 let ccConnected = false;
 let ccProblem = null;
 let ccTestIndex = 0;
-let ccHasReceivedProblem = false; // Track if we ever received a problem
+let ccHasReceivedProblem = false;
 
 function initCompetitiveCompanion() {
     const btn = document.getElementById('btn-cc');

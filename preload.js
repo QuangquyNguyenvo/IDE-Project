@@ -66,6 +66,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     watchFile: (filePath) => ipcRenderer.invoke('watch-file', filePath),
     unwatchFile: (filePath) => ipcRenderer.invoke('unwatch-file', filePath),
     reloadFile: (filePath) => ipcRenderer.invoke('reload-file', filePath),
-    onFileChangedExternal: (callback) => ipcRenderer.on('file-changed-external', (event, data) => callback(data))
+    onFileChangedExternal: (callback) => ipcRenderer.on('file-changed-external', (event, data) => callback(data)),
+
+    // System messages
+    onSystemMessage: (callback) => ipcRenderer.on('system-message', (event, data) => callback(data))
 });
 

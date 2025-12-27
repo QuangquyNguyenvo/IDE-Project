@@ -384,8 +384,6 @@ async function ensurePCH() {
 
     const compilerExe = detectedCompiler || 'g++';
 
-    // Check if PCH needs rebuild (different compiler or version)
-    let needsRebuild = true;
     if (fs.existsSync(pchFile) && fs.existsSync(pchInfoFile)) {
         try {
             const pchInfo = JSON.parse(fs.readFileSync(pchInfoFile, 'utf-8'));
@@ -401,20 +399,29 @@ async function ensurePCH() {
         }
     }
 
-    console.log('[PCH] Building precompiled header (this takes ~10 seconds first time)...');
+    console.log('[PCH] Building precompiled header...');
 
-    // Create the header file
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('system-message', {
+            type: 'info',
+            message: 'Đang tạo Precompiled Header (lần đầu, ~10s)...'
+        });
+    }
+
     fs.writeFileSync(pchHeader, '#include <bits/stdc++.h>\n', 'utf-8');
 
-    // Compile PCH using detected compiler
     return new Promise((resolve) => {
         const startTime = Date.now();
-        const compiler = spawn(compilerExe, ['-x', 'c++-header', pchHeader, '-o', pchFile, '-O0'], { cwd: pchDir });
+        const compiler = spawn(compilerExe, [
+            '-x', 'c++-header',
+            pchHeader,
+            '-o', pchFile,
+            '-O0'
+        ], { cwd: pchDir });
 
         compiler.on('close', (code) => {
             const elapsed = Date.now() - startTime;
             if (code === 0) {
-                // Save PCH info for future checks
                 fs.writeFileSync(pchInfoFile, JSON.stringify({
                     compiler: compilerExe,
                     version: compilerInfo.version,
@@ -422,6 +429,13 @@ async function ensurePCH() {
                 }), 'utf-8');
                 console.log(`[PCH] Built successfully in ${elapsed}ms`);
                 pchReady = true;
+
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.webContents.send('system-message', {
+                        type: 'success',
+                        message: `PCH sẵn sàng (${(elapsed / 1000).toFixed(1)}s). Các lần build sau sẽ nhanh hơn!`
+                    });
+                }
                 resolve(true);
             } else {
                 console.log('[PCH] Build failed');
@@ -438,7 +452,7 @@ async function ensurePCH() {
     });
 }
 
-ipcMain.handle('compile', async (event, { filePath, content }) => {
+ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
     const startTime = Date.now();
 
     return new Promise(async (resolve) => {
@@ -518,27 +532,40 @@ ipcMain.handle('compile', async (event, { filePath, content }) => {
             }
         }
 
-        // Check if file uses bits/stdc++.h and PCH is ready
-        const usesPCH = content.includes('bits/stdc++.h') && pchReady;
+        // PCH only incompatible with different C++ standard (-std=)
+        // Optimization (-O2,-O3) and warnings (-Wall) are fine with PCH
+        const hasStdFlag = flags && /-std=/.test(flags);
+        const usesPCH = content.includes('bits/stdc++.h') && pchReady && !hasStdFlag;
 
-        // Build args - optimized for speed without breaking STL
+        // Build args - start with source files and output
         const args = [
             ...sourceFiles,  // All source files
             '-o', outputPath,
-            '-O0',      // No optimization (fastest compile)
-            '-w',       // Suppress warnings
             '-I', dir,  // Include current directory for local headers
         ];
 
-        // PCH optimization - CRITICAL for speed with bits/stdc++.h
+        // Apply user settings flags (C++ standard, optimization, warnings)
+        if (flags) {
+            const flagsArr = flags.split(' ').filter(f => f.trim());
+            args.push(...flagsArr);
+            if (hasStdFlag) {
+                console.log(`[Compile] User flags: ${flagsArr.join(' ')} (PCH disabled due to -std=)`);
+            } else {
+                console.log(`[Compile] User flags: ${flagsArr.join(' ')}`);
+            }
+        } else {
+            args.push('-O0', '-w');
+        }
+
         if (usesPCH) {
-            // Use -I to add PCH dir and -include to use the precompiled header
             args.push('-I', pchDir);
             args.push('-include', 'stdc++.h');
+            console.log('[Compile] Using PCH');
         }
 
         // Use detected compiler (TDM-GCC, MinGW, or fallback)
         const compilerExe = detectedCompiler || 'g++';
+        console.log(`[Compile] Command: ${compilerExe} ${args.join(' ')}`);
         const compiler = spawn(compilerExe, args, { cwd: dir });
 
         let stderr = '';
