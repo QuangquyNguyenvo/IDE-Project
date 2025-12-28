@@ -23,6 +23,7 @@ const { exec, spawn } = require('child_process');
 let mainWindow;
 let currentFile = null;
 let runningProcess = null;
+let runningMemoryPollInterval = null;  // Track memory polling interval for cleanup
 
 // ============================================================================
 // FILE WATCHER - Detect external file changes
@@ -296,6 +297,12 @@ async function saveFileAs() {
 }
 
 function stopProcess() {
+    // Clear memory polling interval first
+    if (runningMemoryPollInterval) {
+        clearInterval(runningMemoryPollInterval);
+        runningMemoryPollInterval = null;
+    }
+
     if (runningProcess) {
         runningProcess.kill();
         runningProcess = null;
@@ -619,7 +626,6 @@ ipcMain.handle('run', async (event, exePath) => {
         const dir = path.dirname(exePath);
         const runStartTime = Date.now();
         let peakMemoryKB = 0;
-        let memoryPollInterval = null;
 
         // Run the executable
         runningProcess = spawn(exePath, [], {
@@ -648,10 +654,10 @@ ipcMain.handle('run', async (event, exePath) => {
             });
         };
 
-        // Poll memory usage (Windows only) - poll immediately and every 50ms
+        // Poll memory usage (Windows only) - poll every 500ms to avoid spawning too many processes
         if (pid && process.platform === 'win32') {
             pollMemory(); // Immediate first poll
-            memoryPollInterval = setInterval(pollMemory, 50);
+            runningMemoryPollInterval = setInterval(pollMemory, 500);  // Use global for cleanup
         }
 
         let output = '';
@@ -668,8 +674,9 @@ ipcMain.handle('run', async (event, exePath) => {
         });
 
         runningProcess.on('close', (code) => {
-            if (memoryPollInterval) {
-                clearInterval(memoryPollInterval);
+            if (runningMemoryPollInterval) {
+                clearInterval(runningMemoryPollInterval);
+                runningMemoryPollInterval = null;
             }
             const executionTime = Date.now() - runStartTime;
             runningProcess = null;
@@ -788,6 +795,13 @@ function startCompetitiveCompanionServer() {
                                 memoryLimit: problem.memoryLimit,
                                 tests: problem.tests || []
                             });
+
+                            // Focus window when receiving problem
+                            if (mainWindow.isMinimized()) {
+                                mainWindow.restore();
+                            }
+                            mainWindow.focus();
+                            mainWindow.show();
                         }
 
                         res.writeHead(200);
@@ -845,5 +859,240 @@ ipcMain.handle('cc-get-status', async () => {
 ipcMain.handle('cc-open-extension-page', async () => {
     // Open Chrome Web Store page for Competitive Companion
     shell.openExternal('https://chromewebstore.google.com/detail/competitive-companion/cjnmckjndlpiamhfimnnjmnckgghkjbl');
+    return { success: true };
+});
+
+// ============================================================================
+// BATCH TESTING - Run single test case with timeout
+// ============================================================================
+ipcMain.handle('run-test', async (event, { exePath, input, expectedOutput, timeLimit }) => {
+    return new Promise((resolve) => {
+        if (!exePath || !fs.existsSync(exePath)) {
+            resolve({ status: 'CE', error: 'Executable not found' });
+            return;
+        }
+
+        const dir = path.dirname(exePath);
+        let output = '';
+        let errorOutput = '';
+        let killed = false;
+        let peakMemoryKB = 0;
+        let memoryPollInterval = null;
+
+        // Create test process
+        const testProcess = spawn(exePath, [], {
+            cwd: dir,
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        const pid = testProcess.pid;
+
+        // Poll memory (Windows)
+        const pollMemory = () => {
+            if (!testProcess || !pid) return;
+            exec(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, (err, stdout) => {
+                if (!err && stdout) {
+                    const match = stdout.match(/"([0-9][0-9.,\s]*)\s*K"/i);
+                    if (match) {
+                        const memKB = parseInt(match[1].replace(/[,.\s]/g, ''), 10);
+                        if (memKB > peakMemoryKB) peakMemoryKB = memKB;
+                    }
+                }
+            });
+        };
+
+        // Poll memory (Windows) - poll every 500ms to avoid process spam
+        if (pid && process.platform === 'win32') {
+            pollMemory();
+            memoryPollInterval = setInterval(pollMemory, 500);  // Reduced from 50ms
+        }
+
+        // Set timeout
+        const timeout = setTimeout(() => {
+            killed = true;
+            testProcess.kill();
+        }, timeLimit || 3000);
+
+        // Send input and start timing AFTER input is sent
+        let startTime;
+        if (input) {
+            testProcess.stdin.write(input);
+        }
+        testProcess.stdin.end();
+        startTime = Date.now(); // Start timing after input is fully sent
+
+        testProcess.stdout.on('data', (data) => {
+            output += data.toString();
+        });
+
+        testProcess.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+        });
+
+        testProcess.on('close', (code) => {
+            clearTimeout(timeout);
+            if (memoryPollInterval) clearInterval(memoryPollInterval);
+
+            const executionTime = Date.now() - startTime;
+
+            // Determine status
+            let status = 'AC';
+            let details = '';
+
+            if (killed) {
+                status = 'TLE';
+                details = 'Time limit exceeded';
+            } else if (code !== 0) {
+                status = 'RE';
+                details = `Runtime error (exit code: ${code})`;
+            } else if (expectedOutput) {
+                // Compare output (flexible: ignore trailing whitespace)
+                const normalize = (s) => s.split('\n').map(l => l.trimEnd()).join('\n').trim();
+                const actualNorm = normalize(output);
+                const expectedNorm = normalize(expectedOutput);
+
+                if (actualNorm !== expectedNorm) {
+                    status = 'WA';
+                    details = `Expected: ${expectedNorm.substring(0, 100)}${expectedNorm.length > 100 ? '...' : ''}\nGot: ${actualNorm.substring(0, 100)}${actualNorm.length > 100 ? '...' : ''}`;
+                }
+            }
+
+            resolve({
+                status,
+                output: output,
+                error: errorOutput,
+                executionTime,
+                peakMemoryKB,
+                details
+            });
+        });
+
+        testProcess.on('error', (err) => {
+            clearTimeout(timeout);
+            if (memoryPollInterval) clearInterval(memoryPollInterval);
+            resolve({ status: 'RE', error: err.message, executionTime: 0 });
+        });
+    });
+});
+
+// ============================================================================
+// AUTO UPDATE - Check for new versions on GitHub
+// ============================================================================
+const https = require('https');
+const currentVersion = require('./package.json').version;
+const GITHUB_REPO = 'QuangquyNguyenvo/IDE-Project';
+
+function fetchLatestRelease() {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.github.com',
+            path: `/repos/${GITHUB_REPO}/releases/latest`,
+            method: 'GET',
+            headers: {
+                'User-Agent': 'SamekoIDE-UpdateChecker',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    if (res.statusCode === 200) {
+                        resolve(JSON.parse(data));
+                    } else if (res.statusCode === 404) {
+                        resolve(null); // No releases yet
+                    } else {
+                        reject(new Error(`HTTP ${res.statusCode}`));
+                    }
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+
+        req.on('error', reject);
+        req.setTimeout(10000, () => {
+            req.destroy();
+            reject(new Error('Timeout'));
+        });
+        req.end();
+    });
+}
+
+function compareVersions(v1, v2) {
+    // Compare semver versions: returns 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+    const parse = (v) => {
+        const match = v.replace(/^v/, '').match(/^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
+        if (!match) return [0, 0, 0, ''];
+        return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3]), match[4] || ''];
+    };
+
+    const [major1, minor1, patch1, pre1] = parse(v1);
+    const [major2, minor2, patch2, pre2] = parse(v2);
+
+    if (major1 !== major2) return major1 > major2 ? 1 : -1;
+    if (minor1 !== minor2) return minor1 > minor2 ? 1 : -1;
+    if (patch1 !== patch2) return patch1 > patch2 ? 1 : -1;
+
+    // Pre-release comparison (beta.5 vs beta.6)
+    if (pre1 && pre2) {
+        const num1 = parseInt(pre1.replace(/\D/g, '')) || 0;
+        const num2 = parseInt(pre2.replace(/\D/g, '')) || 0;
+        if (num1 !== num2) return num1 > num2 ? 1 : -1;
+    } else if (pre1 && !pre2) {
+        return -1; // Pre-release is older than release
+    } else if (!pre1 && pre2) {
+        return 1;
+    }
+
+    return 0;
+}
+
+ipcMain.handle('check-for-updates', async () => {
+    try {
+        const release = await fetchLatestRelease();
+
+        if (!release) {
+            return { hasUpdate: false, currentVersion };
+        }
+
+        const latestVersion = release.tag_name.replace(/^v/, '');
+        const hasUpdate = compareVersions(latestVersion, currentVersion) > 0;
+
+        // Find download URL (prefer .exe or .rar for Windows)
+        let downloadUrl = release.html_url;
+        if (release.assets && release.assets.length > 0) {
+            const winAsset = release.assets.find(a =>
+                a.name.endsWith('.exe') || a.name.endsWith('.rar') || a.name.endsWith('.zip')
+            );
+            if (winAsset) {
+                downloadUrl = winAsset.browser_download_url;
+            }
+        }
+
+        return {
+            hasUpdate,
+            currentVersion,
+            latestVersion,
+            releaseNotes: release.body || '',
+            releaseName: release.name || `v${latestVersion}`,
+            downloadUrl,
+            releaseUrl: release.html_url,
+            publishedAt: release.published_at
+        };
+    } catch (error) {
+        console.error('[Update] Check failed:', error.message);
+        return { hasUpdate: false, currentVersion, error: error.message };
+    }
+});
+
+ipcMain.handle('get-current-version', () => {
+    return currentVersion;
+});
+
+ipcMain.handle('open-release-page', async (event, url) => {
+    shell.openExternal(url || `https://github.com/${GITHUB_REPO}/releases/latest`);
     return { success: true };
 });

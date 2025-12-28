@@ -69,6 +69,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onFileChangedExternal: (callback) => ipcRenderer.on('file-changed-external', (event, data) => callback(data)),
 
     // System messages
-    onSystemMessage: (callback) => ipcRenderer.on('system-message', (event, data) => callback(data))
+    onSystemMessage: (callback) => ipcRenderer.on('system-message', (event, data) => callback(data)),
+
+    // Batch testing - run single test case
+    runTest: (data) => ipcRenderer.invoke('run-test', data),
+
+    // Auto-update
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    getCurrentVersion: () => ipcRenderer.invoke('get-current-version'),
+    openReleasePage: (url) => ipcRenderer.invoke('open-release-page', url)
 });
 

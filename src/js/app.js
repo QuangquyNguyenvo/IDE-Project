@@ -1421,13 +1421,22 @@ function toggleProblems() {
 // PANELS
 // ============================================================================
 function initPanels() {
-    document.getElementById('clear-input').onclick = () => { document.getElementById('input-area').value = ''; };
-    document.getElementById('clear-output').onclick = () => {
-        document.getElementById('expected-area').value = '';
-        document.getElementById('expected-area').style.display = 'block';
-        document.getElementById('expected-diff').style.display = 'none';
-        document.getElementById('expected-diff').innerHTML = '';
-    };
+    // Clear buttons (optional - may not exist)
+    const clearInput = document.getElementById('clear-input');
+    const clearOutput = document.getElementById('clear-output');
+
+    if (clearInput) {
+        clearInput.onclick = () => { document.getElementById('input-area').value = ''; };
+    }
+    if (clearOutput) {
+        clearOutput.onclick = () => {
+            document.getElementById('expected-area').value = '';
+            document.getElementById('expected-area').style.display = 'block';
+            document.getElementById('expected-diff').style.display = 'none';
+            document.getElementById('expected-diff').innerHTML = '';
+        };
+    }
+
     document.getElementById('clear-term').onclick = clearTerm;
     document.getElementById('close-problems').onclick = () => { App.showProblems = false; updateUI(); };
 
@@ -2200,77 +2209,118 @@ async function saveAs(tabIdOverride = null) {
 // BUILD & RUN
 // ============================================================================
 
+// Anti-spam: prevent multiple rapid build requests
+let isBuilding = false;
+
+function setBuildingState(building) {
+    isBuilding = building;
+    const btnBuildRun = document.getElementById('btn-buildrun');
+    const btnRunOnly = document.getElementById('btn-run-only');
+    const btnRunAll = document.getElementById('btn-run-all-tests');
+
+    if (btnBuildRun) btnBuildRun.disabled = building;
+    if (btnRunOnly) btnRunOnly.disabled = building;
+    if (btnRunAll) btnRunAll.disabled = building;
+
+    // Visual feedback
+    if (btnBuildRun) {
+        if (building) {
+            btnBuildRun.classList.add('building');
+        } else {
+            btnBuildRun.classList.remove('building');
+        }
+    }
+}
+
 // Compile only (F9) - compile without running
 async function compileOnly() {
+    // Anti-spam check
+    if (isBuilding) {
+        log('Build in progress...', 'warning');
+        return;
+    }
+
     const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
     const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
 
     const tab = App.tabs.find(t => t.id === tabId);
     if (!tab) { log('No file open', 'warning'); return; }
 
-    tab.content = editor.getValue();
+    setBuildingState(true);
 
-    // Auto-save if file has path
-    if (tab.path) {
-        await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
-        tab.original = tab.content; tab.modified = false; renderTabs();
-    }
+    try {
+        tab.content = editor.getValue();
 
-    // Show terminal for build output
-    if (!App.showTerm) {
-        App.showTerm = true;
-        if (App.settings.panels) App.settings.panels.showTerm = true;
-        saveSettings();
-        updateUI();
-    }
-
-    if (App.settings.execution.clearTerminal) clearTerm();
-    clearProblems();
-    clearErrorDecorations();
-
-    log('Compiling...', 'info');
-    setStatus('Compiling...', 'building');
-
-    const t0 = Date.now();
-
-    const flags = [];
-    if (App.settings.compiler.cppStandard) flags.push(`-std=${App.settings.compiler.cppStandard}`);
-    if (App.settings.compiler.optimization) flags.push(App.settings.compiler.optimization);
-    if (App.settings.compiler.warnings) flags.push('-Wall', '-Wextra');
-
-    const r = await window.electronAPI.compile({
-        filePath: tab.path,
-        content: tab.content,
-        flags: flags.join(' ')
-    });
-    const ms = Date.now() - t0;
-
-    if (r.success) {
-        App.exePath = r.outputPath;
-        if (r.linkedFiles && r.linkedFiles.length > 0) {
-            log(`Linked: ${r.linkedFiles.join(', ')}`, 'system');
+        // Auto-save if file has path
+        if (tab.path) {
+            await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
+            tab.original = tab.content; tab.modified = false; renderTabs();
         }
-        log(`Compile OK (${ms}ms)`, 'success');
-        if (r.warnings) {
-            log(r.warnings, 'warning');
-            parseProblems(r.warnings, 'warning');
-        }
-        setStatus(`Compile: ${ms}ms`, 'success');
-    } else {
-        log('Compile failed', 'error');
-        log(r.error, 'error');
-        parseProblems(r.error, 'error');
-        highlightErrorLines();
-        setStatus('Compile failed', 'error');
-        App.exePath = null;
 
-        if (DockingState.terminalDocked) {
-            switchDockedPanel('problems');
+        // Show terminal for build output
+        if (!App.showTerm) {
+            App.showTerm = true;
+            if (App.settings.panels) App.settings.panels.showTerm = true;
+            saveSettings();
+            updateUI();
         }
+
+        if (App.settings.execution.clearTerminal) clearTerm();
+        clearProblems();
+        clearErrorDecorations();
+
+        log('Compiling...', 'info');
+        setStatus('Compiling...', 'building');
+
+        const t0 = Date.now();
+
+        const flags = [];
+        if (App.settings.compiler.cppStandard) flags.push(`-std=${App.settings.compiler.cppStandard}`);
+        if (App.settings.compiler.optimization) flags.push(App.settings.compiler.optimization);
+        if (App.settings.compiler.warnings) flags.push('-Wall', '-Wextra');
+
+        const r = await window.electronAPI.compile({
+            filePath: tab.path,
+            content: tab.content,
+            flags: flags.join(' ')
+        });
+        const ms = Date.now() - t0;
+
+        if (r.success) {
+            App.exePath = r.outputPath;
+            if (r.linkedFiles && r.linkedFiles.length > 0) {
+                log(`Linked: ${r.linkedFiles.join(', ')}`, 'system');
+            }
+            log(`Compile OK (${ms}ms)`, 'success');
+            if (r.warnings) {
+                log(r.warnings, 'warning');
+                parseProblems(r.warnings, 'warning');
+            }
+            setStatus(`Compile: ${ms}ms`, 'success');
+        } else {
+            log('Compile failed', 'error');
+            log(r.error, 'error');
+            parseProblems(r.error, 'error');
+            highlightErrorLines();
+            setStatus('Compile failed', 'error');
+            App.exePath = null;
+
+            if (DockingState.terminalDocked) {
+                switchDockedPanel('problems');
+            }
+        }
+    } finally {
+        setBuildingState(false);
     }
 }
 
 async function buildRun() {
+    // Anti-spam check
+    if (isBuilding) {
+        log('Build in progress...', 'warning');
+        return;
+    }
+
     // Get tab based on which editor is focused (for split mode support)
     const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
     const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
@@ -2278,69 +2328,80 @@ async function buildRun() {
     const tab = App.tabs.find(t => t.id === tabId);
     if (!tab) { log('No file open', 'warning'); return; }
 
-    // Get current content from the focused editor
-    tab.content = editor.getValue();
+    setBuildingState(true);
 
-    // If file has a path, save it first (optional auto-save)
-    if (tab.path) {
-        await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
-        tab.original = tab.content; tab.modified = false; renderTabs();
-    }
+    try {
+        // Get current content from the focused editor
+        tab.content = editor.getValue();
 
-    // Auto-show terminal when building
-    if (!App.showTerm) {
-        App.showTerm = true;
-        if (App.settings.panels) App.settings.panels.showTerm = true;
-        saveSettings();
-        updateUI();
-    }
-
-    if (App.settings.execution.clearTerminal) clearTerm();
-    clearProblems();
-    clearErrorDecorations();
-
-    log('Building...', 'info');
-    setStatus('Building...', 'building');
-
-    const t0 = Date.now();
-
-    const flags = [];
-    if (App.settings.compiler.cppStandard) flags.push(`-std=${App.settings.compiler.cppStandard}`);
-    if (App.settings.compiler.optimization) flags.push(App.settings.compiler.optimization);
-    if (App.settings.compiler.warnings) flags.push('-Wall', '-Wextra');
-
-    const r = await window.electronAPI.compile({
-        filePath: tab.path,
-        content: tab.content,
-        flags: flags.join(' ')
-    });
-    const ms = Date.now() - t0;
-
-    if (r.success) {
-        App.exePath = r.outputPath;
-        // Show linked files if multi-file project
-        if (r.linkedFiles && r.linkedFiles.length > 0) {
-            log(`Linked: ${r.linkedFiles.join(', ')}`, 'system');
+        // If file has a path, save it first (optional auto-save)
+        if (tab.path) {
+            await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
+            tab.original = tab.content; tab.modified = false; renderTabs();
         }
-        log(`Build OK (${ms}ms)`, 'success');
-        if (r.warnings) {
-            log(r.warnings, 'warning');
-            parseProblems(r.warnings, 'warning');
-        }
-        setStatus(`Build: ${ms}ms`, 'success');
-        await run(false); // Don't clear terminal - keep build info visible
-    } else {
-        log('Build failed', 'error');
-        log(r.error, 'error');
-        parseProblems(r.error, 'error');
-        highlightErrorLines();
-        setStatus('Build failed', 'error');
-        App.exePath = null;
 
-        // If terminal docked, switch to Problems tab to show errors
-        if (DockingState.terminalDocked) {
-            switchDockedPanel('problems');
+        // Auto-show terminal when building
+        if (!App.showTerm) {
+            App.showTerm = true;
+            if (App.settings.panels) App.settings.panels.showTerm = true;
+            saveSettings();
+            updateUI();
         }
+
+        if (App.settings.execution.clearTerminal) clearTerm();
+        clearProblems();
+        clearErrorDecorations();
+
+        log('Building...', 'info');
+        setStatus('Building...', 'building');
+
+        const t0 = Date.now();
+
+        const flags = [];
+        if (App.settings.compiler.cppStandard) flags.push(`-std=${App.settings.compiler.cppStandard}`);
+        if (App.settings.compiler.optimization) flags.push(App.settings.compiler.optimization);
+        if (App.settings.compiler.warnings) flags.push('-Wall', '-Wextra');
+
+        const r = await window.electronAPI.compile({
+            filePath: tab.path,
+            content: tab.content,
+            flags: flags.join(' ')
+        });
+        const ms = Date.now() - t0;
+
+        if (r.success) {
+            App.exePath = r.outputPath;
+            // Show linked files if multi-file project
+            if (r.linkedFiles && r.linkedFiles.length > 0) {
+                log(`Linked: ${r.linkedFiles.join(', ')}`, 'system');
+            }
+            log(`Build OK (${ms}ms)`, 'success');
+            if (r.warnings) {
+                log(r.warnings, 'warning');
+                parseProblems(r.warnings, 'warning');
+            }
+            setStatus(`Build: ${ms}ms`, 'success');
+
+            // Unlock before running so stop button works
+            setBuildingState(false);
+            await run(false); // Don't clear terminal - keep build info visible
+        } else {
+            log('Build failed', 'error');
+            log(r.error, 'error');
+            parseProblems(r.error, 'error');
+            highlightErrorLines();
+            setStatus('Build failed', 'error');
+            App.exePath = null;
+
+            // If terminal docked, switch to Problems tab to show errors
+            if (DockingState.terminalDocked) {
+                switchDockedPanel('problems');
+            }
+            setBuildingState(false);
+        }
+    } catch (e) {
+        setBuildingState(false);
+        throw e;
     }
 }
 
@@ -3086,11 +3147,18 @@ function handleProblemReceived(problem) {
 function updateTestNavUI() {
     const testNav = document.getElementById('test-nav');
     const testLabel = document.getElementById('test-nav-label');
-
-    if (!testNav || !testLabel) return;
+    const runAllBtn = document.getElementById('btn-run-all-tests');
 
     const testCount = ccProblem?.tests?.length || 0;
 
+    // Show/hide Run All button in header
+    if (runAllBtn) {
+        runAllBtn.style.display = testCount > 0 ? 'flex' : 'none';
+    }
+
+    if (!testNav || !testLabel) return;
+
+    // Show test navigation only when multiple tests
     if (testCount > 1) {
         testNav.style.display = 'flex';
         testLabel.textContent = `${ccTestIndex + 1}/${testCount}`;
@@ -3243,3 +3311,333 @@ if (window.electronAPI?.onFileChangedExternal) {
     });
 }
 
+// ============================================================================
+// BATCH TESTING - Run All Test Cases
+// ============================================================================
+let batchTestResults = [];
+let isBatchTesting = false;
+
+function initBatchTesting() {
+    const runAllBtn = document.getElementById('btn-run-all-tests');
+    if (!runAllBtn) return;
+
+    runAllBtn.addEventListener('click', runAllTests);
+
+    // Tab switching in Problems panel
+    const problemsPanel = document.getElementById('problems-panel');
+    if (problemsPanel) {
+        problemsPanel.querySelectorAll('.panel-title[data-panel]').forEach(tab => {
+            tab.addEventListener('click', () => switchProblemsTab(tab.dataset.panel));
+        });
+    }
+}
+
+async function runAllTests() {
+    if (!ccProblem || !ccProblem.tests || ccProblem.tests.length === 0) {
+        log('Không có test cases để chạy. Hãy lấy test từ OJ trước!', 'warning');
+        return;
+    }
+
+    if (isBatchTesting) {
+        log('Đang chạy tests...', 'warning');
+        return;
+    }
+
+    const runAllBtn = document.getElementById('btn-run-all-tests');
+    if (runAllBtn) {
+        runAllBtn.classList.add('running');
+    }
+
+    isBatchTesting = true;
+    batchTestResults = [];
+
+    // First, compile the code
+    log('=== Run All Tests ===', 'system');
+    setStatus('Compiling...', '');
+
+    const tab = App.tabs.find(t => t.id === App.activeTabId);
+    if (!tab) {
+        log('Không có file đang mở!', 'error');
+        isBatchTesting = false;
+        runAllBtn?.classList.remove('running');
+        return;
+    }
+
+    const content = App.editor ? App.editor.getValue() : tab.content;
+    const compileFlags = buildCompileFlags();
+
+    const compileResult = await window.electronAPI.compile({
+        filePath: tab.path,
+        content: content,
+        flags: compileFlags
+    });
+
+    if (!compileResult.success) {
+        log('Compile Error!', 'error');
+        log(compileResult.error, 'error');
+        setStatus('Compile Error', 'error');
+        isBatchTesting = false;
+        runAllBtn?.classList.remove('running');
+        return;
+    }
+
+    App.exePath = compileResult.outputPath;
+    log(`Compiled in ${compileResult.time}ms`, 'success');
+
+    // Get time limit from problem or settings
+    const timeLimit = ccProblem.timeLimit || (App.settings.execution.timeLimitSeconds * 1000) || 3000;
+
+    // Run each test case
+    const totalTests = ccProblem.tests.length;
+    let passedCount = 0;
+
+    for (let i = 0; i < totalTests; i++) {
+        const test = ccProblem.tests[i];
+        setStatus(`Testing ${i + 1}/${totalTests}...`, '');
+
+        const result = await window.electronAPI.runTest({
+            exePath: App.exePath,
+            input: test.input || '',
+            expectedOutput: test.output || '',
+            timeLimit: timeLimit
+        });
+
+        result.testIndex = i;
+        result.testName = `Test ${i + 1}`;
+        batchTestResults.push(result);
+
+        if (result.status === 'AC') {
+            passedCount++;
+            log(`  Test ${i + 1}: AC (${result.executionTime}ms)`, 'success');
+        } else {
+            log(`  Test ${i + 1}: ${result.status} (${result.executionTime}ms)`,
+                result.status === 'WA' ? 'error' : 'warning');
+        }
+    }
+
+    // Show summary
+    const allPassed = passedCount === totalTests;
+    log(`\n=== ${passedCount}/${totalTests} AC ===`, allPassed ? 'success' : 'warning');
+    setStatus(`${passedCount}/${totalTests} AC`, allPassed ? 'success' : '');
+
+    // Update UI
+    renderTestResults();
+    showTestsTab();
+
+    isBatchTesting = false;
+    runAllBtn?.classList.remove('running');
+}
+
+function renderTestResults() {
+    const container = document.getElementById('tests-results-list');
+    const countEl = document.getElementById('test-results-count');
+
+    if (!container) return;
+
+    const passed = batchTestResults.filter(r => r.status === 'AC').length;
+    const total = batchTestResults.length;
+
+    // Update count badge
+    if (countEl) {
+        countEl.textContent = `${passed}/${total}`;
+        countEl.style.display = total > 0 ? 'inline' : 'none';
+    }
+
+    // Build HTML
+    let html = '';
+
+    // Summary bar
+    if (total > 0) {
+        const allPassed = passed === total;
+        html += `
+            <div class="test-results-summary">
+                <span class="test-summary-stat passed">✓ ${passed} passed</span>
+                <span class="test-summary-stat failed">✗ ${total - passed} failed</span>
+                <span class="test-summary-stat total">${batchTestResults.reduce((s, r) => s + r.executionTime, 0)}ms total</span>
+            </div>
+        `;
+    }
+
+    // Individual results
+    batchTestResults.forEach((result, idx) => {
+        const timeStr = result.executionTime >= 1000
+            ? (result.executionTime / 1000).toFixed(2) + 's'
+            : result.executionTime + 'ms';
+
+        const memStr = result.peakMemoryKB > 0
+            ? (result.peakMemoryKB >= 1024
+                ? (result.peakMemoryKB / 1024).toFixed(1) + 'MB'
+                : result.peakMemoryKB + 'KB')
+            : '';
+
+        html += `
+            <div class="test-result-item" data-index="${idx}">
+                <span class="test-result-status ${result.status}">${result.status}</span>
+                <div class="test-result-info">
+                    <span class="test-result-title">${result.testName}</span>
+                    <span class="test-result-details">${result.details || ''}</span>
+                </div>
+                <span class="test-result-time">${timeStr}${memStr ? ' | ' + memStr : ''}</span>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    // Click to view test case
+    container.querySelectorAll('.test-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const idx = parseInt(item.dataset.index);
+            if (ccProblem && ccProblem.tests[idx]) {
+                switchTestCase(idx);
+            }
+        });
+    });
+}
+
+function switchProblemsTab(tabName) {
+    const problemsList = document.getElementById('problems-list');
+    const testsList = document.getElementById('tests-results-list');
+    const problemsTitle = document.querySelector('.panel-title.problems');
+    const testsTitle = document.querySelector('.panel-title.tests');
+
+    if (tabName === 'problems') {
+        problemsList.style.display = 'block';
+        testsList.style.display = 'none';
+        problemsTitle?.classList.add('active');
+        testsTitle?.classList.remove('active');
+    } else {
+        problemsList.style.display = 'none';
+        testsList.style.display = 'block';
+        problemsTitle?.classList.remove('active');
+        testsTitle?.classList.add('active');
+    }
+}
+
+function showTestsTab() {
+    const problemsPanel = document.getElementById('problems-panel');
+
+    // Show problems panel if hidden
+    if (!App.showProblems) {
+        App.showProblems = true;
+        updateUI();
+    }
+
+    // Switch to tests tab
+    switchProblemsTab('tests');
+
+    // Auto-expand panel for better visibility
+    if (problemsPanel) {
+        problemsPanel.classList.add('auto-expand');
+        // Set a reasonable min-height based on number of tests
+        const testCount = batchTestResults.length;
+        const minHeight = Math.min(200 + testCount * 50, 400);
+        problemsPanel.style.minHeight = `${minHeight}px`;
+    }
+}
+
+function buildCompileFlags() {
+    const flags = [];
+    if (App.settings.compiler.cppStandard) {
+        flags.push(`-std=${App.settings.compiler.cppStandard}`);
+    }
+    if (App.settings.compiler.optimization) {
+        flags.push(App.settings.compiler.optimization);
+    }
+    if (App.settings.compiler.warnings) {
+        flags.push('-Wall', '-Wextra');
+    }
+    return flags.join(' ');
+}
+
+// Initialize batch testing
+initBatchTesting();
+
+// ============================================================================
+// AUTO UPDATE - Check for new versions
+// ============================================================================
+let updateInfo = null;
+let updateDismissedVersion = null;
+
+async function checkForUpdates() {
+    if (!window.electronAPI?.checkForUpdates) return;
+
+    try {
+        const info = await window.electronAPI.checkForUpdates();
+
+        if (info.hasUpdate) {
+            // Check if user dismissed this version before
+            const dismissedVersion = localStorage.getItem('dismissedUpdateVersion');
+            if (dismissedVersion === info.latestVersion) {
+                console.log('[Update] User previously dismissed this version');
+                return;
+            }
+
+            updateInfo = info;
+            showUpdateNotification(info);
+        }
+    } catch (error) {
+        console.error('[Update] Check failed:', error);
+    }
+}
+
+function showUpdateNotification(info) {
+    const overlay = document.getElementById('update-overlay');
+    const currentEl = document.getElementById('update-current');
+    const newEl = document.getElementById('update-new');
+    const notesEl = document.getElementById('update-notes');
+
+    if (!overlay) return;
+
+    // Update content
+    if (currentEl) currentEl.textContent = `v${info.currentVersion}`;
+    if (newEl) newEl.textContent = `v${info.latestVersion}`;
+    if (notesEl) {
+        // Parse release notes (simple markdown-ish)
+        let notes = info.releaseNotes || 'Không có thông tin chi tiết.';
+        // Convert markdown headers to bold
+        notes = notes.replace(/^#+\s*(.+)$/gm, '<strong>$1</strong>');
+        // Convert - to bullet points
+        notes = notes.replace(/^-\s+/gm, '• ');
+        notesEl.innerHTML = notes;
+    }
+
+    // Show overlay
+    overlay.classList.add('show');
+
+    // Setup handlers
+    document.getElementById('update-close')?.addEventListener('click', hideUpdateNotification);
+    document.getElementById('update-later')?.addEventListener('click', () => {
+        // Don't show again for this session
+        hideUpdateNotification();
+    });
+    document.getElementById('update-download')?.addEventListener('click', () => {
+        window.electronAPI.openReleasePage(info.downloadUrl || info.releaseUrl);
+        hideUpdateNotification();
+    });
+
+    // Click overlay to close
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) hideUpdateNotification();
+    });
+}
+
+function hideUpdateNotification() {
+    const overlay = document.getElementById('update-overlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+    }
+}
+
+// Check for updates on startup (after a short delay)
+setTimeout(() => {
+    checkForUpdates();
+}, 3000);
+
+// Add keyboard shortcut for Run All Tests (Ctrl+Shift+F11)
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'F11') {
+        e.preventDefault();
+        runAllTests();
+    }
+});
