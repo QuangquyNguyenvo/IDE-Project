@@ -77,6 +77,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Auto-update
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
     getCurrentVersion: () => ipcRenderer.invoke('get-current-version'),
-    openReleasePage: (url) => ipcRenderer.invoke('open-release-page', url)
+    openReleasePage: (url) => ipcRenderer.invoke('open-release-page', url),
+
+    // Code formatting (AStyle)
+    formatCode: (code, style) => ipcRenderer.invoke('format-code', { code, style }),
+    checkAStyle: () => ipcRenderer.invoke('check-astyle')
 });
 

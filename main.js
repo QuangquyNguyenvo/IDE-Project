@@ -732,6 +732,122 @@ ipcMain.handle('get-compiler-info', async () => {
     return compilerInfo;
 });
 
+// ============================================================================
+// CODE FORMATTING - AStyle Integration
+// ============================================================================
+// Detect AStyle executable (bundled with TDM-GCC or system-installed)
+function detectAStyle() {
+    const possiblePaths = [
+        // Bundled with app (in TDM-GCC-64)
+        path.join(resourcesPath, 'TDM-GCC-64', 'bin', 'astyle.exe'),
+        path.join(basePath, 'TDM-GCC-64', 'bin', 'astyle.exe'),
+        // System paths
+        'C:\\TDM-GCC-64\\bin\\astyle.exe',
+        'C:\\Program Files\\AStyle\\bin\\astyle.exe',
+        'C:\\Program Files (x86)\\AStyle\\bin\\astyle.exe',
+    ];
+
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            console.log(`[AStyle] Found: ${p}`);
+            return p;
+        }
+    }
+
+    console.log('[AStyle] Not found - format feature will be disabled');
+    return null;
+}
+
+let detectedAStyle = null;
+
+// Format code using AStyle
+ipcMain.handle('format-code', async (event, { code, style = 'google' }) => {
+    // Lazy detection
+    if (detectedAStyle === null) {
+        detectedAStyle = detectAStyle() || false;
+    }
+
+    if (!detectedAStyle) {
+        return {
+            success: false,
+            error: 'AStyle không được tìm thấy. Vui lòng tải astyle.exe và đặt vào thư mục TDM-GCC-64\\bin\\'
+        };
+    }
+
+    return new Promise((resolve) => {
+        // AStyle arguments for different styles
+        const styleArgs = {
+            'google': ['--style=google', '--indent=spaces=4', '--attach-namespaces', '--attach-classes', '--attach-inlines', '--add-braces', '--align-pointer=type'],
+            'allman': ['--style=allman', '--indent=spaces=4'],
+            'java': ['--style=java', '--indent=spaces=4'],
+            'kr': ['--style=kr', '--indent=spaces=4'],
+            'stroustrup': ['--style=stroustrup', '--indent=spaces=4'],
+            'whitesmith': ['--style=whitesmith', '--indent=spaces=4'],
+            'vtk': ['--style=vtk', '--indent=spaces=4'],
+            'ratliff': ['--style=ratliff', '--indent=spaces=4'],
+            'gnu': ['--style=gnu', '--indent=spaces=4'],
+            'linux': ['--style=linux', '--indent=spaces=4'],
+            'horstmann': ['--style=horstmann', '--indent=spaces=4'],
+            'lisp': ['--style=lisp', '--indent=spaces=4'],
+            'pico': ['--style=pico', '--indent=spaces=4'],
+        };
+
+        const args = styleArgs[style] || styleArgs['google'];
+
+        // Spawn astyle process
+        const astyle = spawn(detectedAStyle, args, {
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        let formattedCode = '';
+        let errorOutput = '';
+
+        astyle.stdout.on('data', (data) => {
+            formattedCode += data.toString();
+        });
+
+        astyle.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+        });
+
+        astyle.on('close', (exitCode) => {
+            if (exitCode === 0) {
+                resolve({
+                    success: true,
+                    code: formattedCode
+                });
+            } else {
+                resolve({
+                    success: false,
+                    error: errorOutput || `AStyle exited with code ${exitCode}`
+                });
+            }
+        });
+
+        astyle.on('error', (err) => {
+            resolve({
+                success: false,
+                error: err.message
+            });
+        });
+
+        // Send code to astyle via stdin
+        astyle.stdin.write(code);
+        astyle.stdin.end();
+    });
+});
+
+// Check if AStyle is available
+ipcMain.handle('check-astyle', async () => {
+    if (detectedAStyle === null) {
+        detectedAStyle = detectAStyle() || false;
+    }
+    return {
+        available: !!detectedAStyle,
+        path: detectedAStyle || null
+    };
+});
+
 app.whenReady().then(async () => {
     createWindow();
 
@@ -797,11 +913,22 @@ function startCompetitiveCompanionServer() {
                             });
 
                             // Focus window when receiving problem
+                            // Windows needs special handling to bring window to front
                             if (mainWindow.isMinimized()) {
                                 mainWindow.restore();
                             }
-                            mainWindow.focus();
+
+                            // Trick to force window to front on Windows:
+                            // Temporarily set alwaysOnTop, then remove it
+                            mainWindow.setAlwaysOnTop(true);
                             mainWindow.show();
+                            mainWindow.focus();
+                            mainWindow.setAlwaysOnTop(false);
+
+                            // Flash taskbar if window is not focused (visual notification)
+                            if (!mainWindow.isFocused()) {
+                                mainWindow.flashFrame(true);
+                            }
                         }
 
                         res.writeHead(200);

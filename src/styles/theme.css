@@ -3437,10 +3437,10 @@ body.split-active .editor-pane {
     align-items: center;
     gap: 5px;
     padding: 5px 12px;
-    background: var(--success);
+    background: var(--bg-ocean-deep);
     border: none;
     border-radius: 10px;
-    color: white;
+    color: var(--bg-ocean-dark, white);
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
@@ -3451,8 +3451,7 @@ body.split-active .editor-pane {
 
 .run-all-btn:hover {
     filter: brightness(1.1);
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(163, 217, 165, 0.4);
+    transform: scale(1.02);
 }
 
 .run-all-btn:active {
@@ -3543,28 +3542,33 @@ body.split-active .editor-pane {
 }
 
 .test-result-status.AC {
-    background: rgba(163, 217, 165, 0.3);
-    color: #2d7a33;
+    background: var(--success);
+    color: white;
+    opacity: 0.9;
 }
 
 .test-result-status.WA {
-    background: rgba(255, 143, 171, 0.3);
-    color: #c0392b;
+    background: var(--danger, var(--error));
+    color: white;
+    opacity: 0.9;
 }
 
 .test-result-status.TLE {
-    background: rgba(252, 213, 206, 0.5);
-    color: #d68910;
+    background: var(--warning);
+    color: #333;
+    opacity: 0.9;
 }
 
 .test-result-status.RE {
-    background: rgba(255, 200, 120, 0.3);
-    color: #a04000;
+    background: var(--warning);
+    color: #333;
+    opacity: 0.9;
 }
 
 .test-result-status.CE {
-    background: rgba(180, 180, 210, 0.3);
-    color: #5b5b8a;
+    background: var(--text-muted);
+    color: white;
+    opacity: 0.8;
 }
 
 .test-result-info {
@@ -3616,11 +3620,11 @@ body.split-active .editor-pane {
 }
 
 .test-summary-stat.passed {
-    color: #2d7a33;
+    color: var(--success);
 }
 
 .test-summary-stat.failed {
-    color: #c0392b;
+    color: var(--danger);
 }
 
 .test-summary-stat.total {
@@ -3656,4 +3660,126 @@ body.split-active .editor-pane {
     .test-nav-label {
         display: none;
     }
+}
+
+/* ===== TEMPLATE SETTINGS ===== */
+.setting-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.template-editor textarea {
+    width: 100%;
+    min-height: 280px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    background: var(--editor-bg, #1a2530);
+    color: var(--text-primary, #e0f0ff);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.template-editor textarea:focus {
+    border-color: var(--bg-ocean-deep);
+}
+
+.template-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-template-reset,
+.btn-keybindings-reset {
+    padding: 8px 16px;
+    background: var(--bg-button, #e8f4fc);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-template-reset:hover,
+.btn-keybindings-reset:hover {
+    background: var(--bg-button-hover, #d8ecf8);
+    border-color: var(--bg-ocean-medium);
+    color: var(--text-primary);
+}
+
+/* ===== KEYBINDINGS SETTINGS ===== */
+.keybindings-list {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-glass, rgba(255, 255, 255, 0.5));
+}
+
+.keybinding-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+
+.keybinding-item:last-child {
+    border-bottom: none;
+}
+
+.keybinding-item:hover {
+    background: var(--bg-ocean-light, rgba(136, 201, 234, 0.1));
+}
+
+.keybinding-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.keybinding-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: var(--bg-button, #e8f4fc);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.keybinding-key:hover {
+    background: var(--bg-ocean-light);
+    border-color: var(--bg-ocean-deep);
+    color: var(--text-primary);
+}
+
+.keybinding-key.editing {
+    background: var(--bg-ocean-deep);
+    border-color: var(--bg-ocean-deep);
+    color: white;
+    animation: pulse 1s infinite;
+}
+
+.keybindings-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
 }

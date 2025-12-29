@@ -18,11 +18,13 @@
 const DEFAULT_SETTINGS = {
     editor: {
         fontSize: 14,
-        fontFamily: "'Consolas', monospace",
+        fontFamily: "Consolas, monospace",
         tabSize: 4,
         minimap: true,
         wordWrap: false,
-        colorScheme: 'auto'
+        colorScheme: 'auto',
+        autoSave: false,
+        autoSaveDelay: 3  // seconds
     },
     compiler: {
         cppStandard: '',
@@ -51,6 +53,29 @@ const DEFAULT_SETTINGS = {
     },
     oj: {
         verified: false
+    },
+    template: {
+        code: `#include<bits/stdc++.h>
+using namespace std;
+
+int main() {
+    
+    return 0;
+}`
+    },
+    keybindings: {
+        compile: 'F9',
+        buildRun: 'F11',
+        run: 'F10',
+        stop: 'Shift+F5',
+        save: 'Ctrl+S',
+        newFile: 'Ctrl+N',
+        openFile: 'Ctrl+O',
+        closeTab: 'Ctrl+W',
+        toggleProblems: 'Ctrl+J',
+        settings: 'Ctrl+,',
+        toggleSplit: 'Ctrl+\\',
+        formatCode: 'Ctrl+Shift+A'
     }
 };
 
@@ -407,6 +432,9 @@ function createEditor(containerId) {
             }
         }
         clearErrorDecorations();
+
+        // Trigger auto-save if enabled
+        scheduleAutoSave();
     });
 
     // Shortcuts
@@ -420,6 +448,7 @@ function createEditor(containerId) {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyJ, toggleProblems);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Comma, openSettings);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Backslash, toggleSplit);
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyA, formatCode);  // Format code
 
     return editor;
 }
@@ -766,7 +795,9 @@ function loadSettings() {
                 appearance: { ...DEFAULT_SETTINGS.appearance, ...saved.appearance },
                 terminal: { ...DEFAULT_SETTINGS.terminal, ...saved.terminal },
                 panels: { ...DEFAULT_SETTINGS.panels, ...saved.panels },
-                oj: { ...DEFAULT_SETTINGS.oj, ...saved.oj }
+                oj: { ...DEFAULT_SETTINGS.oj, ...saved.oj },
+                template: { ...DEFAULT_SETTINGS.template, ...saved.template },
+                keybindings: { ...DEFAULT_SETTINGS.keybindings, ...saved.keybindings }
             };
         }
 
@@ -851,6 +882,18 @@ function initSettings() {
 
     document.getElementById('btn-save-settings').onclick = saveSettingsAndClose;
     document.getElementById('btn-reset-settings').onclick = resetSettings;
+
+    // Template reset button
+    const templateResetBtn = document.getElementById('btn-template-reset');
+    if (templateResetBtn) {
+        templateResetBtn.onclick = resetTemplate;
+    }
+
+    // Keybindings reset button
+    const keybindingsResetBtn = document.getElementById('btn-keybindings-reset');
+    if (keybindingsResetBtn) {
+        keybindingsResetBtn.onclick = resetKeybindings;
+    }
 }
 
 // Theme color palettes for preview and settings
@@ -1088,6 +1131,8 @@ function openSettings() {
     document.getElementById('set-minimap').checked = App.settings.editor.minimap;
     document.getElementById('set-wordWrap').checked = App.settings.editor.wordWrap;
     document.getElementById('set-editorColorScheme').value = App.settings.editor.colorScheme || 'auto';
+    document.getElementById('set-autoSave').checked = App.settings.editor.autoSave || false;
+    document.getElementById('set-autoSaveDelay').value = App.settings.editor.autoSaveDelay || 3;
 
     document.getElementById('set-cppStandard').value = App.settings.compiler.cppStandard;
     document.getElementById('set-optimization').value = App.settings.compiler.optimization;
@@ -1106,6 +1151,12 @@ function openSettings() {
     document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
     document.getElementById('set-bgUrl').value = App.settings.appearance.bgUrl || '';
 
+    // Template
+    document.getElementById('set-template').value = App.settings.template?.code || DEFAULT_SETTINGS.template.code;
+
+    // Keybindings
+    renderKeybindings();
+
     // Update theme preview to match current theme
     updateThemePreview();
 
@@ -1123,6 +1174,8 @@ function saveSettingsAndClose() {
     App.settings.editor.minimap = document.getElementById('set-minimap').checked;
     App.settings.editor.wordWrap = document.getElementById('set-wordWrap').checked;
     App.settings.editor.colorScheme = document.getElementById('set-editorColorScheme').value;
+    App.settings.editor.autoSave = document.getElementById('set-autoSave').checked;
+    App.settings.editor.autoSaveDelay = parseInt(document.getElementById('set-autoSaveDelay').value) || 3;
 
     App.settings.compiler.cppStandard = document.getElementById('set-cppStandard').value;
     App.settings.compiler.optimization = document.getElementById('set-optimization').value;
@@ -1141,6 +1194,10 @@ function saveSettingsAndClose() {
     App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
     App.settings.appearance.bgUrl = document.getElementById('set-bgUrl').value;
 
+    // Template
+    if (!App.settings.template) App.settings.template = {};
+    App.settings.template.code = document.getElementById('set-template').value;
+
     applySettings();
     saveSettings();
     closeSettings();
@@ -1154,6 +1211,188 @@ function resetSettings() {
         saveSettings();
         openSettings();
         log('Settings reset to defaults', 'info');
+    }
+}
+
+// ============================================================================
+// KEYBINDINGS MANAGEMENT
+// ============================================================================
+const KEYBINDING_LABELS = {
+    compile: 'Compile Only',
+    buildRun: 'Compile & Run',
+    run: 'Run Only',
+    stop: 'Stop Process',
+    save: 'Save File',
+    newFile: 'New File',
+    openFile: 'Open File',
+    closeTab: 'Close Tab',
+    toggleProblems: 'Toggle Problems',
+    settings: 'Open Settings',
+    toggleSplit: 'Toggle Split',
+    formatCode: 'Format Code'
+};
+
+let editingKeybinding = null;
+
+function renderKeybindings() {
+    const container = document.getElementById('keybindings-list');
+    if (!container) return;
+
+    const keybindings = App.settings.keybindings || DEFAULT_SETTINGS.keybindings;
+
+    container.innerHTML = Object.entries(keybindings).map(([key, value]) => `
+        <div class="keybinding-item" data-action="${key}">
+            <span class="keybinding-name">${KEYBINDING_LABELS[key] || key}</span>
+            <button class="keybinding-key" data-action="${key}">${value}</button>
+        </div>
+    `).join('');
+
+    // Add click handlers
+    container.querySelectorAll('.keybinding-key').forEach(btn => {
+        btn.addEventListener('click', startEditingKeybinding);
+    });
+}
+
+function startEditingKeybinding(e) {
+    const btn = e.target;
+    const action = btn.dataset.action;
+
+    // Remove editing from all
+    document.querySelectorAll('.keybinding-key').forEach(b => b.classList.remove('editing'));
+
+    btn.classList.add('editing');
+    btn.textContent = 'Press a key...';
+    editingKeybinding = action;
+
+    // Listen for key press
+    document.addEventListener('keydown', captureKeybinding);
+}
+
+function captureKeybinding(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!editingKeybinding) return;
+
+    // Escape to cancel
+    if (e.key === 'Escape') {
+        cancelEditingKeybinding();
+        return;
+    }
+
+    // Build key string
+    const parts = [];
+    if (e.ctrlKey) parts.push('Ctrl');
+    if (e.shiftKey) parts.push('Shift');
+    if (e.altKey) parts.push('Alt');
+
+    // Get the key name
+    let keyName = e.key;
+    if (keyName === ' ') keyName = 'Space';
+    else if (keyName.length === 1) keyName = keyName.toUpperCase();
+    else if (keyName.startsWith('Arrow')) keyName = keyName.replace('Arrow', '');
+
+    // Don't add modifier keys alone
+    if (!['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
+        parts.push(keyName);
+    } else {
+        return; // Wait for non-modifier key
+    }
+
+    const keyCombo = parts.join('+');
+
+    // Save the new keybinding
+    if (!App.settings.keybindings) {
+        App.settings.keybindings = { ...DEFAULT_SETTINGS.keybindings };
+    }
+    App.settings.keybindings[editingKeybinding] = keyCombo;
+
+    // Update UI
+    const btn = document.querySelector(`.keybinding-key[data-action="${editingKeybinding}"]`);
+    if (btn) {
+        btn.textContent = keyCombo;
+        btn.classList.remove('editing');
+    }
+
+    // Cleanup
+    editingKeybinding = null;
+    document.removeEventListener('keydown', captureKeybinding);
+}
+
+function cancelEditingKeybinding() {
+    if (!editingKeybinding) return;
+
+    const keybindings = App.settings.keybindings || DEFAULT_SETTINGS.keybindings;
+    const btn = document.querySelector(`.keybinding-key[data-action="${editingKeybinding}"]`);
+    if (btn) {
+        btn.textContent = keybindings[editingKeybinding];
+        btn.classList.remove('editing');
+    }
+
+    editingKeybinding = null;
+    document.removeEventListener('keydown', captureKeybinding);
+}
+
+function resetKeybindings() {
+    if (confirm('Reset all keybindings to defaults?')) {
+        App.settings.keybindings = { ...DEFAULT_SETTINGS.keybindings };
+        renderKeybindings();
+        log('Keybindings reset to defaults', 'info');
+    }
+}
+
+function resetTemplate() {
+    if (confirm('Reset template to default?')) {
+        const textarea = document.getElementById('set-template');
+        if (textarea) {
+            textarea.value = DEFAULT_SETTINGS.template.code;
+        }
+    }
+}
+
+// ============================================================================
+// AUTO-SAVE
+// ============================================================================
+let autoSaveTimer = null;
+
+function scheduleAutoSave() {
+    if (!App.settings.editor.autoSave) return;
+
+    // Clear existing timer
+    if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+    }
+
+    // Schedule new save
+    const delay = (App.settings.editor.autoSaveDelay || 3) * 1000;
+    autoSaveTimer = setTimeout(() => {
+        autoSaveCurrentFile();
+    }, delay);
+}
+
+async function autoSaveCurrentFile() {
+    const tabId = App.activeEditor === 2 ? App.splitTabId : App.activeTabId;
+    if (!tabId) return;
+
+    const tab = App.tabs.find(t => t.id === tabId);
+    if (!tab || !tab.path || !tab.modified) return;
+
+    // Only auto-save if file has been saved before (has path)
+    const editor = App.activeEditor === 2 ? App.editor2 : App.editor;
+    if (!editor) return;
+
+    const content = editor.getValue();
+
+    try {
+        const result = await window.electronAPI.saveFile({ path: tab.path, content });
+        if (result.success) {
+            tab.original = content;
+            tab.modified = false;
+            renderTabs();
+            // Silent save - no log message
+        }
+    } catch (e) {
+        console.log('Auto-save failed:', e);
     }
 }
 
@@ -1274,9 +1513,72 @@ function initShortcuts() {
         if (e.key === 'F11') { e.preventDefault(); buildRun(); }
         if (e.key === 'F10') { e.preventDefault(); run(); }
         if (e.key === 'F5' && e.shiftKey) { e.preventDefault(); stop(); }
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') { e.preventDefault(); formatCode(); }
         if (e.key === 'Escape') closeSettings();
     });
 }
+
+// ============================================================================
+// CODE FORMATTING - AStyle Integration
+// ============================================================================
+async function formatCode() {
+    const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
+    if (!editor) return;
+
+    const code = editor.getValue();
+    if (!code.trim()) return;
+
+    // Save cursor position and scroll
+    const position = editor.getPosition();
+    const scrollTop = editor.getScrollTop();
+
+    // Show status
+    setStatus('formatting', 'Đang format code...');
+
+    try {
+        if (!window.electronAPI?.formatCode) {
+            setStatus('error', 'Format không khả dụng');
+            termLog('⚠ Format code không khả dụng trong môi trường này', 'warning');
+            return;
+        }
+
+        const result = await window.electronAPI.formatCode(code, 'google');
+
+        if (result.success) {
+            const model = editor.getModel();
+            if (!model) return;
+
+            // Use executeEdits to preserve undo history (allows Ctrl+Z)
+            const fullRange = model.getFullModelRange();
+
+            editor.pushUndoStop(); // Create undo point before edit
+            editor.executeEdits('format-code', [{
+                range: fullRange,
+                text: result.code,
+                forceMoveMarkers: true
+            }]);
+            editor.pushUndoStop(); // Create undo point after edit
+
+            // Restore cursor position (best effort)
+            if (position) {
+                const newLineCount = result.code.split('\n').length;
+                const newLine = Math.min(position.lineNumber, newLineCount);
+                editor.setPosition({ lineNumber: newLine, column: position.column });
+            }
+            editor.setScrollTop(scrollTop);
+
+            setStatus('ready', 'Format thành công!');
+            termLog('✓ Code đã được format (Google Style) - Nhấn Ctrl+Z để hoàn tác', 'success');
+        } else {
+            setStatus('error', 'Format thất bại');
+            termLog(`⚠ Format thất bại: ${result.error}`, 'error');
+        }
+    } catch (err) {
+        setStatus('error', 'Format lỗi');
+        termLog(`⚠ Lỗi format: ${err.message}`, 'error');
+    }
+}
+
 
 function initTabsScroll() {
     const container = document.getElementById('tabs-container');
@@ -2018,7 +2320,9 @@ function setupResizerH(resizerId, targetId, min, max) {
 // ============================================================================
 function newFile() {
     const id = 'tab_' + Date.now();
-    const tab = { id, name: 'untitled.cpp', path: null, content: DEFAULT_CODE, original: DEFAULT_CODE, modified: false };
+    // Use template from settings, fallback to DEFAULT_CODE
+    const templateCode = App.settings.template?.code || DEFAULT_CODE;
+    const tab = { id, name: 'untitled.cpp', path: null, content: templateCode, original: templateCode, modified: false };
     App.tabs.push(tab);
     setActive(id);
     updateUI();

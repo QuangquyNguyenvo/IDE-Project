@@ -291,6 +291,24 @@
                             </svg>
                             Appearance
                         </button>
+                        <button class="settings-tab" data-tab="template">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                            Template
+                        </button>
+                        <button class="settings-tab" data-tab="keybindings">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+                                <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10" />
+                            </svg>
+                            Keybindings
+                        </button>
                     </div>
 
                     <!-- Tab Content -->
@@ -310,7 +328,7 @@
                                 <select id="set-fontFamily">
                                     <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
                                     <option value="'Fira Code', monospace">Fira Code</option>
-                                    <option value="Consolas, monospace">Consolas</option>
+                                    <option value="Consolas, monospace" selected>Consolas</option>
                                     <option value="'Cascadia Code', monospace">Cascadia Code</option>
                                 </select>
                             </div>
@@ -348,6 +366,19 @@
                                     <option value="nord">Nord</option>
                                     <option value="one-dark">One Dark</option>
                                 </select>
+                            </div>
+                            <div class="setting-row">
+                                <label>Auto Save <span class="tooltip"
+                                        title="Automatically save files after you stop typing">?</span></label>
+                                <div class="setting-control">
+                                    <label class="switch">
+                                        <input type="checkbox" id="set-autoSave">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <input type="number" id="set-autoSaveDelay" min="1" max="30" value="3"
+                                        style="width:60px;margin-left:10px;text-align:center">
+                                    <span>sec</span>
+                                </div>
                             </div>
                         </div>
 
@@ -549,6 +580,31 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Template Tab -->
+                        <div class="settings-panel" id="panel-template">
+                            <h3>Code Template</h3>
+                            <p class="setting-desc">Template code for new files. Use this as your starting point.</p>
+                            <div class="template-editor">
+                                <textarea id="set-template" rows="15" spellcheck="false"></textarea>
+                            </div>
+                            <div class="template-actions">
+                                <button class="btn-template-reset" id="btn-template-reset">Reset to Default</button>
+                            </div>
+                        </div>
+
+                        <!-- Keybindings Tab -->
+                        <div class="settings-panel" id="panel-keybindings">
+                            <h3>Keyboard Shortcuts</h3>
+                            <p class="setting-desc">Click on a shortcut to change it. Press Escape to cancel.</p>
+                            <div class="keybindings-list" id="keybindings-list">
+                                <!-- Keybindings will be rendered by JS -->
+                            </div>
+                            <div class="keybindings-actions">
+                                <button class="btn-keybindings-reset" id="btn-keybindings-reset">Reset to
+                                    Defaults</button>
                             </div>
                         </div>
                     </div>
