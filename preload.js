@@ -29,7 +29,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // Build operations
     compile: (data) => ipcRenderer.invoke('compile', data),
-    run: (exePath) => ipcRenderer.invoke('run', exePath),
+    run: (data) => ipcRenderer.invoke('run', data),
     sendInput: (input) => ipcRenderer.invoke('send-input', input),
     stopProcess: () => ipcRenderer.invoke('stop-process'),
     getCompilerInfo: () => ipcRenderer.invoke('get-compiler-info'),

@@ -26,7 +26,9 @@ const DEFAULT_SETTINGS = {
         autoSave: false,
         autoSaveDelay: 3,  // seconds
         liveCheck: false,  // Real-time syntax checking
-        liveCheckDelay: 1000  // milliseconds
+        liveCheckDelay: 1000,  // milliseconds
+        snippets: true,  // Enable snippet suggestions
+        keywords: true   // Enable keyword suggestions
     },
     compiler: {
         cppStandard: '',
@@ -78,7 +80,22 @@ int main() {
         settings: 'Ctrl+,',
         toggleSplit: 'Ctrl+\\',
         formatCode: 'Ctrl+Shift+A'
-    }
+    },
+    snippets: [
+        {
+            trigger: 'cp',
+            name: 'CP Template',
+            content: '#include <bits/stdc++.h>\nusing namespace std;\n\n#define ll long long\n#define fi first\n#define se second\n#define pb push_back\n#define all(v) v.begin(), v.end()\n\nvoid solve() {\n\t${0}\n}\n\nint main() {\n\tios_base::sync_with_stdio(0); cin.tie(0);\n\tint t = 1;\n\t// cin >> t;\n\twhile (t--) solve();\n\treturn 0;\n}',
+            isBuiltin: true
+        },
+        { trigger: 'fori', name: 'For Loop I (0)', content: 'for(int i=0; i<${1:n}; i++) {\n\t${0}\n}', isBuiltin: true },
+        { trigger: 'fori1', name: 'For Loop I (1)', content: 'for(int i=1; i<=${1:n}; i++) {\n\t${0}\n}', isBuiltin: true },
+        { trigger: 'forj', name: 'For Loop J (0)', content: 'for(int j=0; j<${1:n}; j++) {\n\t${0}\n}', isBuiltin: true },
+        { trigger: 'forj1', name: 'For Loop J (1)', content: 'for(int j=1; j<=${1:n}; j++) {\n\t${0}\n}', isBuiltin: true },
+        { trigger: 'cout', name: 'Compact Print', content: 'cout<<${1:res}<<"\\n";', isBuiltin: true },
+        { trigger: 'cin', name: 'Compact Read', content: 'cin>>${1:n};', isBuiltin: true },
+        { trigger: 'vector', name: 'STL Vector', content: 'vector<${1:int}> ${2:v};', isBuiltin: true }
+    ]
 };
 
 // ============================================================================
@@ -164,6 +181,11 @@ function initMonaco() {
 
         // Ctrl + Wheel zoom in/out
         initCtrlWheelZoom();
+
+        // Register custom C++ Intellisense & Snippets
+        if (typeof registerCppIntellisense === 'function') {
+            registerCppIntellisense(monaco);
+        }
     });
 }
 
@@ -407,14 +429,41 @@ function createEditor(containerId) {
             renderCharacters: true,
             scale: 1
         },
-        // Disable code suggestions/autocomplete
-        quickSuggestions: false,
-        suggestOnTriggerCharacters: false,
-        acceptSuggestionOnEnter: 'off',
-        tabCompletion: 'off',
-        wordBasedSuggestions: 'off',
-        parameterHints: { enabled: false },
-        suggest: { enabled: false }
+        // Enable code suggestions/autocomplete based on settings
+        quickSuggestions: {
+            other: (App.settings.editor.intellisense !== false || App.settings.editor.snippets !== false),
+            comments: false,
+            strings: (App.settings.editor.intellisense !== false || App.settings.editor.snippets !== false)
+        },
+        suggestOnTriggerCharacters: true,
+        acceptSuggestionOnEnter: 'on',
+        tabCompletion: 'on',
+        wordBasedSuggestions: App.settings.editor.intellisense !== false ? 'allDocuments' : 'off',
+        parameterHints: { enabled: App.settings.editor.intellisense !== false },
+        snippetSuggestions: 'top',
+        suggest: {
+            showKeywords: App.settings.editor.intellisense !== false && App.settings.editor.keywords !== false,
+            showSnippets: App.settings.editor.snippets !== false,
+            showWords: App.settings.editor.intellisense !== false,
+            showClasses: App.settings.editor.intellisense !== false && App.settings.editor.keywords !== false,
+            showFunctions: App.settings.editor.intellisense !== false && App.settings.editor.keywords !== false,
+            showVariables: App.settings.editor.intellisense !== false,
+            showValues: App.settings.editor.intellisense !== false,
+            showIcons: true,
+            showMethods: App.settings.editor.intellisense !== false,
+            showProperties: App.settings.editor.intellisense !== false,
+            showModules: App.settings.editor.intellisense !== false,
+            showOperators: App.settings.editor.intellisense !== false,
+            showReferences: false,
+            showFolders: false,
+            showTypeParameters: App.settings.editor.intellisense !== false,
+            showStatusBar: false,
+            preview: true,
+            insertMode: 'insert'
+        },
+        suggestSelection: 'first',
+        suggestFontSize: 13.5,
+        suggestLineHeight: 26
     });
 
     editor.onDidChangeCursorPosition(e => {
@@ -802,7 +851,8 @@ function loadSettings() {
                 panels: { ...DEFAULT_SETTINGS.panels, ...saved.panels },
                 oj: { ...DEFAULT_SETTINGS.oj, ...saved.oj },
                 template: { ...DEFAULT_SETTINGS.template, ...saved.template },
-                keybindings: { ...DEFAULT_SETTINGS.keybindings, ...saved.keybindings }
+                keybindings: { ...DEFAULT_SETTINGS.keybindings, ...saved.keybindings },
+                snippets: saved.snippets || DEFAULT_SETTINGS.snippets
             };
         }
 
@@ -851,6 +901,11 @@ function initSettings() {
 
             // Re-apply theme colors to fix inline styles
             updateThemePreview();
+
+            // Refresh snippets list if switching to snippets tab
+            if (tab.dataset.tab === 'snippets' && typeof renderSnippetsList === 'function') {
+                renderSnippetsList();
+            }
         };
     });
 
@@ -1179,6 +1234,9 @@ function openSettings() {
     document.getElementById('set-autoSaveDelay').value = App.settings.editor.autoSaveDelay || 3;
     document.getElementById('set-liveCheck').checked = App.settings.editor.liveCheck || false;
     document.getElementById('set-liveCheckDelay').value = App.settings.editor.liveCheckDelay || 1000;
+    document.getElementById('set-intellisense').checked = App.settings.editor.intellisense !== false;
+    document.getElementById('set-keywords').checked = App.settings.editor.keywords !== false;
+    document.getElementById('set-snippets-enabled').checked = App.settings.editor.snippets !== false;
 
     document.getElementById('set-cppStandard').value = App.settings.compiler.cppStandard;
     document.getElementById('set-optimization').value = App.settings.compiler.optimization;
@@ -1217,6 +1275,11 @@ function openSettings() {
     // Update theme preview to match current theme
     updateThemePreview();
 
+    // Refresh snippets list
+    if (typeof renderSnippetsList === 'function') {
+        renderSnippetsList();
+    }
+
     document.getElementById('settings-overlay').classList.add('show');
 }
 
@@ -1235,6 +1298,9 @@ function saveSettingsAndClose() {
     App.settings.editor.autoSaveDelay = parseInt(document.getElementById('set-autoSaveDelay').value) || 3;
     App.settings.editor.liveCheck = document.getElementById('set-liveCheck').checked;
     App.settings.editor.liveCheckDelay = parseInt(document.getElementById('set-liveCheckDelay').value) || 1000;
+    App.settings.editor.intellisense = document.getElementById('set-intellisense').checked;
+    App.settings.editor.keywords = document.getElementById('set-keywords').checked;
+    App.settings.editor.snippets = document.getElementById('set-snippets-enabled').checked;
 
     App.settings.compiler.cppStandard = document.getElementById('set-cppStandard').value;
     App.settings.compiler.optimization = document.getElementById('set-optimization').value;
@@ -1480,7 +1546,7 @@ function scheduleLiveCheck() {
 }
 
 async function doLiveCheck() {
-    if (isLiveChecking || !App.editor) return;
+    if (isLiveChecking || isBuilding || !App.editor) return;
 
     const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
     const tabId = App.activeEditor === 2 ? App.splitTabId : App.activeTabId;
@@ -1557,7 +1623,28 @@ function applySettings() {
         fontFamily: App.settings.editor.fontFamily,
         tabSize: App.settings.editor.tabSize,
         minimap: { enabled: App.settings.editor.minimap },
-        wordWrap: App.settings.editor.wordWrap ? 'on' : 'off'
+        wordWrap: App.settings.editor.wordWrap ? 'on' : 'off',
+        quickSuggestions: {
+            other: (App.settings.editor.intellisense !== false || App.settings.editor.snippets !== false),
+            comments: false,
+            strings: (App.settings.editor.intellisense !== false || App.settings.editor.snippets !== false)
+        },
+        wordBasedSuggestions: App.settings.editor.intellisense !== false ? 'allDocuments' : 'off',
+        parameterHints: { enabled: App.settings.editor.intellisense !== false },
+        suggest: {
+            showKeywords: App.settings.editor.intellisense !== false && App.settings.editor.keywords !== false,
+            showSnippets: App.settings.editor.snippets !== false,
+            showWords: App.settings.editor.intellisense !== false,
+            showClasses: App.settings.editor.intellisense !== false && App.settings.editor.keywords !== false,
+            showFunctions: App.settings.editor.intellisense !== false && App.settings.editor.keywords !== false,
+            showVariables: App.settings.editor.intellisense !== false,
+            showValues: App.settings.editor.intellisense !== false,
+            showMethods: App.settings.editor.intellisense !== false,
+            showProperties: App.settings.editor.intellisense !== false,
+            showModules: App.settings.editor.intellisense !== false,
+            showOperators: App.settings.editor.intellisense !== false,
+            showTypeParameters: App.settings.editor.intellisense !== false
+        }
     };
     if (App.editor) App.editor.updateOptions(opts);
     if (App.editor2) App.editor2.updateOptions(opts);
@@ -2999,7 +3086,18 @@ async function run(clearTerminal = true) {
         }, App.settings.execution.timeLimitSeconds * 1000);
     }
 
-    await window.electronAPI.run(App.exePath);
+    const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
+    const tab = App.tabs.find(t => t.id === tabId);
+    let sourceDir = null;
+    if (tab && tab.path) {
+        const lastSlash = Math.max(tab.path.lastIndexOf('/'), tab.path.lastIndexOf('\\'));
+        if (lastSlash !== -1) sourceDir = tab.path.substring(0, lastSlash);
+    }
+
+    await window.electronAPI.run({
+        exePath: App.exePath,
+        cwd: sourceDir
+    });
 
     if (App.inputLines.length > 0) {
         setTimeout(sendNextInput, 100);
@@ -3280,8 +3378,8 @@ function applyAnsiStyle(text, fg, bg, bold, underline) {
     }
 
     let style = '';
-    if (fg) style += `color:${fg};`;
-    if (bg) style += `background:${bg};`;
+    if (fg) style += `color:${fg}; `;
+    if (bg) style += `background:${bg}; `;
     if (bold) style += 'font-weight:bold;';
     if (underline) style += 'text-decoration:underline;';
 
@@ -3348,7 +3446,7 @@ async function sendInput() {
 function setStatus(msg, type) {
     const bar = document.getElementById('status-bar');
     bar.className = 'status-bar' + (type ? ' ' + type : '');
-    document.getElementById('status').innerHTML = `<span class="dot"></span>${msg}`;
+    document.getElementById('status').innerHTML = `<span class="dot"></span> ${msg}`;
 }
 
 function compareOutput() {
@@ -3804,25 +3902,25 @@ function showReloadNotification(tab) {
     notification.dataset.path = tab.path;
 
     notification.innerHTML = `
-        <div class="reload-notification-content">
-            <div class="reload-notification-icon">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-            </div>
-            <div class="reload-notification-text">
-                <div class="reload-notification-title">File đã thay đổi</div>
-                <div class="reload-notification-file">${tab.name}</div>
-                <div class="reload-notification-desc">File đã được thay đổi bên ngoài. Bạn có muốn tải lại?</div>
-            </div>
-            <div class="reload-notification-actions">
-                <button class="reload-btn reload-btn-yes" title="Tải lại từ disk">Tải lại</button>
-                <button class="reload-btn reload-btn-no" title="Giữ nguyên">Bỏ qua</button>
-            </div>
-        </div>
-    `;
+                <div class="reload-notification-content">
+                    <div class="reload-notification-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                    <div class="reload-notification-text">
+                        <div class="reload-notification-title">File đã thay đổi</div>
+                        <div class="reload-notification-file">${tab.name}</div>
+                        <div class="reload-notification-desc">File đã được thay đổi bên ngoài. Bạn có muốn tải lại?</div>
+                    </div>
+                    <div class="reload-notification-actions">
+                        <button class="reload-btn reload-btn-yes" title="Tải lại từ disk">Tải lại</button>
+                        <button class="reload-btn reload-btn-no" title="Giữ nguyên">Bỏ qua</button>
+                    </div>
+                </div>
+                `;
 
     // Yes - Reload from disk
     notification.querySelector('.reload-btn-yes').onclick = async () => {
@@ -3960,11 +4058,15 @@ async function runAllTests() {
         const test = ccProblem.tests[i];
         setStatus(`Testing ${i + 1}/${totalTests}...`, '');
 
+        const lastSlash = tab.path ? Math.max(tab.path.lastIndexOf('/'), tab.path.lastIndexOf('\\')) : -1;
+        const sourceDir = lastSlash !== -1 ? tab.path.substring(0, lastSlash) : null;
+
         const result = await window.electronAPI.runTest({
             exePath: App.exePath,
             input: test.input || '',
             expectedOutput: test.output || '',
-            timeLimit: timeLimit
+            timeLimit: timeLimit,
+            cwd: sourceDir
         });
 
         result.testIndex = i;
@@ -4015,12 +4117,12 @@ function renderTestResults() {
     if (total > 0) {
         const allPassed = passed === total;
         html += `
-            <div class="test-results-summary">
-                <span class="test-summary-stat passed">✓ ${passed} passed</span>
-                <span class="test-summary-stat failed">✗ ${total - passed} failed</span>
-                <span class="test-summary-stat total">${batchTestResults.reduce((s, r) => s + r.executionTime, 0)}ms total</span>
-            </div>
-        `;
+                <div class="test-results-summary">
+                    <span class="test-summary-stat passed">✓ ${passed} passed</span>
+                    <span class="test-summary-stat failed">✗ ${total - passed} failed</span>
+                    <span class="test-summary-stat total">${batchTestResults.reduce((s, r) => s + r.executionTime, 0)}ms total</span>
+                </div>
+                `;
     }
 
     // Individual results
@@ -4036,15 +4138,15 @@ function renderTestResults() {
             : '';
 
         html += `
-            <div class="test-result-item" data-index="${idx}">
-                <span class="test-result-status ${result.status}">${result.status}</span>
-                <div class="test-result-info">
-                    <span class="test-result-title">${result.testName}</span>
-                    <span class="test-result-details">${result.details || ''}</span>
+                <div class="test-result-item" data-index="${idx}">
+                    <span class="test-result-status ${result.status}">${result.status}</span>
+                    <div class="test-result-info">
+                        <span class="test-result-title">${result.testName}</span>
+                        <span class="test-result-details">${result.details || ''}</span>
+                    </div>
+                    <span class="test-result-time">${timeStr}${memStr ? ' | ' + memStr : ''}</span>
                 </div>
-                <span class="test-result-time">${timeStr}${memStr ? ' | ' + memStr : ''}</span>
-            </div>
-        `;
+                `;
     });
 
     container.innerHTML = html;

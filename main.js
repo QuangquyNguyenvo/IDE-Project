@@ -1,18 +1,4 @@
-/**
- * C++ IDE - Main Process
- * 
- * Electron main process handling:
- * - Window creation and management
- * - IPC communication with renderer
- * - File system operations
- * - Compiler detection and integration
- * - Build system (compile, run, stop)
- * - Precompiled header (PCH) management
- * 
- * @author Project IDE Team
- * @license MIT
- */
-
+require('v8-compile-cache');
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -546,7 +532,15 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
 
         const dir = path.dirname(actualFilePath);
         const baseName = path.basename(actualFilePath, path.extname(actualFilePath));
-        const outputPath = path.join(dir, baseName + '.exe');
+
+        // OPTIMIZATION: Use system temp directory for .exe output
+        // This acts like a "RAM Disk" on modern OS which caches small temp files in RAM.
+        // It also keeps the user's source directory clean.
+        const buildsDir = path.join(app.getPath('temp'), 'cpp-ide-builds');
+        if (!fs.existsSync(buildsDir)) {
+            fs.mkdirSync(buildsDir, { recursive: true });
+        }
+        const outputPath = path.join(buildsDir, baseName + '.exe');
 
         // ===== MULTI-FILE PROJECT SUPPORT =====
         // Smart detection: only link .cpp files whose .h headers are #included
@@ -555,54 +549,43 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
 
         if (!usingTempFile) {
             try {
-                // Extract all #include "..." from the main file
-                const includeRegex = /#include\s*"([^"]+)"/g;
-                let match;
-                const includedHeaders = new Set();
+                // Quick check if there are any local includes at all before scanning directory
+                if (content.includes('#include "')) {
+                    const includeRegex = /#include\s*"([^"]+)"/g;
+                    let match;
+                    const includedHeaders = new Set();
+                    while ((match = includeRegex.exec(content)) !== null) {
+                        const headerBase = path.basename(match[1], path.extname(match[1])).toLowerCase();
+                        includedHeaders.add(headerBase);
+                    }
 
-                while ((match = includeRegex.exec(content)) !== null) {
-                    // Get the base name without extension
-                    const headerFile = match[1];
-                    const headerBase = path.basename(headerFile, path.extname(headerFile));
-                    includedHeaders.add(headerBase.toLowerCase());
-                }
-
-                if (includedHeaders.size > 0) {
-                    // Find all .cpp files in the same directory
-                    const allFiles = fs.readdirSync(dir);
-
-                    for (const file of allFiles) {
-                        const ext = path.extname(file).toLowerCase();
-                        if ((ext === '.cpp' || ext === '.c' || ext === '.cc' || ext === '.cxx') && file !== path.basename(actualFilePath)) {
-                            // Check if this .cpp has a matching header that was included
-                            const cppBase = path.basename(file, ext).toLowerCase();
-                            if (includedHeaders.has(cppBase)) {
-                                const fullPath = path.join(dir, file);
-                                sourceFiles.push(fullPath);
-                                linkedFiles.push(file);
+                    if (includedHeaders.size > 0) {
+                        const allFiles = fs.readdirSync(dir);
+                        for (const file of allFiles) {
+                            const ext = path.extname(file).toLowerCase();
+                            if ((ext === '.cpp' || ext === '.c' || ext === '.cc' || ext === '.cxx') &&
+                                file.toLowerCase() !== path.basename(actualFilePath).toLowerCase()) {
+                                const cppBase = path.basename(file, ext).toLowerCase();
+                                if (includedHeaders.has(cppBase)) {
+                                    sourceFiles.push(path.join(dir, file));
+                                    linkedFiles.push(file);
+                                }
                             }
                         }
                     }
-
-                    if (linkedFiles.length > 0) {
-                        console.log(`[Compile] Multi-file project detected. Linking: ${linkedFiles.join(', ')}`);
-                    }
                 }
-            } catch (e) {
-                console.log('[Compile] Could not scan directory:', e.message);
-            }
+            } catch (e) { }
         }
 
         // PCH only incompatible with different C++ standard (-std=)
-        // Optimization (-O2,-O3) and warnings (-Wall) are fine with PCH
         const hasStdFlag = flags && /-std=/.test(flags);
         const usesPCH = content.includes('bits/stdc++.h') && pchReady && !hasStdFlag;
 
-        // Build args - start with source files and output
+        // Build args - reverted to stable set
         const args = [
-            ...sourceFiles,  // All source files
+            ...sourceFiles,
             '-o', outputPath,
-            '-I', dir,  // Include current directory for local headers
+            '-I', dir,
         ];
 
         // Apply user settings flags (C++ standard, optimization, warnings)
@@ -670,20 +653,21 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
     });
 });
 
-ipcMain.handle('run', async (event, exePath) => {
+ipcMain.handle('run', async (event, { exePath, cwd }) => {
     return new Promise((resolve) => {
         if (!exePath || !fs.existsSync(exePath)) {
             resolve({ success: false, error: 'Executable not found. Please compile first.' });
             return;
         }
 
-        const dir = path.dirname(exePath);
+        // Use provided CWD (usually source file dir) or fallback to exe dir
+        const workingDir = cwd || path.dirname(exePath);
         const runStartTime = Date.now();
         let peakMemoryKB = 0;
 
         // Run the executable
         runningProcess = spawn(exePath, [], {
-            cwd: dir,
+            cwd: workingDir,
             stdio: ['pipe', 'pipe', 'pipe']
         });
         runningExeName = path.basename(exePath); // Save for stopProcess
@@ -972,6 +956,9 @@ ipcMain.handle('syntax-check', async (event, { content, filePath }) => {
             '-fmax-errors=50',
             '-Wall',
             '-Wextra',
+            '-pipe',
+            '-fno-exceptions',
+            '-fno-rtti',
             tempFile
         ];
 
@@ -1165,14 +1152,14 @@ ipcMain.handle('cc-open-extension-page', async () => {
 // ============================================================================
 // BATCH TESTING - Run single test case with timeout
 // ============================================================================
-ipcMain.handle('run-test', async (event, { exePath, input, expectedOutput, timeLimit }) => {
+ipcMain.handle('run-test', async (event, { exePath, input, expectedOutput, timeLimit, cwd }) => {
     return new Promise((resolve) => {
         if (!exePath || !fs.existsSync(exePath)) {
             resolve({ status: 'CE', error: 'Executable not found' });
             return;
         }
 
-        const dir = path.dirname(exePath);
+        const workingDir = cwd || path.dirname(exePath);
         let output = '';
         let errorOutput = '';
         let killed = false;
@@ -1181,7 +1168,7 @@ ipcMain.handle('run-test', async (event, { exePath, input, expectedOutput, timeL
 
         // Create test process
         const testProcess = spawn(exePath, [], {
-            cwd: dir,
+            cwd: workingDir,
             stdio: ['pipe', 'pipe', 'pipe']
         });
 

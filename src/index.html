@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -11,6 +11,8 @@
         href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="styles/theme.css">
+    <link rel="stylesheet" href="styles/suggest-fix.css">
+    <link rel="stylesheet" href="styles/snippet-editor.css">
     <link rel="stylesheet" href="styles/themes.css">
     <link rel="stylesheet" href="../node_modules/monaco-editor/min/vs/editor/editor.main.css">
 </head>
@@ -309,6 +311,14 @@
                             </svg>
                             Keybindings
                         </button>
+                        <button class="settings-tab" data-tab="snippets">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                            </svg>
+                            Snippets
+                        </button>
                     </div>
 
                     <!-- Tab Content -->
@@ -355,6 +365,14 @@
                                 </label>
                             </div>
                             <div class="setting-row">
+                                <label>Keyword Suggestions <span class="tooltip"
+                                        title="Suggest keywords like vector, cout, int...">?</span></label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-keywords" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
                                 <label>Editor Colors <span class="tooltip"
                                         title="Syntax highlighting color scheme">?</span></label>
                                 <select id="set-editorColorScheme">
@@ -392,6 +410,14 @@
                                         style="width:90px;margin-left:10px;text-align:center">
                                     <span>ms</span>
                                 </div>
+                            </div>
+                            <div class="setting-row">
+                                <label>Intellisense (Code Suggestions) <span class="tooltip"
+                                        title="Enable smart code completion for C++">?</span></label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-intellisense">
+                                    <span class="slider"></span>
+                                </label>
                             </div>
                         </div>
 
@@ -621,6 +647,39 @@
                                     Defaults</button>
                             </div>
                         </div>
+
+                        <!-- Snippets Tab -->
+                        <div class="settings-panel" id="panel-snippets">
+                            <h3>Code Snippets</h3>
+                            <p class="setting-desc">
+                                Create shortcuts for frequently used code. Type the trigger keyword in the editor to
+                                insert your snippet.
+                            </p>
+
+                            <!-- Enable toggle -->
+                            <div class="setting-row" style="margin-bottom: 15px;">
+                                <label>Enable Snippets <span class="tooltip"
+                                        title="Show snippet suggestions when typing">?</span></label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-snippets-enabled" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-group" style="display: block;">
+                                <div class="snippets-list-container">
+                                    <div id="snippets-list"></div>
+                                </div>
+                                <button id="btn-add-snippet">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>
+                                    Add New Snippet
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -630,6 +689,66 @@
                 </div>
             </div>
         </div>
+
+        <!-- ===== SNIPPET EDITOR MODAL ===== -->
+        <div class="snippet-editor-modal" id="snippet-editor-modal">
+            <div class="snippet-editor-overlay"></div>
+            <div class="snippet-editor-container">
+                <div class="snippet-editor-header">
+                    <h2 id="snippet-editor-title">Edit Snippet</h2>
+                    <button class="btn-close-snippet-editor" id="btn-close-snippet-editor">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="snippet-editor-body">
+                    <div class="snippet-field">
+                        <label for="snippet-trigger-input">Trigger Keyword</label>
+                        <input type="text" id="snippet-trigger-input" placeholder="e.g., fori, bfs, dfs..." />
+                    </div>
+                    <div class="snippet-field">
+                        <label for="snippet-content-editor">Snippet Content</label>
+                        <div id="snippet-content-editor"
+                            style="height: 300px; border: 1px solid var(--border-color); border-radius: 6px; background: #1e1e1e;">
+                        </div>
+                    </div>
+                    <!-- Snippet Tips -->
+                    <div class="snippet-tips">
+                        <div class="tips-header">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Mẹo viết Snippet (Smart Template)
+                        </div>
+                        <div class="tips-content">
+                            • <code>${1:ten_bien}</code> : Điểm dừng số 1, nhấn Tab để nhảy tới đây. Có nội dung mặc
+                            định.<br>
+                            • <code>${2}</code> : Điểm dừng số 2, nhấn Tab lần nữa để tới đây.<br>
+                            • <code>${0}</code> : Điểm dừng cuối cùng (thường để giữa cặp ngoặc { }).
+                            <div class="tips-examples">
+                                <strong>Ví dụ:</strong><br>
+                                1. Vòng lặp:
+                                <pre>for(int i=0; i<${1:n}; i++) {\n    ${0}\n}</pre>
+                                2. Xuất dữ liệu / Vector:
+                                <pre>cout<<${1:res}<<"\\n";\nvector<${1:int}> ${2:v};</pre>
+                                3. Viết hàm nhanh:
+                                <pre>${1:void} ${2:solve}() {\n    ${0}\n}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="snippet-editor-footer">
+                    <button class="btn-secondary" id="btn-cancel-snippet">Cancel</button>
+                    <button class="btn-primary" id="btn-save-snippet">Save Snippet</button>
+                </div>
+            </div>
+        </div>
+
 
         <!-- ===== MAIN ===== -->
         <div class="main">
@@ -777,6 +896,8 @@
 
     <script>var require = { paths: { vs: '../node_modules/monaco-editor/min/vs' } };</script>
     <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script src="js/cpp-suggestions.js"></script>
+    <script src="js/snippet-editor.js"></script>
     <script src="js/app.js"></script>
 </body>
 

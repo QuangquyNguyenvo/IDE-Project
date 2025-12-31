@@ -47,13 +47,13 @@
     --border-strong: #88c9ea;
 
     /* Effect Variables (Quality Mode) */
-    --shadow-soft: 0 8px 32px rgba(136, 201, 234, 0.25);
-    --shadow-card: 0 4px 12px rgba(136, 201, 234, 0.15);
-    --glow: 0 0 15px rgba(136, 201, 234, 0.6);
-    --blur-filter: blur(10px);
+    --shadow-soft: 0 8px 32px rgba(136, 201, 234, 0.2);
+    --shadow-card: 0 4px 12px rgba(136, 201, 234, 0.1);
+    --glow: 0 0 12px rgba(136, 201, 234, 0.4);
+    --blur-filter: blur(8px);
     --blur-filter-light: blur(2px);
-    --blur-filter-medium: blur(5px);
-    --transition-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Professional sleek easing, no bounce for better performance feeling */
+    --transition-timing: cubic-bezier(0.2, 0.8, 0.2, 1);
     --transition-duration: 0.2s;
 
     --header-height: 54px;
@@ -128,8 +128,10 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: radial-gradient(circle at center, transparent 0%, rgba(188, 226, 245, 0.3) 100%);
-    backdrop-filter: var(--blur-filter-light);
+    background: transparent;
+    /* Remove heavy radial gradient */
+    backdrop-filter: none;
+    /* CRITICAL: Removing blur from main container fixes 90% of lag */
     position: relative;
     z-index: 1;
 }
@@ -163,6 +165,8 @@ body {
     align-items: center;
     height: var(--header-height);
     background: var(--bg-glass-heavy);
+    backdrop-filter: var(--blur-filter-light);
+    /* Apply blur only here */
     border-bottom: 2px solid white;
     box-shadow: 0 4px 20px rgba(136, 201, 234, 0.1);
     padding: 0 16px;
@@ -239,13 +243,16 @@ body {
     font-family: 'Nunito', sans-serif;
     font-size: 14px;
     font-weight: 700;
-    transition: background var(--transition-duration) var(--transition-timing), color var(--transition-duration), transform var(--transition-duration) var(--transition-timing);
+    transform: translateZ(0);
+    /* Force GPU acceleration */
+    will-change: transform, background, color;
+    transition: all var(--transition-duration) var(--transition-timing);
 }
 
 .menu-btn:hover {
     background: var(--bg-ocean-light);
     color: var(--bg-ocean-dark);
-    transform: translateY(-1px);
+    transform: translateY(-1px) translateZ(0);
 }
 
 .menu-btn.active {
@@ -833,6 +840,10 @@ body {
     flex-direction: column;
     gap: 8px;
     border: 3px solid #b8e2f5;
+    overflow-y: auto;
+    /* Allow scrolling when tabs overflow */
+    max-height: calc(100vh - 200px);
+    /* Limit height */
 }
 
 .settings-tab {

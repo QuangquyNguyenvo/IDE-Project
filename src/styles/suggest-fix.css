@@ -1,0 +1,108 @@
+.suggest-widget,
+.monaco-editor .suggest-widget {
+    background-color: var(--bg-primary, #1e1e1e) !important;
+    border: 1px solid var(--border-color, #454545) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 8px !important;
+    z-index: 99999 !important;
+    overflow: hidden !important;
+}
+
+/* CRITICAL: Force row height to prevent text clipping */
+.suggest-widget .monaco-list .monaco-list-row,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row {
+    height: 26px !important;
+    /* Force explicit height */
+    min-height: 26px !important;
+    line-height: 26px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 6px !important;
+}
+
+/* Icon and label containers */
+.suggest-widget .monaco-list .monaco-list-row .monaco-icon-label,
+.suggest-widget .monaco-list .monaco-list-row>.contents {
+    height: 26px !important;
+    line-height: 26px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* List container adjustments */
+.suggest-widget .monaco-list {
+    padding: 2px 0 !important;
+}
+
+/* Text color */
+.suggest-widget .monaco-list .monaco-list-row .label-name {
+    color: #d4d4d4 !important;
+    opacity: 1 !important;
+}
+
+.suggest-widget .monaco-list .monaco-list-row.focused .label-name {
+    color: #ffffff !important;
+}
+
+/* Type Label (right side text) */
+.suggest-widget .monaco-list .monaco-list-row .type-label {
+    opacity: 0.6 !important;
+    color: #aaaaaa !important;
+}
+
+/* Background for focused item */
+.suggest-widget .monaco-list .monaco-list-row.focused {
+    background-color: #007acc !important;
+}
+
+/* Matching highlight color */
+.suggest-widget .monaco-list .monaco-list-row .monaco-highlighted-label .highlight {
+    color: #569cd6 !important;
+    font-weight: bold !important;
+}
+
+.suggest-widget .monaco-list .monaco-list-row.focused .monaco-highlighted-label .highlight {
+    color: #9cdcfe !important;
+}
+
+
+/* --- LIGHT THEME OVERRIDES --- */
+body[data-theme="kawaii-light"] .suggest-widget {
+    background-color: #f3f3f3 !important;
+    border-color: #c0c0c0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row .label-name {
+    color: #333333 !important;
+}
+
+body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row.focused {
+    background-color: #0060c0 !important;
+}
+
+body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row.focused .label-name {
+    color: #ffffff !important;
+}
+
+body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row .monaco-highlighted-label .highlight {
+    color: #005cc5 !important;
+}
+
+body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row.focused .monaco-highlighted-label .highlight {
+    color: #ffffff !important;
+    text-decoration: underline;
+}
+
+/* Details Widget (Documentation) */
+.suggest-details,
+.monaco-editor .suggest-details {
+    background-color: #1e1e1e !important;
+    border: 1px solid #454545 !important;
+}
+
+body[data-theme="kawaii-light"] .suggest-details {
+    background-color: #f3f3f3 !important;
+    border-color: #c0c0c0 !important;
+    color: #333 !important;
+}
