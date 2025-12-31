@@ -420,14 +420,23 @@ const pchDir = path.join(app.getPath('userData'), 'pch');
 let pchReady = false;
 
 // Ensure PCH is created on startup (or rebuild if compiler changed)
-async function ensurePCH() {
+const getPCHKey = (flags = '') => {
+    const optMatch = flags.match(/-O[0-3|s|fast]/);
+    const stdMatch = flags.match(/-std=[^ ]+/);
+    const opt = optMatch ? optMatch[0] : '-O0';
+    const std = stdMatch ? stdMatch[0] : '';
+    return `${opt}_${std}`.replace(/[^a-zA-Z0-9_]/g, '');
+};
+
+async function ensurePCH(flags = '') {
     if (!fs.existsSync(pchDir)) {
         fs.mkdirSync(pchDir, { recursive: true });
     }
 
+    const pchKey = getPCHKey(flags);
     const pchHeader = path.join(pchDir, 'stdc++.h');
-    const pchFile = path.join(pchDir, 'stdc++.h.gch');
-    const pchInfoFile = path.join(pchDir, 'pch-info.json');
+    const pchFile = path.join(pchDir, `stdc++.h_${pchKey}.gch`);
+    const pchInfoFile = path.join(pchDir, `pch-info_${pchKey}.json`);
 
     const compilerExe = detectedCompiler || 'g++';
 
@@ -435,67 +444,43 @@ async function ensurePCH() {
         try {
             const pchInfo = JSON.parse(fs.readFileSync(pchInfoFile, 'utf-8'));
             if (pchInfo.compiler === compilerExe && pchInfo.version === compilerInfo.version) {
-                console.log('[PCH] Using cached PCH');
-                pchReady = true;
-                return true;
-            } else {
-                console.log(`[PCH] Compiler changed: ${pchInfo.compiler} → ${compilerExe}`);
+                return { ready: true, pchFile, pchKey };
             }
-        } catch (e) {
-            console.log('[PCH] Invalid pch-info.json, rebuilding');
-        }
+        } catch (e) { }
     }
 
-    console.log('[PCH] Building precompiled header...');
+    const optMatch = flags.match(/-O[0-3|s|fast]/);
+    const stdMatch = flags.match(/-std=[^ ]+/);
+    const buildArgs = ['-x', 'c++-header', pchHeader, '-o', pchFile];
+    if (optMatch) buildArgs.push(optMatch[0]);
+    if (stdMatch) buildArgs.push(stdMatch[0]);
+
+    if (!fs.existsSync(pchHeader)) {
+        fs.writeFileSync(pchHeader, '#include <bits/stdc++.h>\n', 'utf-8');
+    }
 
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('system-message', {
             type: 'info',
-            message: 'Đang tạo Precompiled Header (lần đầu, ~10s)...'
+            message: `Đang tối ưu thư viện cho cấu hình ${optMatch ? optMatch[0] : '-O0'}...`
         });
     }
 
-    fs.writeFileSync(pchHeader, '#include <bits/stdc++.h>\n', 'utf-8');
-
     return new Promise((resolve) => {
-        const startTime = Date.now();
-        const compiler = spawn(compilerExe, [
-            '-x', 'c++-header',
-            pchHeader,
-            '-o', pchFile,
-            '-O0'
-        ], { cwd: pchDir });
-
+        const compiler = spawn(compilerExe, buildArgs, { cwd: pchDir });
         compiler.on('close', (code) => {
-            const elapsed = Date.now() - startTime;
             if (code === 0) {
                 fs.writeFileSync(pchInfoFile, JSON.stringify({
                     compiler: compilerExe,
                     version: compilerInfo.version,
-                    created: new Date().toISOString()
+                    flags: buildArgs.join(' ')
                 }), 'utf-8');
-                console.log(`[PCH] Built successfully in ${elapsed}ms`);
-                pchReady = true;
-
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('system-message', {
-                        type: 'success',
-                        message: `PCH sẵn sàng (${(elapsed / 1000).toFixed(1)}s). Các lần build sau sẽ nhanh hơn!`
-                    });
-                }
-                resolve(true);
+                resolve({ ready: true, pchFile, pchKey });
             } else {
-                console.log('[PCH] Build failed');
-                pchReady = false;
-                resolve(false);
+                resolve({ ready: false });
             }
         });
-
-        compiler.on('error', (err) => {
-            console.log('[PCH] Error:', err.message);
-            pchReady = false;
-            resolve(false);
-        });
+        compiler.on('error', () => resolve({ ready: false }));
     });
 }
 
@@ -577,34 +562,31 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
             } catch (e) { }
         }
 
-        // PCH only incompatible with different C++ standard (-std=)
-        const hasStdFlag = flags && /-std=/.test(flags);
-        const usesPCH = content.includes('bits/stdc++.h') && pchReady && !hasStdFlag;
+        // PCH optimization: ensure PCH matches current flags to avoid g++ ignoring it
+        const pch = (content.includes('bits/stdc++.h')) ? await ensurePCH(flags) : { ready: false };
 
         // Build args - reverted to stable set
         const args = [
             ...sourceFiles,
             '-o', outputPath,
             '-I', dir,
+            '-fno-enforce-eh-specs' // Minor speed optimization for EH analysis
         ];
 
-        // Apply user settings flags (C++ standard, optimization, warnings)
+        // Apply user settings flags
         if (flags) {
             const flagsArr = flags.split(' ').filter(f => f.trim());
             args.push(...flagsArr);
-            if (hasStdFlag) {
-                console.log(`[Compile] User flags: ${flagsArr.join(' ')} (PCH disabled due to -std=)`);
-            } else {
-                console.log(`[Compile] User flags: ${flagsArr.join(' ')}`);
-            }
         } else {
             args.push('-O0', '-w');
         }
 
-        if (usesPCH) {
+        if (pch.ready) {
+            // Important: Use the EXACT filename we generated for the .gch
+            // We tell g++ where it is and force include it
             args.push('-I', pchDir);
-            args.push('-include', 'stdc++.h');
-            console.log('[Compile] Using PCH');
+            args.push('-include', path.basename(pch.pchFile, '.gch'));
+            console.log(`[Compile] Using PCH: ${pch.pchKey}`);
         }
 
         // Use detected compiler (TDM-GCC, MinGW, or fallback)
@@ -1011,13 +993,13 @@ ipcMain.handle('syntax-check', async (event, { content, filePath }) => {
 app.whenReady().then(async () => {
     createWindow();
 
-    // Get compiler version (silent - no terminal output)
+    // Get compiler version
     await getCompilerVersion();
     console.log(`[System] Compiler: ${compilerInfo.name} ${compilerInfo.version}`);
 
-    // Prepare PCH in background (silent - no terminal output)
-    const pchResult = await ensurePCH();
-    console.log(`[System] PCH ready: ${pchResult}`);
+    // Pre-build common PCH (-O0) so first build remains fast
+    const pch = await ensurePCH('-O0');
+    console.log(`[System] PCH (-O0) ready: ${pch.ready}`);
 });
 
 app.on('window-all-closed', () => {
