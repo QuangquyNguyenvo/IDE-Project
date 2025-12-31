@@ -81,6 +81,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // Code formatting (AStyle)
     formatCode: (code, style) => ipcRenderer.invoke('format-code', { code, style }),
-    checkAStyle: () => ipcRenderer.invoke('check-astyle')
+    checkAStyle: () => ipcRenderer.invoke('check-astyle'),
+
+    // Real-time syntax checking
+    syntaxCheck: (content, filePath) => ipcRenderer.invoke('syntax-check', { content, filePath })
 });
 

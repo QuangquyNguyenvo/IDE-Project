@@ -380,6 +380,19 @@
                                     <span>sec</span>
                                 </div>
                             </div>
+                            <div class="setting-row">
+                                <label>Live Code Checking <span class="tooltip"
+                                        title="Check for errors automatically while typing">?</span></label>
+                                <div class="setting-control">
+                                    <label class="switch">
+                                        <input type="checkbox" id="set-liveCheck">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <input type="number" id="set-liveCheckDelay" min="500" max="5000" value="1000"
+                                        style="width:90px;margin-left:10px;text-align:center">
+                                    <span>ms</span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Compiler Tab -->
@@ -588,7 +601,8 @@
                             <h3>Code Template</h3>
                             <p class="setting-desc">Template code for new files. Use this as your starting point.</p>
                             <div class="template-editor">
-                                <textarea id="set-template" rows="15" spellcheck="false"></textarea>
+                                <div id="template-editor-container"></div>
+                                <textarea id="set-template" style="display:none"></textarea>
                             </div>
                             <div class="template-actions">
                                 <button class="btn-template-reset" id="btn-template-reset">Reset to Default</button>
@@ -738,7 +752,7 @@
                             <path d="M9 18l6-6-6-6" />
                         </svg>
                     </span>
-                    <input type="text" id="terminal-in" placeholder="Input..." disabled>
+                    <textarea id="terminal-in" rows="1" placeholder="Input..." disabled></textarea>
                     <button class="send-btn" id="btn-send" disabled title="Send">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />

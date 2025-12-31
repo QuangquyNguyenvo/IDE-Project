@@ -20,9 +20,23 @@ const net = require('net');
 const http = require('http');
 const { exec, spawn } = require('child_process');
 
+// Tree-sitter for robust syntax checking
+let tsParser = null;
+try {
+    const Parser = require('tree-sitter');
+    const Cpp = require('tree-sitter-cpp');
+    tsParser = new Parser();
+    tsParser.setLanguage(Cpp);
+    console.log('[TreeSitter] Initialized successfully');
+} catch (e) {
+    console.log('[TreeSitter] Not available, falling back to g++ only:', e.message);
+}
+
 let mainWindow;
 let currentFile = null;
 let runningProcess = null;
+let lastRunningPID = null; // Backup PID in case runningProcess ref is lost
+let runningExeName = null; // Store exe name for force kill
 let runningMemoryPollInterval = null;  // Track memory polling interval for cleanup
 
 // ============================================================================
@@ -241,6 +255,9 @@ function createWindow() {
 
     mainWindow.loadFile('src/index.html');
 
+    // Open DevTools in development (comment out for production)
+    // mainWindow.webContents.openDevTools();
+
     // Remove native menu
     Menu.setApplicationMenu(null);
 }
@@ -303,11 +320,48 @@ function stopProcess() {
         runningMemoryPollInterval = null;
     }
 
-    if (runningProcess) {
-        runningProcess.kill();
-        runningProcess = null;
-        mainWindow.webContents.send('process-stopped');
+
+
+    // KILL STRATEGY 1: Taskkill by PID (Windows)
+    if (lastRunningPID && process.platform === 'win32') {
+        exec(`taskkill /pid ${lastRunningPID} /f /t`, (error, stdout, stderr) => {
+            // Silently fail if process already gone
+        });
     }
+
+    // KILL STRATEGY 2: Taskkill by Image Name (Windows)
+    const targetExes = new Set();
+    if (runningExeName) targetExes.add(runningExeName);
+    targetExes.add('temp_code.exe'); // Always target the default temp executable
+
+    if (process.platform === 'win32') {
+        for (const exe of targetExes) {
+            exec(`taskkill /im ${exe} /f`, (error, stdout, stderr) => {
+                // Silently ignore
+            });
+        }
+    }
+
+    // KILL STRATEGY 3: Node Process Kill (PID)
+    if (lastRunningPID) {
+        try {
+            process.kill(lastRunningPID, 'SIGKILL');
+        } catch (e) {
+            // console.log(`[Stop] Node Kill Error: ${e.message}`);
+        }
+    }
+
+    // KILL STRATEGY 4: Object Kill & Pipe Destruction
+    if (runningProcess) {
+        if (runningProcess.stdin) runningProcess.stdin.destroy();
+        if (runningProcess.stdout) runningProcess.stdout.destroy();
+        if (runningProcess.stderr) runningProcess.stderr.destroy();
+        runningProcess.kill();
+        runningProcess = null; // Reset immediately to update UI state
+    }
+
+    // Always notify UI
+    if (mainWindow) mainWindow.webContents.send('process-stopped');
 }
 
 // IPC Handlers
@@ -632,6 +686,8 @@ ipcMain.handle('run', async (event, exePath) => {
             cwd: dir,
             stdio: ['pipe', 'pipe', 'pipe']
         });
+        runningExeName = path.basename(exePath); // Save for stopProcess
+        lastRunningPID = runningProcess.pid;     // Save PID globally
 
         const pid = runningProcess.pid;
 
@@ -696,8 +752,8 @@ ipcMain.handle('run', async (event, exePath) => {
         });
 
         runningProcess.on('error', (err) => {
-            if (memoryPollInterval) {
-                clearInterval(memoryPollInterval);
+            if (runningMemoryPollInterval) {
+                clearInterval(runningMemoryPollInterval);
             }
             runningProcess = null;
             resolve({ success: false, error: err.message });
@@ -845,6 +901,123 @@ ipcMain.handle('check-astyle', async () => {
     return {
         available: !!detectedAStyle,
         path: detectedAStyle || null
+    };
+});
+
+// ============================================================================
+// REAL-TIME SYNTAX CHECKING
+// ============================================================================
+// Syntax check using g++ -fsyntax-only (fast, no output file)
+// Syntax check using Tree-sitter (fast syntax) and g++ (semantic)
+ipcMain.handle('syntax-check', async (event, { content, filePath }) => {
+    let allDiagnostics = [];
+
+    // 1. Check syntax with Tree-sitter (Fast & Robust for syntax)
+    if (tsParser) {
+        try {
+            const tree = tsParser.parse(content);
+
+            // Traverse to find errors
+            const traverse = (node) => {
+                // node.hasError is a property, not a function in native bindings
+                if (node.hasError || node.type === 'ERROR') {
+                    if (node.type === 'ERROR') {
+                        // Check if it's just a wrapper ERROR node or a specific error token
+                        // Sometimes ERROR nodes contain children that are valid or other errors
+                        if (node.text.trim()) {
+                            allDiagnostics.push({
+                                line: node.startPosition.row + 1,
+                                column: node.startPosition.column + 1,
+                                severity: 'error',
+                                message: `TS: Unexpected '${node.text}'`
+                            });
+                        }
+                    } else if (node.isMissing) { // node.isMissing is also a property
+                        allDiagnostics.push({
+                            line: node.startPosition.row + 1,
+                            column: node.startPosition.column + 1,
+                            severity: 'error',
+                            message: `TS: Missing ${node.type}`
+                        });
+                    }
+
+                    for (let i = 0; i < node.childCount; i++) {
+                        traverse(node.child(i));
+                    }
+                }
+            };
+
+            traverse(tree.rootNode);
+        } catch (e) {
+            console.log('[TreeSitter] Error:', e);
+        }
+    }
+
+    // 2. Run G++ (Good for semantic & backup syntax)
+    // We run this ALWAYS now to get maximum error coverage
+    const gppResult = await new Promise((resolve) => {
+        const compilerExe = detectedCompiler || 'g++';
+
+        // Create temp file for checking
+        const tempDir = path.join(app.getPath('temp'), 'cpp-ide-check');
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+
+        const tempFile = path.join(tempDir, 'check_temp.cpp');
+        fs.writeFileSync(tempFile, content, 'utf-8');
+
+        const args = [
+            '-fsyntax-only',
+            '-fmax-errors=50',
+            '-Wall',
+            '-Wextra',
+            tempFile
+        ];
+
+        if (filePath) {
+            args.push('-I', path.dirname(filePath));
+        }
+
+        const checker = spawn(compilerExe, args, { cwd: tempDir });
+        let stderr = '';
+
+        checker.stderr.on('data', (data) => stderr += data.toString());
+
+        checker.on('close', (code) => {
+            const diags = [];
+            const lines = stderr.split('\n');
+
+            for (const line of lines) {
+                const match = line.match(/^(?:[A-Za-z]:)?[^:]*:(\d+):(\d+):\s*(error|warning|note):\s*(.+)$/);
+                if (match) {
+                    diags.push({
+                        line: parseInt(match[1], 10),
+                        column: parseInt(match[2], 10),
+                        severity: match[3],
+                        message: match[4]
+                    });
+                }
+            }
+            resolve(diags);
+        });
+
+        checker.on('error', () => resolve([]));
+    });
+
+    // 3. Merge results (Deduplicate based on line number roughly)
+    // We prioritize keeping all errors to show user everything
+    gppResult.forEach(d => {
+        // Only add if not exactly same line/col as existing TS error (to avoid double overlay)
+        const exists = allDiagnostics.some(ts => ts.line === d.line && Math.abs(ts.column - d.column) < 5);
+        if (!exists) {
+            allDiagnostics.push(d);
+        }
+    });
+
+    return {
+        success: allDiagnostics.length === 0,
+        diagnostics: allDiagnostics
     };
 });
 
@@ -1113,7 +1286,7 @@ function fetchLatestRelease() {
     return new Promise((resolve, reject) => {
         const options = {
             hostname: 'api.github.com',
-            path: `/repos/${GITHUB_REPO}/releases/latest`,
+            path: `/repos/${GITHUB_REPO}/releases?per_page=1`,
             method: 'GET',
             headers: {
                 'User-Agent': 'SamekoIDE-UpdateChecker',
@@ -1127,7 +1300,12 @@ function fetchLatestRelease() {
             res.on('end', () => {
                 try {
                     if (res.statusCode === 200) {
-                        resolve(JSON.parse(data));
+                        const releases = JSON.parse(data);
+                        if (Array.isArray(releases) && releases.length > 0) {
+                            resolve(releases[0]);
+                        } else {
+                            resolve(null);
+                        }
                     } else if (res.statusCode === 404) {
                         resolve(null); // No releases yet
                     } else {
@@ -1178,6 +1356,11 @@ function compareVersions(v1, v2) {
 }
 
 ipcMain.handle('check-for-updates', async () => {
+    // Skip update check in Dev
+    if (!app.isPackaged) {
+        return { hasUpdate: false, currentVersion };
+    }
+
     try {
         const release = await fetchLatestRelease();
 
@@ -1223,3 +1406,5 @@ ipcMain.handle('open-release-page', async (event, url) => {
     shell.openExternal(url || `https://github.com/${GITHUB_REPO}/releases/latest`);
     return { success: true };
 });
+
+

@@ -24,7 +24,9 @@ const DEFAULT_SETTINGS = {
         wordWrap: false,
         colorScheme: 'auto',
         autoSave: false,
-        autoSaveDelay: 3  // seconds
+        autoSaveDelay: 3,  // seconds
+        liveCheck: false,  // Real-time syntax checking
+        liveCheckDelay: 1000  // milliseconds
     },
     compiler: {
         cppStandard: '',
@@ -435,6 +437,9 @@ function createEditor(containerId) {
 
         // Trigger auto-save if enabled
         scheduleAutoSave();
+
+        // Trigger live syntax check if enabled
+        scheduleLiveCheck();
     });
 
     // Shortcuts
@@ -889,11 +894,50 @@ function initSettings() {
         templateResetBtn.onclick = resetTemplate;
     }
 
+    // Template Monaco editor will be initialized when settings panel opens
+
     // Keybindings reset button
     const keybindingsResetBtn = document.getElementById('btn-keybindings-reset');
     if (keybindingsResetBtn) {
         keybindingsResetBtn.onclick = resetKeybindings;
     }
+}
+
+// Template editor (Monaco mini editor for settings)
+let templateEditor = null;
+
+function initTemplateEditor() {
+    const container = document.getElementById('template-editor-container');
+    if (!container || templateEditor) return;
+
+    templateEditor = monaco.editor.create(container, {
+        value: App.settings.template?.code || DEFAULT_SETTINGS.template.code,
+        language: 'cpp',
+        theme: App.settings.appearance.theme || 'kawaii-dark',
+        fontSize: 13,
+        fontFamily: "'JetBrains Mono', 'Consolas', monospace",
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+        tabSize: 4,
+        lineNumbers: 'on',
+        folding: false,
+        renderWhitespace: 'none',
+        overviewRulerBorder: false,
+        overviewRulerLanes: 0,
+        hideCursorInOverviewRuler: true,
+        scrollbar: {
+            vertical: 'auto',
+            horizontal: 'auto',
+            verticalScrollbarSize: 10,
+            horizontalScrollbarSize: 10
+        }
+    });
+
+    // Sync to hidden textarea on change
+    templateEditor.onDidChangeModelContent(() => {
+        document.getElementById('set-template').value = templateEditor.getValue();
+    });
 }
 
 // Theme color palettes for preview and settings
@@ -1133,6 +1177,8 @@ function openSettings() {
     document.getElementById('set-editorColorScheme').value = App.settings.editor.colorScheme || 'auto';
     document.getElementById('set-autoSave').checked = App.settings.editor.autoSave || false;
     document.getElementById('set-autoSaveDelay').value = App.settings.editor.autoSaveDelay || 3;
+    document.getElementById('set-liveCheck').checked = App.settings.editor.liveCheck || false;
+    document.getElementById('set-liveCheckDelay').value = App.settings.editor.liveCheckDelay || 1000;
 
     document.getElementById('set-cppStandard').value = App.settings.compiler.cppStandard;
     document.getElementById('set-optimization').value = App.settings.compiler.optimization;
@@ -1151,8 +1197,19 @@ function openSettings() {
     document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
     document.getElementById('set-bgUrl').value = App.settings.appearance.bgUrl || '';
 
-    // Template
-    document.getElementById('set-template').value = App.settings.template?.code || DEFAULT_SETTINGS.template.code;
+    // Template - sync to hidden textarea and update Monaco editor
+    const templateCode = App.settings.template?.code || DEFAULT_SETTINGS.template.code;
+    document.getElementById('set-template').value = templateCode;
+
+    // Initialize template editor if not exists, or update its content
+    if (!templateEditor) {
+        // Delay to ensure container is visible
+        setTimeout(() => {
+            initTemplateEditor();
+        }, 100);
+    } else {
+        templateEditor.setValue(templateCode);
+    }
 
     // Keybindings
     renderKeybindings();
@@ -1176,6 +1233,8 @@ function saveSettingsAndClose() {
     App.settings.editor.colorScheme = document.getElementById('set-editorColorScheme').value;
     App.settings.editor.autoSave = document.getElementById('set-autoSave').checked;
     App.settings.editor.autoSaveDelay = parseInt(document.getElementById('set-autoSaveDelay').value) || 3;
+    App.settings.editor.liveCheck = document.getElementById('set-liveCheck').checked;
+    App.settings.editor.liveCheckDelay = parseInt(document.getElementById('set-liveCheckDelay').value) || 1000;
 
     App.settings.compiler.cppStandard = document.getElementById('set-cppStandard').value;
     App.settings.compiler.optimization = document.getElementById('set-optimization').value;
@@ -1343,9 +1402,14 @@ function resetKeybindings() {
 
 function resetTemplate() {
     if (confirm('Reset template to default?')) {
+        const defaultCode = DEFAULT_SETTINGS.template.code;
         const textarea = document.getElementById('set-template');
         if (textarea) {
-            textarea.value = DEFAULT_SETTINGS.template.code;
+            textarea.value = defaultCode;
+        }
+        // Also update Monaco editor if exists
+        if (templateEditor) {
+            templateEditor.setValue(defaultCode);
         }
     }
 }
@@ -1393,6 +1457,97 @@ async function autoSaveCurrentFile() {
         }
     } catch (e) {
         console.log('Auto-save failed:', e);
+    }
+}
+
+// ============================================================================
+// LIVE SYNTAX CHECKING
+// ============================================================================
+let liveCheckTimer = null;
+let isLiveChecking = false;
+
+function scheduleLiveCheck() {
+    if (!App.settings.editor.liveCheck || !window.electronAPI?.syntaxCheck) {
+        return;
+    }
+
+    if (liveCheckTimer) {
+        clearTimeout(liveCheckTimer);
+    }
+
+    const delay = App.settings.editor.liveCheckDelay || 1000;
+    liveCheckTimer = setTimeout(doLiveCheck, delay);
+}
+
+async function doLiveCheck() {
+    if (isLiveChecking || !App.editor) return;
+
+    const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
+    const tabId = App.activeEditor === 2 ? App.splitTabId : App.activeTabId;
+    const tab = App.tabs.find(t => t.id === tabId);
+
+    const code = editor.getValue();
+    if (!code || !code.trim()) {
+        clearLiveCheckMarkers();
+        return;
+    }
+
+    isLiveChecking = true;
+
+    try {
+        const result = await window.electronAPI.syntaxCheck(code, tab?.path || null);
+
+        if (result && result.diagnostics && result.diagnostics.length > 0) {
+            applyLiveCheckMarkers(editor, result.diagnostics);
+        } else if (result && result.success) {
+            // No errors - clear markers silently
+            clearLiveCheckMarkers();
+        }
+    } catch (e) {
+        // Silent fail - don't spam terminal
+    } finally {
+        isLiveChecking = false;
+    }
+}
+
+function applyLiveCheckMarkers(editor, diagnostics) {
+    const model = editor.getModel();
+    if (!model) return;
+
+    // Convert diagnostics to Monaco markers
+    const markers = diagnostics.map(d => ({
+        severity: d.severity === 'error' ? monaco.MarkerSeverity.Error :
+            d.severity === 'warning' ? monaco.MarkerSeverity.Warning :
+                monaco.MarkerSeverity.Info,
+        startLineNumber: d.line,
+        startColumn: d.column || 1,
+        endLineNumber: d.line,
+        endColumn: d.column ? d.column + 50 : 1000,
+        message: d.message,
+        source: 'g++'
+    }));
+
+    // Apply markers to editor (this shows red squiggly underlines)
+    monaco.editor.setModelMarkers(model, 'live-check', markers);
+
+    // Update problems panel silently
+    App.problems = diagnostics.map(d => ({
+        type: d.severity,
+        line: d.line,
+        column: d.column,
+        message: d.message
+    }));
+    renderProblems();
+}
+
+function clearLiveCheckMarkers() {
+    if (App.editor) {
+        const model1 = App.editor.getModel();
+        if (model1) monaco.editor.setModelMarkers(model1, 'live-check', []);
+    }
+    if (App.editor2) {
+        const model2 = App.editor2.getModel();
+        if (model2) monaco.editor.setModelMarkers(model2, 'live-check', []);
     }
 }
 
@@ -1743,10 +1898,32 @@ function initPanels() {
     document.getElementById('close-problems').onclick = () => { App.showProblems = false; updateUI(); };
 
     document.getElementById('btn-send').onclick = sendInput;
-    document.getElementById('terminal-in').onkeypress = e => { if (e.key === 'Enter') sendInput(); };
+
+    // Terminal textarea logic moved to initTerminalUX at the end of file
 
     // Click on diff display to go back to edit mode
     document.getElementById('expected-diff').onclick = switchToExpectedEdit;
+
+    // Right-click paste support for Input/Expected textareas and terminal input
+    const setupRightClickPaste = (element) => {
+        if (!element) return;
+        element.addEventListener('contextmenu', async (e) => {
+            e.preventDefault();
+            try {
+                const text = await navigator.clipboard.readText();
+                const start = element.selectionStart;
+                const end = element.selectionEnd;
+                element.value = element.value.slice(0, start) + text + element.value.slice(end);
+                element.selectionStart = element.selectionEnd = start + text.length;
+            } catch (err) {
+                console.log('Clipboard access denied:', err);
+            }
+        });
+    };
+
+    setupRightClickPaste(document.getElementById('input-area'));
+    setupRightClickPaste(document.getElementById('expected-area'));
+    setupRightClickPaste(document.getElementById('terminal-in'));
 
     // Initialize dockable panels
     initDockablePanels();
@@ -1984,7 +2161,7 @@ function createDockedTerminalView(container) {
         <div class="docked-terminal-body" id="docked-terminal-output"></div>
         <div class="docked-terminal-input">
             <span class="prompt">></span>
-            <input type="text" id="docked-terminal-in" placeholder="Input...">
+            <textarea id="docked-terminal-in" rows="1" placeholder="Input..."></textarea>
             <button class="send-btn" id="docked-send-btn">➤</button>
         </div>
     `;
@@ -1996,14 +2173,84 @@ function createDockedTerminalView(container) {
 
     const sendDockedInput = () => {
         if (input.value && App.isRunning) {
-            log('> ' + input.value, '');
-            window.electronAPI?.sendInput(input.value);
+            // Send each line separately
+            const lines = input.value.split('\n');
+            lines.forEach(line => {
+                log('> ' + line, '');
+                window.electronAPI?.sendInput(line);
+            });
             input.value = '';
+            input.rows = 1;
         }
     };
 
-    input.onkeypress = (e) => { if (e.key === 'Enter') sendDockedInput(); };
+    // Ctrl+Enter or button to send, Enter for new line
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            sendDockedInput();
+        } else if (e.key === 'Enter' && !e.shiftKey && input.rows === 1) {
+            // Single line mode: Enter sends
+            e.preventDefault();
+            sendDockedInput();
+        }
+    };
+
+    // Auto-resize logic with paste fix
+    const handleResize = function () {
+        if (this.value === '') {
+            this.style.height = '';
+            return;
+        }
+        this.style.height = 0;
+        this.style.height = (this.scrollHeight) + 'px';
+    };
+    input.addEventListener('input', handleResize);
+    input.addEventListener('paste', function () {
+        setTimeout(() => handleResize.call(this), 10);
+    });
+
+    // Right-click to paste
+    input.addEventListener('contextmenu', async (e) => {
+        e.preventDefault();
+        try {
+            const text = await navigator.clipboard.readText();
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.value = input.value.slice(0, start) + text + input.value.slice(end);
+            input.selectionStart = input.selectionEnd = start + text.length;
+            input.dispatchEvent(new Event('input')); // Trigger resize
+        } catch (err) {
+            console.log('Clipboard access denied:', err);
+        }
+    });
+
     sendBtn.onclick = sendDockedInput;
+
+    // Right-click on empty space to paste
+    view.addEventListener('contextmenu', async (e) => {
+        // Ignore if valid interactive elements
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+
+        e.preventDefault();
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                input.value = input.value.slice(0, start) + text + input.value.slice(end);
+
+                // Trigger events for auto-resize
+                input.dispatchEvent(new Event('input'));
+                input.focus();
+
+                // Update cursor
+                input.selectionStart = input.selectionEnd = start + text.length;
+            }
+        } catch (err) {
+            console.warn('Paste failed', err);
+        }
+    });
 
     syncTerminalContent();
 }
@@ -2732,10 +2979,15 @@ async function run(clearTerminal = true) {
     setStatus('Running...', '');
     setRunning(true);
 
-    // If terminal is docked, switch to terminal tab and scroll to bottom
+    // If terminal is docked, switch to terminal tab, scroll to bottom, and focus input
     if (DockingState.terminalDocked) {
         switchDockedPanel('terminal');
         scrollDockedTerminalToBottom();
+        // Auto-focus the docked terminal input
+        setTimeout(() => {
+            const dockedInput = document.getElementById('docked-terminal-in');
+            if (dockedInput) dockedInput.focus();
+        }, 100);
     }
 
     if (App.settings.execution.timeLimitEnabled && App.settings.execution.timeLimitSeconds > 0) {
@@ -2769,6 +3021,10 @@ async function stop() {
         clearTimeout(App.runTimeout);
         App.runTimeout = null;
     }
+
+    setRunning(false);
+    log('\n[System] Process terminated.', 'error');
+
     await window.electronAPI.stopProcess();
 }
 
@@ -3078,9 +3334,14 @@ function setRunning(v) {
 async function sendInput() {
     const inp = document.getElementById('terminal-in');
     if (inp.value && App.isRunning) {
-        log('> ' + inp.value, '');
-        await window.electronAPI.sendInput(inp.value);
+        // Send each line separately
+        const lines = inp.value.split('\n');
+        for (const line of lines) {
+            log('> ' + line, '');
+            await window.electronAPI.sendInput(line);
+        }
         inp.value = '';
+        inp.style.height = 'auto';
     }
 }
 
@@ -3897,13 +4158,8 @@ function showUpdateNotification(info) {
     if (currentEl) currentEl.textContent = `v${info.currentVersion}`;
     if (newEl) newEl.textContent = `v${info.latestVersion}`;
     if (notesEl) {
-        // Parse release notes (simple markdown-ish)
-        let notes = info.releaseNotes || 'Không có thông tin chi tiết.';
-        // Convert markdown headers to bold
-        notes = notes.replace(/^#+\s*(.+)$/gm, '<strong>$1</strong>');
-        // Convert - to bullet points
-        notes = notes.replace(/^-\s+/gm, '• ');
-        notesEl.innerHTML = notes;
+        // Simplified update message - Wibu style (High Contrast)
+        notesEl.innerHTML = '<p style="text-align: center; font-weight: 600; font-size: 15px; margin: 10px 0;">Thằng wjbu nó mới fix bug hay thêm tính năng gì đó. Tải thử xem coi có gì khác không 🐟</p>';
     }
 
     // Show overlay
@@ -3916,7 +4172,8 @@ function showUpdateNotification(info) {
         hideUpdateNotification();
     });
     document.getElementById('update-download')?.addEventListener('click', () => {
-        window.electronAPI.openReleasePage(info.downloadUrl || info.releaseUrl);
+        // Always open the release page (User preference: Link Git)
+        window.electronAPI.openReleasePage(info.releaseUrl);
         hideUpdateNotification();
     });
 
@@ -3945,3 +4202,133 @@ document.addEventListener('keydown', (e) => {
         runAllTests();
     }
 });
+
+// ============================================================================
+// TERMINAL UX ENHANCEMENTS & LOGIC
+// ============================================================================
+let termHistory = [];
+let termHistoryIndex = -1;
+let termCurrentDraft = '';
+
+function initTerminalUX() {
+    const termSection = document.getElementById('terminal-section');
+    const termInput = document.getElementById('terminal-in');
+
+    if (termInput) {
+        // Auto-resize logic with paste fix
+        const handleResize = function () {
+            if (this.value === '') {
+                this.style.height = '';
+                return;
+            }
+            this.style.height = 0; // Set to 0 first to correctly calculate scrollHeight
+            this.style.height = (this.scrollHeight) + 'px';
+        };
+        termInput.addEventListener('input', handleResize);
+        termInput.addEventListener('paste', function () {
+            setTimeout(() => handleResize.call(this), 10);
+        });
+
+        // Keydown Handler: History, Ctrl+C, Enter
+        termInput.addEventListener('keydown', (e) => {
+            // 1. Ctrl+C to Stop
+            if (e.ctrlKey && e.key === 'c') {
+                if (termInput.selectionStart === termInput.selectionEnd) {
+                    e.preventDefault();
+                    if (App.isRunning) {
+                        stop();
+                        log('^C', 'error');
+                    }
+                }
+                return;
+            }
+
+            // 2. History Navigation (Up/Down)
+            if (e.key === 'ArrowUp') {
+                if (termHistory.length > 0) {
+                    e.preventDefault();
+                    if (termHistoryIndex === -1) {
+                        termCurrentDraft = termInput.value; // Save current input
+                        termHistoryIndex = termHistory.length - 1;
+                    } else if (termHistoryIndex > 0) {
+                        termHistoryIndex--;
+                    }
+                    termInput.value = termHistory[termHistoryIndex];
+                    handleResize.call(termInput);
+                }
+            } else if (e.key === 'ArrowDown') {
+                if (termHistoryIndex !== -1) {
+                    e.preventDefault();
+                    if (termHistoryIndex < termHistory.length - 1) {
+                        termHistoryIndex++;
+                        termInput.value = termHistory[termHistoryIndex];
+                    } else {
+                        termHistoryIndex = -1;
+                        termInput.value = termCurrentDraft; // Restore draft
+                    }
+                    handleResize.call(termInput);
+                }
+            }
+
+            // 3. Enter to Send
+            if (e.key === 'Enter') {
+                if (e.shiftKey) {
+                    // Newline
+                } else {
+                    e.preventDefault();
+                    const val = termInput.value.trim();
+                    if (val) {
+                        // Add to history if unique or last one different
+                        if (termHistory.length === 0 || termHistory[termHistory.length - 1] !== val) {
+                            termHistory.push(val);
+                        }
+                        termHistoryIndex = -1;
+                        termCurrentDraft = '';
+                    }
+                    sendInput();
+                }
+            }
+        });
+
+        // 4. Paste context menu (Right click on terminal area)
+        if (termSection && !termSection.dataset.contextMenuInitialized) {
+            termSection.dataset.contextMenuInitialized = 'true';
+
+            termSection.addEventListener('contextmenu', async (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'TEXTAREA') {
+                    if (e.target.tagName === 'TEXTAREA') return;
+                }
+
+                e.preventDefault();
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text && !termInput.disabled) {
+                        const startPos = termInput.selectionStart;
+                        const endPos = termInput.selectionEnd;
+                        const currentValue = termInput.value;
+
+                        termInput.value = currentValue.substring(0, startPos) + text + currentValue.substring(endPos);
+
+                        // Dispatch input event to trigger auto-resize consistently
+                        termInput.dispatchEvent(new Event('input'));
+
+                        termInput.focus();
+
+                        // Update cursor position
+                        const newPos = startPos + text.length;
+                        termInput.setSelectionRange(newPos, newPos);
+                    }
+                } catch (err) {
+                    console.warn('Paste failed:', err);
+                }
+            });
+        }
+    }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTerminalUX);
+} else {
+    initTerminalUX();
+}

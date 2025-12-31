@@ -31,11 +31,15 @@
         "build": "electron-builder",
         "build:win": "electron-builder --win",
         "build:mac": "electron-builder --mac",
-        "build:linux": "electron-builder --linux"
+        "build:linux": "electron-builder --linux",
+        "clean:dist": "powershell -Command \"Remove-Item -Recurse -Force release_build -ErrorAction SilentlyContinue\"",
+        "rebuild:win": "npm run clean:dist && npm run build:win"
     },
     "dependencies": {
         "golden-layout": "^2.6.0",
-        "monaco-editor": "^0.45.0"
+        "monaco-editor": "^0.45.0",
+        "tree-sitter": "^0.21.1",
+        "tree-sitter-cpp": "^0.23.4"
     },
     "devDependencies": {
         "electron": "^28.0.0",

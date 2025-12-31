@@ -546,18 +546,28 @@
 }
 
 [data-theme="kawaii-dark"] .terminal-input input,
+[data-theme="kawaii-dark"] .terminal-input textarea,
 [data-theme="dracula"] .terminal-input input,
+[data-theme="dracula"] .terminal-input textarea,
 [data-theme="monokai"] .terminal-input input,
+[data-theme="monokai"] .terminal-input textarea,
 [data-theme="nord"] .terminal-input input,
-[data-theme="one-dark"] .terminal-input input {
+[data-theme="nord"] .terminal-input textarea,
+[data-theme="one-dark"] .terminal-input input,
+[data-theme="one-dark"] .terminal-input textarea {
     color: var(--text-primary);
 }
 
 [data-theme="kawaii-dark"] .terminal-input input::placeholder,
+[data-theme="kawaii-dark"] .terminal-input textarea::placeholder,
 [data-theme="dracula"] .terminal-input input::placeholder,
+[data-theme="dracula"] .terminal-input textarea::placeholder,
 [data-theme="monokai"] .terminal-input input::placeholder,
+[data-theme="monokai"] .terminal-input textarea::placeholder,
 [data-theme="nord"] .terminal-input input::placeholder,
-[data-theme="one-dark"] .terminal-input input::placeholder {
+[data-theme="nord"] .terminal-input textarea::placeholder,
+[data-theme="one-dark"] .terminal-input input::placeholder,
+[data-theme="one-dark"] .terminal-input textarea::placeholder {
     color: var(--text-muted);
 }
 
