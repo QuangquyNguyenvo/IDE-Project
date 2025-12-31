@@ -1,17 +1,17 @@
 {
-    "name": "cpp-ide",
-    "version": "1.0.0-beta.6",
+    "name": "sameko-dev-cpp",
+    "version": "1.0.0-beta.8",
     "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
     "main": "main.js",
     "author": "QuangquyNguyenvo",
     "license": "MIT",
-    "homepage": "https://github.com/QuangquyNguyenvo/IDE-Project",
+    "homepage": "https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP",
     "repository": {
         "type": "git",
-        "url": "https://github.com/QuangquyNguyenvo/IDE-Project.git"
+        "url": "https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP.git"
     },
     "bugs": {
-        "url": "https://github.com/QuangquyNguyenvo/IDE-Project/issues"
+        "url": "https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues"
     },
     "keywords": [
         "cpp",

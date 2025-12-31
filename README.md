@@ -10,14 +10,14 @@
   **The cutest & fastest C++ IDE for your coding adventures! (≧◡≦) ♡**
 
   <p>
-    <a href="https://github.com/QuangquyNguyenvo/IDE-Project/releases">
-      <img src="https://img.shields.io/github/v/release/QuangquyNguyenvo/IDE-Project?include_prereleases&style=for-the-badge&color=88c9ea&labelColor=1a2530" alt="Release" />
+    <a href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases">
+      <img src="https://img.shields.io/github/v/release/QuangquyNguyenvo/Sameko-Dev-CPP?include_prereleases&style=for-the-badge&color=88c9ea&labelColor=1a2530" alt="Release" />
     </a>
-    <a href="https://github.com/QuangquyNguyenvo/IDE-Project/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/QuangquyNguyenvo/IDE-Project?style=for-the-badge&color=88c9ea&labelColor=1a2530" alt="License" />
+    <a href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/QuangquyNguyenvo/Sameko-Dev-CPP?style=for-the-badge&color=88c9ea&labelColor=1a2530" alt="License" />
     </a>
-    <a href="https://github.com/QuangquyNguyenvo/IDE-Project">
-      <img src="https://img.shields.io/github/stars/QuangquyNguyenvo/IDE-Project?style=for-the-badge&color=88c9ea&labelColor=1a2530" alt="Stars" />
+    <a href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP">
+      <img src="https://img.shields.io/github/stars/QuangquyNguyenvo/Sameko-Dev-CPP?style=for-the-badge&color=88c9ea&labelColor=1a2530" alt="Stars" />
     </a>
   </p>
 </div>
@@ -74,8 +74,10 @@
 | :------------------------------------------------------------------ | :------------------------------------------------------------- |
 | 🚀 **Zero Setup** — TDM-GCC 9.2.0 bundled, no MinGW needed           | ⚡ **Instant Run** — F11 to compile & run without saving        |
 | 🔗 **Smart Header Linking** — Auto-links .cpp when #include headers  | 👁️ **File Watcher** — Detects external changes, prompts reload  |
-| 🏆 **Competitive Companion** — Auto-fetch tests from CF, AtCoder, LC | 📑 **Multi-tab & Split View** — Drag to reorder, split editor   |
-| 🎨 **6 Beautiful Themes** — Kawaii, Dracula, Monokai, Nord, One Dark | ⚙️ **Highly Customizable** — Backgrounds, C++11/14/17/20, flags |
+| 🏆 **Competitive Companion** — Auto-fetch tests from CF, AtCoder, LC | ✂️ **Snippet Editor** — Custom IntelliSense snippets & manager  |
+| 🎨 **6 Beautiful Themes** — Kawaii, Dracula, Monokai, Nord, One Dark | 🧹 **AStyle Formatting** — Clean code with `Ctrl + Shift + A`   |
+| 📑 **Multi-tab & Split View** — Drag to reorder, split editor        | 💾 **Auto-Save** — Customizable background saving intervals     |
+| ⚙️ **Highly Customizable** — Backgrounds, C++11/14/17/20, flags      | 📋 **Template Manager** — boilerplate code for new source files |
 
 <br />
 
@@ -92,7 +94,7 @@
 
 ### Windows (Portable)
 
-1. Go to [**Releases**](https://github.com/QuangquyNguyenvo/IDE-Project/releases)
+1. Go to [**Releases**](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases)
 2. Download the latest `.rar` or `.exe` file
 3. Extract and run — that's it!
 
@@ -110,8 +112,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/QuangquyNguyenvo/IDE-Project.git
-cd IDE-Project
+git clone https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP.git
+cd Sameko-Dev-CPP
 
 # Install dependencies
 npm install
@@ -127,16 +129,19 @@ npm run build:win
 
 ## ⌨️ Shortcuts
 
-| Key        | Action        |
-| :--------- | :------------ |
-| `F9`       | Compile       |
-| `F10`      | Run           |
-| `F11`      | Compile & Run |
-| `Ctrl + N` | New file      |
-| `Ctrl + O` | Open file     |
-| `Ctrl + S` | Save file     |
-| `Ctrl + J` | Toggle Panel  |
-| `Ctrl + \` | Split Editor  |
+| Key                | Action               |
+| :----------------- | :------------------- |
+| `F9`               | Compile              |
+| `F10`              | Run                  |
+| `F11`              | Compile & Run        |
+| `Ctrl + N`         | New file             |
+| `Ctrl + O`         | Open file            |
+| `Ctrl + S`         | Save file            |
+| `Ctrl + J`         | Toggle Panel         |
+| `Ctrl + \`         | Split Editor         |
+| `Ctrl + Shift + A` | Auto Format (AStyle) |
+| `Ctrl + Alt + S`   | Toggle Auto-Save     |
+| `Ctrl + Shift + P` | Command Palette      |
 
 <br />
 
@@ -165,8 +170,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
   <p><i>"Have a bubbly day!"</i></p>
   <br />
   <p>
-    <a href="https://github.com/QuangquyNguyenvo/IDE-Project/issues">Report Bug</a> •
-    <a href="https://github.com/QuangquyNguyenvo/IDE-Project/issues">Request Feature</a>
+    <a href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues">Report Bug</a> •
+    <a href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues">Request Feature</a>
   </p>
 </div>
 

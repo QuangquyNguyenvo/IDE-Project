@@ -21,7 +21,7 @@ Hii! Whether you found a bug 🐛 or have a super cool idea 💡, we'd love to h
 
 ### 🐞 Reporting Bugs
 
-1.  **Check Issues**: Maybe someone else already spotted it! Check [Issues](https://github.com/QuangquyNguyenvo/IDE-Project/issues) first.
+1.  **Check Issues**: Maybe someone else already spotted it! Check [Issues](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues) first.
 2.  **Create Issue**: If not, tell us about it!
     *   **Title**: Short & sweet description.
     *   **Steps**: How can we see the bug too?
@@ -44,7 +44,7 @@ Ready to code? Let's go! ⛵
 1.  **Fork** the repository 🍴
 2.  **Clone** your fork to your machine:
     ```bash
-    git clone https://github.com/YOUR_USERNAME/IDE-Project.git
+    git clone https://github.com/YOUR_USERNAME/Sameko-Dev-CPP.git
     ```
 3.  **Create a branch** for your magic:
     ```bash
