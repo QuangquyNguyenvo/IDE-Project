@@ -884,6 +884,16 @@ const THEME_COLORS = {
         border: '#b8e2f5', borderLight: '#d4eef8', accentColor: '#7fc4e8',
         headerFooterBg: '#c8e7f5'
     },
+    'sakura': {
+        headerBg: '#ffb7c5', editorBg: '#2d1f2f', terminalBg: '#251a26', statusBg: '#ffb7c5', ioBg: '#fff0f5',
+        text: '#f8e8f0', textMuted: '#8b7080', lineNum: '#6d5060',
+        keyword: '#ff69b4', string: '#98d998', type: '#da75e3', func: '#ffb07a',
+        accent: '#ff69b4', success: '#77dd77', info: '#ffb7c5',
+        // Settings popup colors
+        popupBg: '#fff0f5', sidebarBg: '#ffe4e1', contentBg: '#fffafa',
+        border: '#ffc0cb', borderLight: '#ffb7c5', accentColor: '#ff69b4',
+        headerFooterBg: '#ffe4e1'
+    },
     'dracula': {
         headerBg: '#282a36', editorBg: '#282a36', terminalBg: '#1e1f29', statusBg: '#282a36', ioBg: '#21222c',
         text: '#f8f8f2', textMuted: '#6272a4', lineNum: '#6272a4',
@@ -921,6 +931,57 @@ const THEME_COLORS = {
         border: '#5c6370', borderLight: '#3e4452', accentColor: '#61afef'
     }
 };
+
+/**
+ * Populate theme dropdown from ThemeManager
+ */
+function populateThemeDropdowns() {
+    if (typeof ThemeManager === 'undefined') return;
+
+    const themeList = ThemeManager.getThemeList();
+    const themeSelect = document.getElementById('set-theme');
+    const editorColorSelect = document.getElementById('set-editorColorScheme');
+
+    if (themeSelect) {
+        // Keep current value
+        const currentValue = themeSelect.value;
+
+        // Clear existing options except first (for editor color which has 'auto')
+        themeSelect.innerHTML = '';
+
+        // Add themes from ThemeManager
+        themeList.forEach(theme => {
+            const option = document.createElement('option');
+            option.value = theme.id;
+            option.textContent = theme.name;
+            themeSelect.appendChild(option);
+        });
+
+        // Restore value if still exists
+        if ([...themeSelect.options].some(o => o.value === currentValue)) {
+            themeSelect.value = currentValue;
+        }
+    }
+
+    if (editorColorSelect) {
+        const currentValue = editorColorSelect.value;
+
+        // Keep 'auto' option
+        editorColorSelect.innerHTML = '<option value="auto">Auto (Match Theme)</option>';
+
+        // Add themes
+        themeList.forEach(theme => {
+            const option = document.createElement('option');
+            option.value = theme.id;
+            option.textContent = theme.name;
+            editorColorSelect.appendChild(option);
+        });
+
+        if ([...editorColorSelect.options].some(o => o.value === currentValue)) {
+            editorColorSelect.value = currentValue;
+        }
+    }
+}
 
 function updateThemePreview() {
     const theme = document.getElementById('set-theme').value;
@@ -1091,13 +1152,15 @@ function updateThemePreview() {
 }
 
 function openSettings() {
+    // Populate theme dropdowns dynamically from ThemeManager first
+    populateThemeDropdowns();
+
     document.getElementById('set-fontSize').value = App.settings.editor.fontSize;
     document.getElementById('val-fontSize').textContent = App.settings.editor.fontSize + 'px';
     document.getElementById('set-fontFamily').value = App.settings.editor.fontFamily;
     document.getElementById('set-tabSize').value = App.settings.editor.tabSize;
     document.getElementById('set-minimap').checked = App.settings.editor.minimap;
     document.getElementById('set-wordWrap').checked = App.settings.editor.wordWrap;
-    document.getElementById('set-editorColorScheme').value = App.settings.editor.colorScheme || 'auto';
     document.getElementById('set-autoSave').checked = App.settings.editor.autoSave || false;
     document.getElementById('set-autoSaveDelay').value = App.settings.editor.autoSaveDelay || 3;
     document.getElementById('set-liveCheck').checked = App.settings.editor.liveCheck || false;
@@ -1117,7 +1180,9 @@ function openSettings() {
 
     document.getElementById('set-terminalColorScheme').value = App.settings.terminal?.colorScheme || 'ansi-16';
 
+    // Set theme values after dropdown is populated
     document.getElementById('set-theme').value = App.settings.appearance.theme;
+    document.getElementById('set-editorColorScheme').value = App.settings.editor.colorScheme || 'auto';
     document.getElementById('set-performanceMode').checked = App.settings.appearance.performanceMode || false;
     document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
     document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
@@ -1399,6 +1464,7 @@ async function autoSaveCurrentFile() {
 // ============================================================================
 let liveCheckTimer = null;
 let isLiveChecking = false;
+let hasBuildProblems = false; // Prevents live-check from overwriting build errors
 
 function scheduleLiveCheck() {
     if (!App.settings.editor.liveCheck || !window.electronAPI?.syntaxCheck) {
@@ -1464,14 +1530,17 @@ function applyLiveCheckMarkers(editor, diagnostics) {
 
     monaco.editor.setModelMarkers(model, 'live-check', markers);
 
-
-    App.problems = diagnostics.map(d => ({
-        type: d.severity,
-        line: d.line,
-        column: d.column,
-        message: d.message
-    }));
-    renderProblems();
+    // Don't overwrite build problems with live-check results
+    if (!hasBuildProblems) {
+        App.problems = diagnostics.map(d => ({
+            file: d.file || 'untitled.cpp',
+            type: d.severity,
+            line: d.line,
+            col: d.column || 1,
+            message: d.message
+        }));
+        renderProblems();
+    }
 }
 
 function clearLiveCheckMarkers() {
@@ -1535,11 +1604,40 @@ function applySettings() {
 // THEME APPLICATION
 // ============================================================================
 function applyTheme(themeName) {
-    // Delegate to ThemeManager
+    // Delegate to ThemeManager for UI theme
     ThemeManager.setTheme(themeName);
+
+    // Apply editor color scheme (can be different from UI theme)
+    applyEditorColorScheme();
 
     // Additional app-specific background logic (opacity, image...)
     applyBackgroundSettings();
+}
+
+/**
+ * Apply editor-specific color scheme (separate from UI theme)
+ */
+function applyEditorColorScheme() {
+    const editorScheme = App.settings.editor?.colorScheme || 'auto';
+    const uiTheme = App.settings.appearance?.theme || 'kawaii-dark';
+
+    // Determine which theme to use for editor
+    const monacoTheme = (editorScheme === 'auto') ? uiTheme : editorScheme;
+
+    // Apply to Monaco editors
+    if (typeof monaco !== 'undefined') {
+        try {
+            // Ensure theme is registered in ThemeManager
+            if (ThemeManager.themes.has(monacoTheme)) {
+                monaco.editor.setTheme(monacoTheme);
+            } else {
+                // Fallback to UI theme
+                monaco.editor.setTheme(uiTheme);
+            }
+        } catch (e) {
+            console.warn('[Theme] Failed to apply editor color scheme:', e);
+        }
+    }
 }
 
 function applyBackgroundSettings() {
@@ -1556,6 +1654,10 @@ function applyBackgroundSettings() {
         'kawaii-light': {
             default: 'linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 50%, #c5e3f6 100%)',
             overlay: `rgba(255, 255, 255, ${opacity * 0.3})`
+        },
+        'sakura': {
+            default: 'linear-gradient(135deg, #fff0f5 0%, #ffe4e1 50%, #ffb7c5 100%)',
+            overlay: `rgba(255, 240, 245, ${opacity * 0.3})`
         },
         'dracula': {
             default: 'linear-gradient(135deg, #282a36 0%, #21222c 100%)',
@@ -1768,6 +1870,27 @@ function initHeader() {
 }
 
 function toggleIO() {
+    if (DockingState.ioDocked) {
+        const problemsPanel = document.getElementById('problems-panel');
+        const isIOActive = document.getElementById('docked-io-tab')?.classList.contains('active');
+
+        if (!App.showProblems) {
+            App.showProblems = true;
+            if (!App.settings.panels) App.settings.panels = {};
+            App.settings.panels.showProblems = true;
+            saveSettings();
+            updateUI();
+            switchDockedPanel('io');
+        } else {
+            if (isIOActive) {
+                toggleProblems();
+            } else {
+                switchDockedPanel('io');
+            }
+        }
+        return;
+    }
+
     App.showIO = !App.showIO;
     if (!App.settings.panels) App.settings.panels = {};
     App.settings.panels.showIO = App.showIO;
@@ -1780,17 +1903,28 @@ function toggleIO() {
     }, 50);
 }
 function toggleTerm() {
-
     if (DockingState.terminalDocked) {
+        const problemsPanel = document.getElementById('problems-panel');
+        const isTerminalActive = document.getElementById('docked-terminal-tab')?.classList.contains('active');
+
         if (!App.showProblems) {
+            // If hidden, show and switch to terminal
             App.showProblems = true;
             if (!App.settings.panels) App.settings.panels = {};
             App.settings.panels.showProblems = true;
             saveSettings();
             updateUI();
+            switchDockedPanel('terminal');
+        } else {
+            // If shown...
+            if (isTerminalActive) {
+                // If already looking at terminal, close problems
+                toggleProblems();
+            } else {
+                // If looking at something else, switch to terminal
+                switchDockedPanel('terminal');
+            }
         }
-
-        switchDockedPanel('terminal');
         return;
     }
 
@@ -2060,25 +2194,33 @@ function switchDockedPanel(panelId) {
     if (!problemsPanel) return;
 
     const problemsTitle = problemsPanel.querySelector('.panel-title.problems');
+    const testsTitle = problemsPanel.querySelector('.panel-title.tests');
     const terminalTab = document.getElementById('docked-terminal-tab');
     const ioTab = document.getElementById('docked-io-tab');
+
     const problemsBody = problemsPanel.querySelector('.problems-body');
+    const testsBody = document.getElementById('tests-results-list');
     let terminalView = problemsPanel.querySelector('.docked-terminal-view');
     let ioView = problemsPanel.querySelector('.docked-io-view');
 
-
+    // Deactivate all headers
     problemsTitle?.classList.remove('active');
+    testsTitle?.classList.remove('active');
     terminalTab?.classList.remove('active');
     ioTab?.classList.remove('active');
 
-
+    // Hide all bodies
     if (problemsBody) problemsBody.style.display = 'none';
+    if (testsBody) testsBody.style.display = 'none';
     if (terminalView) terminalView.style.display = 'none';
     if (ioView) ioView.style.display = 'none';
 
     if (panelId === 'problems') {
         problemsTitle?.classList.add('active');
         if (problemsBody) problemsBody.style.display = '';
+    } else if (panelId === 'tests') {
+        testsTitle?.classList.add('active');
+        if (testsBody) testsBody.style.display = 'block';
     } else if (panelId === 'terminal') {
         terminalTab?.classList.add('active');
         if (!terminalView) {
@@ -2379,6 +2521,34 @@ function createDockedIOView(container) {
         dockedIOView = document.createElement('div');
         dockedIOView.className = 'docked-io-view';
         dockedIOView.innerHTML = `
+            <div class="docked-io-header-bar">
+                <span class="docked-io-title">Test Cases</span>
+                <div class="docked-test-nav" id="docked-test-nav">
+                    <button class="docked-nav-btn" id="docked-btn-add-test" title="Thêm test">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                    <button class="docked-nav-btn" id="docked-btn-prev-test" title="Test trước">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                    </button>
+                    <span class="docked-test-label" id="docked-test-label">0/0</span>
+                    <button class="docked-nav-btn" id="docked-btn-next-test" title="Test tiếp">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                    <button class="docked-nav-btn danger" id="docked-btn-delete-test" title="Xóa test">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
             <div class="docked-io-split">
                 <div class="docked-io-panel">
                     <div class="docked-io-header">INPUT</div>
@@ -2395,6 +2565,7 @@ function createDockedIOView(container) {
 
 
         syncIOContent();
+        updateDockedTestNavUI();
 
 
         const dockedInput = document.getElementById('docked-input');
@@ -2403,14 +2574,52 @@ function createDockedIOView(container) {
         dockedInput?.addEventListener('input', () => {
             const original = document.getElementById('input-area');
             if (original) original.value = dockedInput.value;
+            // Also update current test case if exists
+            if (ccProblem?.tests?.[ccTestIndex]) {
+                ccProblem.tests[ccTestIndex].input = dockedInput.value;
+            }
         });
 
         dockedExpected?.addEventListener('input', () => {
             const original = document.getElementById('expected-area');
             if (original) original.value = dockedExpected.value;
+            // Also update current test case if exists
+            if (ccProblem?.tests?.[ccTestIndex]) {
+                ccProblem.tests[ccTestIndex].output = dockedExpected.value;
+            }
         });
+
+        // Bind docked nav buttons
+        document.getElementById('docked-btn-add-test')?.addEventListener('click', addTestCase);
+        document.getElementById('docked-btn-prev-test')?.addEventListener('click', prevTestCase);
+        document.getElementById('docked-btn-next-test')?.addEventListener('click', nextTestCase);
+        document.getElementById('docked-btn-delete-test')?.addEventListener('click', deleteTestCase);
     }
     return dockedIOView;
+}
+
+// Update docked test navigation UI
+function updateDockedTestNavUI() {
+    const testLabel = document.getElementById('docked-test-label');
+    const prevBtn = document.getElementById('docked-btn-prev-test');
+    const nextBtn = document.getElementById('docked-btn-next-test');
+    const deleteBtn = document.getElementById('docked-btn-delete-test');
+
+    if (!testLabel) return;
+
+    const testCount = ccProblem?.tests?.length || 0;
+
+    if (testCount > 0) {
+        testLabel.textContent = `${ccTestIndex + 1}/${testCount}`;
+        if (prevBtn) prevBtn.style.display = 'flex';
+        if (nextBtn) nextBtn.style.display = 'flex';
+        if (deleteBtn) deleteBtn.style.display = 'flex';
+    } else {
+        testLabel.textContent = '0/0';
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+        if (deleteBtn) deleteBtn.style.display = 'none';
+    }
 }
 
 function syncIOContent() {
@@ -2763,6 +2972,7 @@ async function compileOnly() {
         if (App.settings.execution.clearTerminal) clearTerm();
         clearProblems();
         clearErrorDecorations();
+        hasBuildProblems = false; // Reset before new build
 
         log('Compiling...', 'info');
         setStatus('Compiling...', 'building');
@@ -2796,6 +3006,7 @@ async function compileOnly() {
             log('Compile failed', 'error');
             log(r.error, 'error');
             parseProblems(r.error, 'error');
+            hasBuildProblems = true; // Lock problems list from live-check overwrite
             highlightErrorLines();
             setStatus('Compile failed', 'error');
             App.exePath = null;
@@ -2842,10 +3053,14 @@ async function buildRun() {
             saveSettings();
             updateUI();
         }
+        if (DockingState.terminalDocked) {
+            switchDockedPanel('terminal');
+        }
 
         if (App.settings.execution.clearTerminal) clearTerm();
         clearProblems();
         clearErrorDecorations();
+        hasBuildProblems = false; // Reset before new build
 
         log('Building...', 'info');
         setStatus('Building...', 'building');
@@ -2884,14 +3099,10 @@ async function buildRun() {
             log('Build failed', 'error');
             log(r.error, 'error');
             parseProblems(r.error, 'error');
+            hasBuildProblems = true; // Lock problems list from live-check overwrite
             highlightErrorLines();
             setStatus('Build failed', 'error');
             App.exePath = null;
-
-
-            if (DockingState.terminalDocked) {
-                switchDockedPanel('problems');
-            }
             setBuildingState(false);
         }
     } catch (e) {
@@ -2906,6 +3117,10 @@ async function run(clearTerminal = true) {
     if (!App.showTerm) {
         App.showTerm = true;
         updateUI();
+    }
+
+    if (DockingState.terminalDocked) {
+        switchDockedPanel('terminal');
     }
 
 
@@ -3025,7 +3240,7 @@ function parseProblems(text, type) {
         const m = line.match(regex);
         if (m) {
             App.problems.push({
-
+                file: m[1],
                 line: parseInt(m[2]),
                 col: parseInt(m[3]),
                 type: m[4],
@@ -3509,6 +3724,34 @@ function initCompetitiveCompanion() {
 
     document.getElementById('btn-prev-test')?.addEventListener('click', prevTestCase);
     document.getElementById('btn-next-test')?.addEventListener('click', nextTestCase);
+    document.getElementById('btn-add-test')?.addEventListener('click', addTestCase);
+    document.getElementById('btn-delete-test')?.addEventListener('click', deleteTestCase);
+
+    // Bind panel add button
+    document.getElementById('btn-add-test-panel')?.addEventListener('click', () => {
+        addTestCase();
+        // If docked, switch to IO tab to edit
+        if (DockingState.ioDocked) {
+            switchDockedPanel('io');
+        } else {
+            // If floating, ensure visible
+            if (!App.showIO) toggleIO();
+        }
+    });
+
+    // Save changes to current test case
+    const inputArea = document.getElementById('input-area');
+    const expectedArea = document.getElementById('expected-area');
+
+    const saveCurrentTest = () => {
+        if (ccProblem && ccProblem.tests && ccProblem.tests[ccTestIndex]) {
+            ccProblem.tests[ccTestIndex].input = inputArea.value;
+            ccProblem.tests[ccTestIndex].output = expectedArea.value;
+        }
+    };
+
+    inputArea?.addEventListener('input', saveCurrentTest);
+    expectedArea?.addEventListener('input', saveCurrentTest);
 
 
     document.getElementById('cc-close')?.addEventListener('click', hideCCPopup);
@@ -3525,6 +3768,55 @@ function initCompetitiveCompanion() {
 
 
     window.electronAPI?.onProblemReceived?.(handleProblemReceived);
+}
+
+function addTestCase() {
+    if (!ccProblem) {
+        ccProblem = { name: 'Manual Problem', tests: [] };
+    }
+    if (!ccProblem.tests) ccProblem.tests = [];
+
+    // Save current before adding
+    const inputArea = document.getElementById('input-area');
+    const expectedArea = document.getElementById('expected-area');
+    if (ccProblem.tests.length > 0 && ccProblem.tests[ccTestIndex]) {
+        ccProblem.tests[ccTestIndex].input = inputArea.value;
+        ccProblem.tests[ccTestIndex].output = expectedArea.value;
+    } else if (ccProblem.tests.length === 0 && (inputArea.value || expectedArea.value)) {
+        // If there were no tests but we had content, treat current content as Test 1
+        ccProblem.tests.push({
+            input: inputArea.value,
+            output: expectedArea.value
+        });
+    }
+
+    ccProblem.tests.push({ input: '', output: '' });
+    ccTestIndex = ccProblem.tests.length - 1;
+    switchTestCase(ccTestIndex);
+    updateTestNavUI();
+    renderTestResults(); // Refresh list
+    log(`Test Case ${ccTestIndex + 1} added`, 'info');
+}
+
+function deleteTestCase() {
+    if (!ccProblem || !ccProblem.tests || ccProblem.tests.length === 0) return;
+
+    if (confirm(`Xóa Test Case ${ccTestIndex + 1}?`)) {
+        ccProblem.tests.splice(ccTestIndex, 1);
+
+        if (ccProblem.tests.length === 0) {
+            // If all deleted, just clear areas
+            document.getElementById('input-area').value = '';
+            document.getElementById('expected-area').value = '';
+            ccTestIndex = 0;
+        } else {
+            // Go to previous or remain at 0
+            ccTestIndex = Math.max(0, ccTestIndex - 1);
+            switchTestCase(ccTestIndex);
+        }
+        updateTestNavUI();
+        renderTestResults(); // Refresh list
+    }
 }
 
 function showCCPopup() {
@@ -3633,6 +3925,7 @@ function handleProblemReceived(problem) {
 
 
     updateTestNavUI();
+    renderTestResults(); // Initialize list
 
 
     if (!App.showIO) toggleIO();
@@ -3668,6 +3961,7 @@ function updateTestNavUI() {
     const testNav = document.getElementById('test-nav');
     const testLabel = document.getElementById('test-nav-label');
     const runAllBtn = document.getElementById('btn-run-all-tests');
+    const deleteBtn = document.getElementById('btn-delete-test');
 
     const testCount = ccProblem?.tests?.length || 0;
 
@@ -3676,15 +3970,46 @@ function updateTestNavUI() {
         runAllBtn.style.display = testCount > 0 ? 'flex' : 'none';
     }
 
+    // Show/hide Panel Add button
+    const panelAddBtn = document.getElementById('btn-add-test-panel');
+    if (panelAddBtn) {
+        // Always show Add button to allow manual test creation
+        panelAddBtn.style.display = 'flex';
+    }
+
     if (!testNav || !testLabel) return;
 
+    // Always show nav if we have any tests, OR if we want to allow adding
+    // Showing it always (except completely empty startup) allows adding
+    const hasTests = testCount > 0;
 
-    if (testCount > 1) {
+    // But we need to allow adding manual tests even if none exist yet.
+    // So we should check if I/O panel is open or file is open?
+    // Let's just default to showing it if I/O is active? 
+    // Actually, simply: If there are tests, show navigation. If not, show "Add" button only?
+    // For simplicity, let's keep it visible but maybe simplified if 0 tests.
+
+    if (hasTests) {
         testNav.style.display = 'flex';
         testLabel.textContent = `${ccTestIndex + 1}/${testCount}`;
+        if (deleteBtn) deleteBtn.style.display = 'flex';
     } else {
-        testNav.style.display = 'none';
+        // Show only the "Add" button area?
+        // For now, let's show it so user can click Add.
+        testNav.style.display = 'flex';
+        testLabel.textContent = '0/0';
+        // Hide nav arrows if 0
+        document.getElementById('btn-prev-test').style.display = 'none';
+        document.getElementById('btn-next-test').style.display = 'none';
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        return;
     }
+
+    document.getElementById('btn-prev-test').style.display = 'flex';
+    document.getElementById('btn-next-test').style.display = 'flex';
+
+    // Also update docked test nav
+    updateDockedTestNavUI();
 }
 
 
@@ -3701,17 +4026,24 @@ function switchTestCase(index) {
     if (expectedArea) expectedArea.value = test.output || '';
 
 
+    // Also sync docked views
+    const dockedInput = document.getElementById('docked-input');
+    const dockedExpected = document.getElementById('docked-expected');
+    if (dockedInput) dockedInput.value = inputArea.value;
+    if (dockedExpected) dockedExpected.value = expectedArea.value;
+
     updateTestNavUI();
+    updateDockedTestNavUI();
 }
 
 function nextTestCase() {
-    if (ccProblem && ccProblem.tests) {
+    if (ccProblem && ccProblem.tests && ccProblem.tests.length > 0) {
         switchTestCase((ccTestIndex + 1) % ccProblem.tests.length);
     }
 }
 
 function prevTestCase() {
-    if (ccProblem && ccProblem.tests) {
+    if (ccProblem && ccProblem.tests && ccProblem.tests.length > 0) {
         switchTestCase((ccTestIndex - 1 + ccProblem.tests.length) % ccProblem.tests.length);
     }
 }
@@ -3871,85 +4203,106 @@ async function runAllTests() {
     isBatchTesting = true;
     batchTestResults = [];
 
+    // Ensure Problems panel is visible to show results
+    if (!App.showProblems) {
+        App.showProblems = true;
+        updateUI();
+        await new Promise(r => setTimeout(r, 50));
+    }
+
+    // Ensure Terminal is visible for logs
+    if (!App.showTerm && !DockingState.terminalDocked) {
+        App.showTerm = true;
+        updateUI();
+    }
+
+    // Switch to Tests tab if available
+    const problemsPanel = document.getElementById('problems-panel');
+    const testsTab = problemsPanel?.querySelector('.panel-title[data-panel="tests"]');
+    if (testsTab && !testsTab.classList.contains('active')) {
+        testsTab.click();
+    }
 
     log('=== Run All Tests ===', 'system');
     setStatus('Compiling...', '');
 
-    const tab = App.tabs.find(t => t.id === App.activeTabId);
-    if (!tab) {
-        log('Không có file đang mở!', 'error');
-        isBatchTesting = false;
-        runAllBtn?.classList.remove('running');
-        return;
-    }
+    try {
+        const tab = App.tabs.find(t => t.id === App.activeTabId);
+        if (!tab) {
+            log('Không có file đang mở!', 'error');
+            return;
+        }
 
-    const content = App.editor ? App.editor.getValue() : tab.content;
-    const compileFlags = buildCompileFlags();
+        const content = App.editor ? App.editor.getValue() : tab.content;
+        const compileFlags = buildCompileFlags();
 
-    const compileResult = await window.electronAPI.compile({
-        filePath: tab.path,
-        content: content,
-        flags: compileFlags
-    });
-
-    if (!compileResult.success) {
-        log('Compile Error!', 'error');
-        log(compileResult.error, 'error');
-        setStatus('Compile Error', 'error');
-        isBatchTesting = false;
-        runAllBtn?.classList.remove('running');
-        return;
-    }
-
-    App.exePath = compileResult.outputPath;
-    log(`Compiled in ${compileResult.time}ms`, 'success');
-
-
-    const timeLimit = ccProblem.timeLimit || (App.settings.execution.timeLimitSeconds * 1000) || 3000;
-
-
-    const totalTests = ccProblem.tests.length;
-    let passedCount = 0;
-
-    for (let i = 0; i < totalTests; i++) {
-        const test = ccProblem.tests[i];
-        setStatus(`Testing ${i + 1}/${totalTests}...`, '');
-
-        const lastSlash = tab.path ? Math.max(tab.path.lastIndexOf('/'), tab.path.lastIndexOf('\\')) : -1;
-        const sourceDir = lastSlash !== -1 ? tab.path.substring(0, lastSlash) : null;
-
-        const result = await window.electronAPI.runTest({
-            exePath: App.exePath,
-            input: test.input || '',
-            expectedOutput: test.output || '',
-            timeLimit: timeLimit,
-            cwd: sourceDir
+        const compileResult = await window.electronAPI.compile({
+            filePath: tab.path,
+            content: content,
+            flags: compileFlags
         });
 
-        result.testIndex = i;
-        result.testName = `Test ${i + 1}`;
-        batchTestResults.push(result);
-
-        if (result.status === 'AC') {
-            passedCount++;
-            log(`  Test ${i + 1}: AC (${result.executionTime}ms)`, 'success');
-        } else {
-            log(`  Test ${i + 1}: ${result.status} (${result.executionTime}ms)`,
-                result.status === 'WA' ? 'error' : 'warning');
+        if (!compileResult.success) {
+            log('Compile Error!', 'error');
+            log(compileResult.error, 'error');
+            setStatus('Compile Error', 'error');
+            return;
         }
+
+        App.exePath = compileResult.outputPath;
+        log(`Compiled in ${compileResult.time}ms`, 'success');
+
+
+        const timeLimit = ccProblem.timeLimit || (App.settings.execution.timeLimitSeconds * 1000) || 3000;
+
+
+        const totalTests = ccProblem.tests.length;
+        let passedCount = 0;
+
+        for (let i = 0; i < totalTests; i++) {
+            const test = ccProblem.tests[i];
+            setStatus(`Testing ${i + 1}/${totalTests}...`, '');
+
+            const lastSlash = tab.path ? Math.max(tab.path.lastIndexOf('/'), tab.path.lastIndexOf('\\')) : -1;
+            const sourceDir = lastSlash !== -1 ? tab.path.substring(0, lastSlash) : null;
+
+            const result = await window.electronAPI.runTest({
+                exePath: App.exePath,
+                input: test.input || '',
+                expectedOutput: test.output || '',
+                timeLimit: timeLimit,
+                cwd: sourceDir
+            });
+
+            result.testIndex = i;
+            result.testName = `Test ${i + 1}`;
+            batchTestResults.push(result);
+
+            if (result.status === 'AC') {
+                passedCount++;
+                log(`  Test ${i + 1}: AC (${result.executionTime}ms)`, 'success');
+            } else {
+                log(`  Test ${i + 1}: ${result.status} (${result.executionTime}ms)`,
+                    result.status === 'WA' ? 'error' : 'warning');
+            }
+        }
+
+
+        const allPassed = passedCount === totalTests;
+        log(`\n=== ${passedCount}/${totalTests} AC ===`, allPassed ? 'success' : 'warning');
+        setStatus(`${passedCount}/${totalTests} AC`, allPassed ? 'success' : '');
+
+        // Update UI
+        renderTestResults();
+        if (typeof showTestsTab === 'function') showTestsTab();
+
+    } catch (e) {
+        log(`Error running tests: ${e.message}`, 'error');
+        setStatus('Test Error', 'error');
+    } finally {
+        isBatchTesting = false;
+        runAllBtn?.classList.remove('running');
     }
-
-
-    const allPassed = passedCount === totalTests;
-    log(`\n=== ${passedCount}/${totalTests} AC ===`, allPassed ? 'success' : 'warning');
-    setStatus(`${passedCount}/${totalTests} AC`, allPassed ? 'success' : '');
-
-    // Update UI
-    renderTestResults();
-    showTestsTab();
-
-    isBatchTesting = false;
-    runAllBtn?.classList.remove('running');
 }
 
 function renderTestResults() {
@@ -3958,53 +4311,87 @@ function renderTestResults() {
 
     if (!container) return;
 
-    const passed = batchTestResults.filter(r => r.status === 'AC').length;
-    const total = batchTestResults.length;
+    // Use ccProblem.tests as base if available, otherwise fall back to batch results
+    const tests = ccProblem && ccProblem.tests ? ccProblem.tests : [];
+    const results = batchTestResults || [];
+    const total = tests.length;
+
+    // Calculate passed from results that match existing tests
+    // Note: batchTestResults might be cleared or partial.
+    const passed = results.filter(r => r.status === 'AC').length;
+    const executed = results.length;
 
 
     if (countEl) {
-        countEl.textContent = `${passed}/${total}`;
+        // Show Passed/Total if run, or just Total count if not
+        if (executed > 0) {
+            countEl.textContent = `${passed}/${total}`;
+        } else {
+            countEl.textContent = `${total} tests`;
+        }
         countEl.style.display = total > 0 ? 'inline' : 'none';
     }
 
 
     let html = '';
 
-
-    if (total > 0) {
-        const allPassed = passed === total;
+    // Summary if run
+    if (executed > 0) {
+        const allPassed = passed === total && total > 0;
         html += `
                 <div class="test-results-summary">
                     <span class="test-summary-stat passed">✓ ${passed} passed</span>
-                    <span class="test-summary-stat failed">✗ ${total - passed} failed</span>
-                    <span class="test-summary-stat total">${batchTestResults.reduce((s, r) => s + r.executionTime, 0)}ms total</span>
+                    <span class="test-summary-stat failed">✗ ${executed - passed} failed</span>
+                    <span class="test-summary-stat total">${results.reduce((s, r) => s + (r.executionTime || 0), 0)}ms total</span>
                 </div>
                 `;
     }
 
+    // List Tests
+    tests.forEach((test, idx) => {
+        // Find result for this test index
+        const result = results.find(r => r.testIndex === idx);
 
-    batchTestResults.forEach((result, idx) => {
-        const timeStr = result.executionTime >= 1000
-            ? (result.executionTime / 1000).toFixed(2) + 's'
-            : result.executionTime + 'ms';
+        let status = 'PENDING';
+        let timeStr = '';
+        let details = '';
+        let statusClass = 'pending';
 
-        const memStr = result.peakMemoryKB > 0
-            ? (result.peakMemoryKB >= 1024
-                ? (result.peakMemoryKB / 1024).toFixed(1) + 'MB'
-                : result.peakMemoryKB + 'KB')
-            : '';
+        if (result) {
+            status = result.status;
+            statusClass = result.status;
+            timeStr = result.executionTime >= 1000
+                ? (result.executionTime / 1000).toFixed(2) + 's'
+                : result.executionTime + 'ms';
+            details = result.details || '';
+        } else {
+            // Format sample inputs for display if no result
+            const inputPreview = (test.input || '').replace(/\n/g, ' ').substring(0, 20);
+            details = inputPreview ? `In: ${inputPreview}...` : 'Empty input';
+        }
 
         html += `
                 <div class="test-result-item" data-index="${idx}">
-                    <span class="test-result-status ${result.status}">${result.status}</span>
+                    <span class="test-result-status ${statusClass}">${status}</span>
                     <div class="test-result-info">
-                        <span class="test-result-title">${result.testName}</span>
-                        <span class="test-result-details">${result.details || ''}</span>
+                        <span class="test-result-title">Test Case ${idx + 1}</span>
+                        <span class="test-result-details">${details}</span>
                     </div>
-                    <span class="test-result-time">${timeStr}${memStr ? ' | ' + memStr : ''}</span>
+                    <span class="test-result-time">${timeStr}</span>
                 </div>
                 `;
     });
+
+    // Add "Add Test" button
+    html += `
+            <div class="test-result-add-btn" id="btn-list-add-test">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Thêm Test Case Mới
+            </div>
+        `;
 
     container.innerHTML = html;
 
@@ -4014,27 +4401,42 @@ function renderTestResults() {
             const idx = parseInt(item.dataset.index);
             if (ccProblem && ccProblem.tests[idx]) {
                 switchTestCase(idx);
+                // Also switch to IO panel to view it
+                if (DockingState.ioDocked) {
+                    switchDockedPanel('io');
+                } else {
+                    if (!App.showIO) toggleIO();
+                }
             }
         });
     });
+
+    const addBtn = container.querySelector('#btn-list-add-test');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            addTestCase();
+            // Switch to IO
+            if (DockingState.ioDocked) {
+                switchDockedPanel('io');
+            } else {
+                if (!App.showIO) toggleIO();
+            }
+        });
+    }
 }
 
 function switchProblemsTab(tabName) {
-    const problemsList = document.getElementById('problems-list');
-    const testsList = document.getElementById('tests-results-list');
-    const problemsTitle = document.querySelector('.panel-title.problems');
-    const testsTitle = document.querySelector('.panel-title.tests');
+    if (typeof switchDockedPanel === 'function') {
+        switchDockedPanel(tabName);
+    }
 
-    if (tabName === 'problems') {
-        problemsList.style.display = 'block';
-        testsList.style.display = 'none';
-        problemsTitle?.classList.add('active');
-        testsTitle?.classList.remove('active');
-    } else {
-        problemsList.style.display = 'none';
-        testsList.style.display = 'block';
-        problemsTitle?.classList.remove('active');
-        testsTitle?.classList.add('active');
+    // Explicitly render tests if switching to tests tab
+    if (tabName === 'tests') {
+        // Initialize manual problem if none exists
+        if (!ccProblem) {
+            ccProblem = { name: 'Manual Problem', tests: [] };
+        }
+        renderTestResults();
     }
 }
 

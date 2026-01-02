@@ -553,7 +553,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: #1a2530;
+    background: var(--editor-bg, #1a2530);
     border-radius: var(--radius-sm);
     margin: 6px;
     overflow: hidden;
@@ -929,6 +929,7 @@ body {
 .settings-tab.active {
     background: var(--bg-ocean-medium) !important;
     color: var(--text-primary) !important;
+    font-weight: 800 !important;
     border-radius: 28px 22px 25px 20px;
     box-shadow: 4px 4px 0 var(--shadow-card);
 }
@@ -2499,6 +2500,30 @@ body.split-active .editor-pane {
     flex-shrink: 0;
 }
 
+/* Test Results Add Button */
+.test-result-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    margin: 10px 10px 20px 10px;
+    border: 1px dashed var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: all 0.2s;
+    gap: 8px;
+    background: transparent;
+}
+
+.test-result-add-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    /* Subtle highlight */
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
 .test-nav-btn {
     width: 18px;
     height: 18px;
@@ -2527,6 +2552,11 @@ body.split-active .editor-pane {
 
 .test-nav-btn:active {
     transform: scale(0.9);
+}
+
+.test-nav-btn.danger:hover {
+    background: rgba(255, 100, 100, 0.2);
+    color: #e06c75;
 }
 
 .test-nav-label {
@@ -3041,11 +3071,87 @@ body.split-active .editor-pane {
     border: none;
     resize: none;
     outline: none;
+    overflow-y: auto;
+    /* Ensure scrolling works */
+    min-height: 0;
+    /* Flexbox scrolling fix */
 }
 
 .docked-io-textarea::placeholder {
     color: var(--text-muted, #6c8aa0);
     opacity: 0.6;
+}
+
+/* Docked Test Navigation Header */
+.docked-io-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-glass-heavy, rgba(255, 255, 255, 0.05));
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    flex-shrink: 0;
+}
+
+.docked-io-title {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary, #8aa0b0);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.docked-test-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.docked-nav-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: var(--bg-ocean-light, rgba(136, 201, 234, 0.2));
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary, #8aa0b0);
+    transition: all 0.15s ease;
+}
+
+.docked-nav-btn:hover {
+    background: var(--bg-ocean-medium, rgba(136, 201, 234, 0.4));
+    color: var(--text-primary, #e0f0ff);
+    transform: scale(1.1);
+}
+
+.docked-nav-btn:active {
+    transform: scale(0.95);
+}
+
+.docked-nav-btn.danger:hover {
+    background: var(--error, #e06c75);
+    color: white;
+}
+
+.docked-nav-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.docked-test-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted, #6c8aa0);
+    min-width: 32px;
+    text-align: center;
+    padding: 4px 8px;
+    background: var(--bg-ocean-light, rgba(136, 201, 234, 0.15));
+    border-radius: 10px;
 }
 
 /* ============================================================================

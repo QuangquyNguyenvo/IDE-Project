@@ -380,6 +380,7 @@
                                     <option value="auto">Auto (Match Theme)</option>
                                     <option value="kawaii-dark">Kawaii Dark</option>
                                     <option value="kawaii-light">Kawaii Light</option>
+                                    <option value="sakura">Sakura</option>
                                     <option value="dracula">Dracula</option>
                                     <option value="monokai">Monokai</option>
                                     <option value="nord">Nord</option>
@@ -508,6 +509,7 @@
                                         <select id="set-theme">
                                             <option value="kawaii-dark">Kawaii Dark</option>
                                             <option value="kawaii-light">Kawaii Light</option>
+                                            <option value="sakura">Sakura</option>
                                             <option value="dracula">Dracula</option>
                                             <option value="monokai">Monokai</option>
                                             <option value="nord">Nord</option>
@@ -826,6 +828,13 @@
                         <span class="panel-title input">INPUT</span>
                         <!-- Test case navigation (hidden by default, shown when problem loaded) -->
                         <div class="test-nav" id="test-nav" style="display:none">
+                            <button class="test-nav-btn" id="btn-add-test" title="Thêm test case mới">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
                             <button class="test-nav-btn" id="btn-prev-test" title="Test trước">
                                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
                                     stroke-width="3">
@@ -837,6 +846,15 @@
                                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
                                     stroke-width="3">
                                     <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                            <button class="test-nav-btn danger" id="btn-delete-test" title="Xóa test case này">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
                                 </svg>
                             </button>
                         </div>

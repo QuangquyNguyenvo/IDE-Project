@@ -244,12 +244,13 @@
    ======================================== */
 
 .snippets-list-container {
-    background: var(--bg-glass, rgba(232, 244, 252, 0.3));
-    border: 2px solid var(--border, #cceeff);
-    border-radius: 16px;
+    background: var(--bg-glass, rgba(245, 248, 250, 0.8));
+    border: 1px solid var(--border, #e0e0e0);
+    border-radius: 12px;
     padding: 12px;
     margin-bottom: 16px;
-    max-height: 380px;
+    max-height: 350px;
+    min-height: 180px;
     overflow-y: auto;
 }
 
@@ -260,130 +261,135 @@
 
 .snippets-list-container::-webkit-scrollbar-track {
     background: transparent;
-    margin: 10px 0;
 }
 
 .snippets-list-container::-webkit-scrollbar-thumb {
-    background: #d4eef8;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    background-clip: padding-box;
+    background: var(--border, #ccc);
+    border-radius: 3px;
 }
 
 .snippets-list-container::-webkit-scrollbar-thumb:hover {
-    background: #b8e2f5;
-    background-clip: padding-box;
+    background: var(--accent, #88c9ea);
 }
 
 /* Snippet item row */
 .snippet-item {
     display: grid;
-    grid-template-columns: 100px 1fr auto;
-    gap: 12px;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    background: white;
+    gap: 14px;
+    background: var(--bg-input, #fff);
     padding: 12px 16px;
     margin-bottom: 8px;
-    border-radius: 14px;
-    border: 2px solid var(--border, #cceeff);
-    transition: all 0.2s;
-}
-
-.snippet-item:hover {
-    transform: translateX(4px);
-    border-color: var(--bg-ocean-deep);
-    box-shadow: var(--shadow-card, 0 4px 12px rgba(136, 201, 234, 0.15));
+    border-radius: 10px;
+    border: 1px solid var(--border, #e5e5e5);
+    transition: all 0.15s ease;
 }
 
 .snippet-item:last-child {
     margin-bottom: 0;
 }
 
+.snippet-item:hover {
+    border-color: var(--accent, #88c9ea);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
 .snippet-item.builtin {
-    opacity: 0.8;
-    background: var(--bg-ocean-light);
-    border-style: dashed;
+    background: var(--bg-ocean-light, #f5f8fa);
+    border-left: 3px solid var(--text-muted, #aaa);
+}
+
+.snippet-item:not(.builtin) {
+    border-left: 3px solid var(--accent, #88c9ea);
 }
 
 .snippet-trigger {
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 800;
-    color: var(--bg-ocean-dark);
-    padding: 4px 10px;
-    background: var(--bg-ocean-light);
-    border: 1px solid var(--bg-ocean-medium);
-    border-radius: 8px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-weight: 600;
+    color: var(--accent, #3a7ca5);
+    padding: 5px 12px;
+    background: var(--bg-ocean-light, #eef4f8);
+    border-radius: 6px;
     font-size: 0.85em;
+    min-width: 70px;
     text-align: center;
+    white-space: nowrap;
 }
 
 .snippet-preview {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text-secondary);
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: var(--text-secondary, #666);
     font-size: 0.85em;
-    line-height: 1.4;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    opacity: 0.85;
 }
 
 .snippet-actions {
     display: flex;
     gap: 6px;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+}
+
+.snippet-item:hover .snippet-actions {
+    opacity: 1;
 }
 
 .snippet-actions button {
-    background: white;
-    border: 1.5px solid var(--border, #cceeff);
+    background: var(--bg-ocean-light, #f0f4f7);
+    border: 1px solid var(--border, #ddd);
     cursor: pointer;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
-    color: var(--text-secondary);
+    transition: all 0.15s;
+    color: var(--text-secondary, #777);
 }
 
 .snippet-actions button:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .snippet-actions .btn-edit:hover {
-    background: var(--bg-ocean-light);
-    color: var(--bg-ocean-dark);
-    border-color: var(--bg-ocean-deep);
+    background: var(--bg-ocean-medium, #dbe8f0);
+    color: var(--accent, #3a7ca5);
+    border-color: var(--accent, #88c9ea);
 }
 
 .snippet-actions .btn-delete:hover {
-    background: var(--error, #ff8fab);
+    background: var(--error, #ff6b6b);
     color: white;
-    border-color: white;
+    border-color: var(--error, #ff6b6b);
 }
 
 #btn-add-snippet {
     width: 100%;
-    padding: 12px;
-    background: var(--bg-ocean-deep);
+    padding: 12px 16px;
+    background: var(--accent, #88c9ea);
     color: white;
     border: none;
-    border-radius: 14px;
+    border-radius: 10px;
     cursor: pointer;
-    font-weight: 700;
-    font-size: 1em;
+    font-weight: 600;
+    font-size: 0.95em;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     transition: all 0.2s;
-    font-family: 'Fredoka', sans-serif;
+    font-family: 'Nunito', sans-serif;
 }
 
 #btn-add-snippet:hover {
-    background: var(--bg-ocean-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(58, 124, 165, 0.4);
+    background: var(--accent-hover, #6ab8dc);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Empty state */
@@ -392,29 +398,53 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 32px 16px;
     text-align: center;
-    color: var(--text-muted);
+    color: var(--text-muted, #999);
 }
 
 .snippets-empty svg {
-    width: 56px;
-    height: 56px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-    color: var(--bg-ocean-deep);
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+    color: var(--accent, #88c9ea);
 }
 
 /* Dark Theme Adjustments */
 [data-theme="kawaii-dark"] .snippet-item,
-[data-theme="kawacula"] .snippet-item,
-[data-theme="dracula"] .snippet-item {
+[data-theme="dracula"] .snippet-item,
+[data-theme="monokai"] .snippet-item,
+[data-theme="nord"] .snippet-item,
+[data-theme="one-dark"] .snippet-item {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme^="kawaii-dark"] .snippet-actions button,
-[data-theme="dracula"] .snippet-actions button {
+[data-theme="kawaii-dark"] .snippet-trigger,
+[data-theme="dracula"] .snippet-trigger,
+[data-theme="monokai"] .snippet-trigger,
+[data-theme="nord"] .snippet-trigger,
+[data-theme="one-dark"] .snippet-trigger {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+}
+
+[data-theme="kawaii-dark"] .snippet-actions button,
+[data-theme="dracula"] .snippet-actions button,
+[data-theme="monokai"] .snippet-actions button,
+[data-theme="nord"] .snippet-actions button,
+[data-theme="one-dark"] .snippet-actions button {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="kawaii-dark"] .snippets-list-container,
+[data-theme="dracula"] .snippets-list-container,
+[data-theme="monokai"] .snippets-list-container,
+[data-theme="nord"] .snippets-list-container,
+[data-theme="one-dark"] .snippets-list-container {
     background: rgba(0, 0, 0, 0.2);
     border-color: rgba(255, 255, 255, 0.1);
 }

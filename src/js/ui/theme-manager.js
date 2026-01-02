@@ -24,6 +24,7 @@ const ThemeManager = {
     builtinThemeIds: [
         'kawaii-dark',
         'kawaii-light',
+        'sakura',
         'dracula',
         'monokai',
         'nord',
@@ -71,7 +72,7 @@ const ThemeManager = {
      * Load builtin themes from JSON files (async, non-blocking)
      */
     async _loadBuiltinThemesAsync() {
-        for (const themeId of this.builtinThemeIds) {
+        const promises = this.builtinThemeIds.map(async (themeId) => {
             try {
                 const themePath = `${this.builtinThemesPath}/${themeId}.json`;
                 const response = await fetch(themePath);
@@ -82,8 +83,10 @@ const ThemeManager = {
                 }
             } catch (error) {
                 // Silent fail - hardcoded version already loaded
+                console.warn(`[ThemeManager] Failed to load JSON for ${themeId}:`, error.message);
             }
-        }
+        });
+        await Promise.all(promises);
     },
 
 
@@ -131,6 +134,59 @@ const ThemeManager = {
                         number: { color: 'ebcb8b' },
                         type: { color: 'e8a8b8' },
                         function: { color: '7ec8e3' }
+                    }
+                }
+            },
+            'sakura': {
+                meta: { id: 'sakura', name: 'Sakura', type: 'light' },
+                colors: {
+                    bgOceanLight: '#fff0f5',
+                    bgOceanMedium: '#ffe4e1',
+                    bgOceanDeep: '#ffb7c5',
+                    bgOceanDark: '#db7093',
+                    bgGlass: 'rgba(255, 240, 245, 0.9)',
+                    bgGlassHeavy: 'rgba(255, 228, 225, 0.95)',
+                    bgGlassBorder: 'rgba(255, 182, 193, 0.6)',
+                    accent: '#ff69b4',
+                    accentHover: '#ff1493',
+                    textPrimary: '#4a4a4a',
+                    textSecondary: '#8b5f65',
+                    textMuted: '#bc8f8f',
+                    success: '#77dd77',
+                    error: '#ff6961',
+                    warning: '#fdfd96',
+                    border: '#ffc0cb',
+                    borderStrong: '#ff69b4',
+                    shadowSoft: '0 8px 32px rgba(255, 182, 193, 0.3)',
+                    shadowCard: '0 4px 12px rgba(255, 105, 180, 0.2)',
+                    glow: '0 0 15px rgba(255, 182, 193, 0.6)',
+                    bgHeader: 'rgba(255, 240, 245, 0.95)',
+                    bgPanel: 'rgba(255, 255, 255, 0.9)',
+                    bgInput: '#fffafa',
+                    bgButton: '#fff0f5',
+                    bgButtonHover: '#ffe4e1',
+                    editorBg: '#2d1f2f',
+                    terminalBg: '#251a26',
+                    settingsLabelColor: '#8b5f65',
+                    settingsSectionColor: '#ff69b4'
+                },
+                editor: {
+                    base: 'vs-dark', inherit: true,
+                    background: '#2d1f2f', foreground: '#f8e8f0',
+                    lineHighlight: '#3d2a3f',
+                    selection: '#5d3a5f',
+                    cursor: '#ff69b4',
+                    lineNumber: '#6d5060',
+                    lineNumberActive: '#ff69b4',
+                    syntax: {
+                        comment: { color: '8b7080', fontStyle: 'italic' },
+                        keyword: { color: 'ff69b4' },
+                        string: { color: '98d998' },
+                        number: { color: 'da75e3' },
+                        type: { color: 'ffb7c5', fontStyle: 'italic' },
+                        function: { color: 'ffb07a' },
+                        variable: { color: 'f8e8f0' },
+                        operator: { color: 'ff69b4' }
                     }
                 }
             },
@@ -251,6 +307,11 @@ const ThemeManager = {
             this._defineMonacoTheme(normalizedTheme);
         }
 
+        // If this is the active theme, re-apply it to update UI colors (e.g. after background JSON load)
+        if (id === this.activeThemeId) {
+            this.setTheme(id);
+        }
+
         return true;
     },
 
@@ -355,9 +416,6 @@ const ThemeManager = {
      * Apply CSS variables from theme colors
      */
     _applyCSSVariables(theme) {
-        const colors = theme.colors;
-        if (!colors || Object.keys(colors).length === 0) return;
-
         const root = document.documentElement;
 
         // Map JSON keys to CSS variable names
@@ -393,6 +451,13 @@ const ThemeManager = {
             'settingsSectionColor': '--settings-section-color'
         };
 
+        // 1. First clear all existing theme variables from root style
+        Object.values(varMappings).forEach(cssVar => {
+            root.style.removeProperty(cssVar);
+        });
+
+        // 2. Apply current theme variables
+        const colors = theme.colors || {};
         Object.entries(colors).forEach(([key, value]) => {
             const cssVar = varMappings[key];
             if (cssVar && value) {

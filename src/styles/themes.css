@@ -70,6 +70,64 @@
 }
 
 /* ============================================================================
+   SAKURA THEME
+   Pink pastel UI with dark rose editor for comfort coding
+   ============================================================================ */
+[data-theme="sakura"] {
+    /* Sakura pink palette - Refined for true pastel feel */
+    --bg-ocean-light: #fff5f8;
+    --bg-ocean-medium: #ffe4e1;
+    --bg-ocean-deep: #ffb7c5;
+    --bg-ocean-dark: #e097a8;
+
+    --bg-glass: rgba(255, 245, 250, 0.92);
+    --bg-glass-heavy: rgba(255, 228, 225, 0.97);
+    --bg-glass-border: rgba(255, 182, 193, 0.6);
+
+    --accent: #ff9aaf;
+    --accent-hover: #ff758f;
+    --text-primary: #5d4a4d;
+    --text-secondary: #8b5f65;
+    --text-muted: #bc8f8f;
+
+    --success: #b8e2b8;
+    --error: #ffb3b3;
+    --warning: #fff9c4;
+
+    --border: #ffcad4;
+    --border-strong: #ffb7c5;
+
+    --shadow-soft: 0 8px 32px rgba(255, 182, 193, 0.25);
+    --shadow-card: 0 4px 12px rgba(255, 105, 180, 0.15);
+    --glow: 0 0 15px rgba(255, 182, 193, 0.4);
+
+    --bg-header: rgba(255, 228, 225, 0.97);
+    --bg-panel: rgba(255, 245, 248, 0.95);
+    --bg-input: #fffafa;
+    --bg-button: #fff0f5;
+    --bg-button-hover: #ffe4e1;
+
+    --editor-bg: #2d1f2f;
+    --terminal-bg: #251a26;
+    --terminal-text: #f8e8f0;
+
+    /* Settings label text */
+    --settings-label-color: #8b5f65;
+    --settings-section-color: #ff9aaf;
+}
+
+/* Custom Toggle for Sakura (True Pastel) */
+[data-theme="sakura"] .switch input:checked+.slider {
+    background: #ffc2d1;
+    border-color: #ffb7c5;
+}
+
+[data-theme="sakura"] .switch input:checked+.slider::before {
+    background: white;
+    filter: drop-shadow(0 0 4px #ffb7c5);
+}
+
+/* ============================================================================
    DRACULA THEME
    ============================================================================ */
 [data-theme="dracula"] {
@@ -505,7 +563,7 @@
 [data-theme="monokai"] .editor-section,
 [data-theme="nord"] .editor-section,
 [data-theme="one-dark"] .editor-section {
-    background: var(--bg-glass);
+    background: var(--editor-bg);
     border: 2px solid var(--border) !important;
 }
 
@@ -1781,4 +1839,305 @@ html[data-theme="one-dark"] .setting-row>label:not(.switch) {
 /* Fix Nord sidebar text color contrast */
 [data-theme="nord"] .settings-tab {
     color: #eceff4 !important;
+}
+
+/* ============================================================================
+   SAKURA THEME COMPONENT OVERRIDES
+   Pink pastel with dark rose editor - requires special handling
+   ============================================================================ */
+
+/* Sakura Header */
+[data-theme="sakura"] .header-bar {
+    background: var(--bg-header);
+    border-bottom: 2px solid var(--border);
+}
+
+[data-theme="sakura"] .logo {
+    background: var(--bg-ocean-deep);
+    border: 2px solid var(--border);
+    color: white;
+}
+
+[data-theme="sakura"] .menu-group {
+    background: var(--bg-button);
+    border: 1px solid var(--border);
+}
+
+[data-theme="sakura"] .menu-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="sakura"] .menu-btn:hover {
+    background: var(--bg-button-hover);
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] .menu-btn.active {
+    background: var(--bg-ocean-deep);
+    color: white;
+}
+
+/* Sakura Tabs */
+[data-theme="sakura"] .tab {
+    background: var(--bg-button);
+    border: 2px solid var(--border);
+    color: var(--text-secondary);
+}
+
+[data-theme="sakura"] .tab:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] .tab.active {
+    background: var(--bg-ocean-medium);
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] .tab-add {
+    background: var(--bg-button);
+    border-color: var(--border);
+    color: var(--accent);
+}
+
+/* Sakura Toggle & Action buttons */
+[data-theme="sakura"] .toggle-btn {
+    background: var(--bg-button);
+    color: var(--accent);
+    border: 1px solid var(--border);
+}
+
+[data-theme="sakura"] .toggle-btn:hover {
+    background: var(--bg-button-hover);
+}
+
+[data-theme="sakura"] .toggle-btn.active {
+    background: var(--accent);
+    color: white;
+}
+
+[data-theme="sakura"] .action-btn {
+    background: var(--bg-button);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] .action-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+/* Sakura Editor & Panels */
+[data-theme="sakura"] .editor-section {
+    background: var(--editor-bg);
+    border: 2px solid var(--border) !important;
+}
+
+[data-theme="sakura"] .editor-area {
+    background: var(--editor-bg);
+    border: none !important;
+}
+
+[data-theme="sakura"] .terminal-section {
+    background: var(--bg-panel);
+    border: 2px solid var(--border);
+}
+
+[data-theme="sakura"] .terminal-body {
+    background: var(--terminal-bg);
+    color: var(--terminal-text);
+}
+
+[data-theme="sakura"] .terminal-input {
+    background: var(--terminal-bg);
+    border-top-color: var(--border);
+}
+
+[data-theme="sakura"] .terminal-input input,
+[data-theme="sakura"] .terminal-input textarea {
+    color: var(--terminal-text);
+}
+
+/* Sakura IO Panels */
+[data-theme="sakura"] .io-panel {
+    background: var(--bg-panel);
+    border: 2px solid var(--border);
+}
+
+[data-theme="sakura"] .io-section {
+    border-color: var(--border);
+}
+
+[data-theme="sakura"] .panel-head {
+    background: var(--bg-glass-heavy);
+    border-bottom: 2px solid var(--border);
+}
+
+[data-theme="sakura"] .panel-title {
+    color: var(--text-secondary);
+}
+
+[data-theme="sakura"] .panel-textarea {
+    background: var(--editor-bg);
+    color: var(--terminal-text);
+}
+
+/* Sakura Problems Panel */
+[data-theme="sakura"] .problems-panel {
+    background: var(--bg-panel);
+    border-top: 2px solid var(--border);
+}
+
+/* Sakura Status Bar */
+[data-theme="sakura"] .status-bar {
+    background: var(--bg-header);
+    border-top-color: var(--border);
+    color: var(--text-secondary);
+}
+
+/* Sakura Dropdowns */
+[data-theme="sakura"] .dropdown {
+    background: var(--bg-panel);
+    border-color: var(--border);
+}
+
+[data-theme="sakura"] .dropdown-item {
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] .dropdown-item:hover {
+    background: var(--bg-button-hover);
+}
+
+/* Sakura Settings Popup */
+[data-theme="sakura"] .settings-popup {
+    background: var(--bg-panel);
+    border-color: var(--border);
+}
+
+[data-theme="sakura"] .settings-header {
+    background: var(--bg-ocean-medium);
+    border-bottom-color: var(--border);
+}
+
+[data-theme="sakura"] .settings-header h2 {
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] .settings-sidebar {
+    background: var(--bg-button);
+    border-color: var(--border);
+}
+
+[data-theme="sakura"] .settings-content {
+    background: var(--bg-panel);
+}
+
+[data-theme="sakura"] .settings-tab {
+    color: var(--text-secondary);
+}
+
+[data-theme="sakura"] .settings-tab.active {
+    background: var(--accent);
+    color: white;
+}
+
+[data-theme="sakura"] .settings-section h3 {
+    color: var(--accent);
+    border-bottom-color: var(--border);
+}
+
+[data-theme="sakura"] .settings-footer {
+    background: var(--bg-ocean-medium);
+    border-top-color: var(--border);
+}
+
+[data-theme="sakura"] .setting-row {
+    background: var(--bg-button);
+    border-color: var(--border);
+}
+
+[data-theme="sakura"] .setting-row label {
+    color: var(--text-secondary);
+}
+
+/* Sakura Form Controls */
+[data-theme="sakura"] select,
+[data-theme="sakura"] input[type="text"],
+[data-theme="sakura"] input[type="number"] {
+    background: var(--bg-input);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] select:focus,
+[data-theme="sakura"] input:focus {
+    border-color: var(--accent);
+}
+
+/* Sakura Docked Views */
+[data-theme="sakura"] .docked-io-view {
+    background: var(--terminal-bg);
+}
+
+[data-theme="sakura"] .docked-io-header-bar {
+    background: rgba(45, 31, 47, 0.9);
+    border-bottom-color: rgba(255, 105, 180, 0.3);
+}
+
+[data-theme="sakura"] .docked-io-title {
+    color: var(--terminal-text);
+}
+
+[data-theme="sakura"] .docked-test-nav .docked-nav-btn {
+    background: rgba(255, 105, 180, 0.2);
+    color: var(--accent);
+}
+
+[data-theme="sakura"] .docked-test-nav .docked-nav-btn:hover {
+    background: var(--accent);
+    color: white;
+}
+
+[data-theme="sakura"] .docked-test-label {
+    background: rgba(255, 105, 180, 0.2);
+    color: var(--terminal-text);
+}
+
+[data-theme="sakura"] .docked-io-header {
+    color: var(--accent);
+    background: rgba(45, 31, 47, 0.8);
+    border-bottom-color: rgba(255, 105, 180, 0.2);
+}
+
+[data-theme="sakura"] .docked-io-textarea {
+    color: var(--terminal-text);
+    background: var(--editor-bg);
+}
+
+[data-theme="sakura"] .docked-io-textarea::placeholder {
+    color: rgba(248, 232, 240, 0.4);
+}
+
+[data-theme="sakura"] .docked-io-divider {
+    background: rgba(255, 105, 180, 0.3);
+}
+
+[data-theme="sakura"] .docked-terminal-view {
+    background: var(--terminal-bg);
+}
+
+[data-theme="sakura"] .docked-terminal-body {
+    color: var(--terminal-text);
+}
+
+/* Sakura Scrollbars */
+[data-theme="sakura"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 105, 180, 0.4);
+}
+
+[data-theme="sakura"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
 }
