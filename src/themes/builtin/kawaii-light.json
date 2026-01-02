@@ -1,0 +1,100 @@
+{
+    "$schema": "./theme-schema.json",
+    "meta": {
+        "id": "kawaii-light",
+        "name": "Kawaii Light",
+        "author": "Sameko Team",
+        "version": "1.0.0",
+        "description": "Original Sameko Saba ocean blue theme with pink accents",
+        "type": "light",
+        "tags": [
+            "light",
+            "ocean",
+            "kawaii",
+            "default",
+            "blue",
+            "pink"
+        ]
+    },
+    "colors": {
+        "bgOceanLight": "#eff8fe",
+        "bgOceanMedium": "#bce2f5",
+        "bgOceanDeep": "#88c9ea",
+        "bgOceanDark": "#3a7ca5",
+        "bgGlass": "rgba(240, 248, 255, 0.88)",
+        "bgGlassHeavy": "rgba(245, 250, 255, 0.95)",
+        "bgGlassBorder": "rgba(220, 235, 250, 0.9)",
+        "accent": "#88c9ea",
+        "accentHover": "#5eb7e0",
+        "textPrimary": "#2a5a75",
+        "textSecondary": "#5a8a95",
+        "textMuted": "#8abac5",
+        "success": "#a3d9a5",
+        "error": "#ff8fab",
+        "warning": "#fcd5ce",
+        "border": "#cceeff",
+        "borderStrong": "#88c9ea",
+        "shadowSoft": "0 8px 32px rgba(136, 201, 234, 0.2)",
+        "shadowCard": "0 4px 12px rgba(136, 201, 234, 0.1)",
+        "glow": "0 0 12px rgba(136, 201, 234, 0.4)",
+        "bgHeader": "rgba(245, 250, 255, 0.95)",
+        "bgPanel": "#e8f4fc",
+        "bgInput": "#ffffff",
+        "bgButton": "#ffffff",
+        "bgButtonHover": "#eff8fe",
+        "editorBg": "#1a2530",
+        "terminalBg": "#1e2933",
+        "settingsLabelColor": "#5a8a95",
+        "settingsSectionColor": "#5a9fc8"
+    },
+    "editor": {
+        "base": "vs-dark",
+        "inherit": true,
+        "background": "#1a2530",
+        "foreground": "#e0f0ff",
+        "lineHighlight": "#243040",
+        "selection": "#88c9ea40",
+        "cursor": "#88c9ea",
+        "lineNumber": "#4a6a7a",
+        "lineNumberActive": "#88c9ea",
+        "scrollbar": "#4a6a7a50",
+        "scrollbarHover": "#6a8a9a70",
+        "scrollbarActive": "#88c9ea80",
+        "syntax": {
+            "comment": {
+                "color": "6a8a9a",
+                "fontStyle": "italic"
+            },
+            "keyword": {
+                "color": "88c9ea"
+            },
+            "string": {
+                "color": "a3d9a5"
+            },
+            "number": {
+                "color": "ebcb8b"
+            },
+            "type": {
+                "color": "e8a8b8"
+            },
+            "function": {
+                "color": "7ec8e3"
+            }
+        }
+    },
+    "terminal": {
+        "background": "#1e2933",
+        "foreground": "#e0f0ff",
+        "cursor": "#88c9ea",
+        "ansi": {
+            "black": "#1a2530",
+            "red": "#ff8fab",
+            "green": "#a3d9a5",
+            "yellow": "#ebcb8b",
+            "blue": "#88c9ea",
+            "magenta": "#e8a8b8",
+            "cyan": "#7ec8e3",
+            "white": "#e0f0ff"
+        }
+    }
+}

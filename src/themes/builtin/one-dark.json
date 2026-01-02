@@ -1,0 +1,104 @@
+{
+    "$schema": "./theme-schema.json",
+    "meta": {
+        "id": "one-dark",
+        "name": "One Dark Pro",
+        "author": "Atom.io (Original), Sameko Team (Port)",
+        "version": "1.0.0",
+        "description": "Popular VS Code theme with balanced colors",
+        "type": "dark",
+        "tags": [
+            "dark",
+            "vscode",
+            "popular",
+            "balanced"
+        ]
+    },
+    "colors": {
+        "bgOceanLight": "#3e4451",
+        "bgOceanMedium": "#4b5263",
+        "bgOceanDeep": "#61afef",
+        "bgOceanDark": "#282c34",
+        "bgGlass": "rgba(40, 44, 52, 0.95)",
+        "bgGlassHeavy": "rgba(33, 37, 43, 0.97)",
+        "bgGlassBorder": "rgba(62, 68, 81, 0.9)",
+        "accent": "#c678dd",
+        "accentHover": "#d19aed",
+        "textPrimary": "#abb2bf",
+        "textSecondary": "#61afef",
+        "textMuted": "#5c6370",
+        "success": "#98c379",
+        "error": "#e06c75",
+        "warning": "#e5c07b",
+        "border": "#4b5263",
+        "borderStrong": "#61afef",
+        "shadowSoft": "0 8px 32px rgba(0, 0, 0, 0.4)",
+        "shadowCard": "0 4px 12px rgba(0, 0, 0, 0.3)",
+        "glow": "0 0 15px rgba(97, 175, 239, 0.3)",
+        "bgHeader": "rgba(33, 37, 43, 0.97)",
+        "bgPanel": "rgba(40, 44, 52, 0.95)",
+        "bgInput": "#282c34",
+        "bgButton": "#3e4451",
+        "bgButtonHover": "#4b5263",
+        "editorBg": "#282c34",
+        "terminalBg": "#21252b",
+        "settingsLabelColor": "#abb2bf",
+        "settingsSectionColor": "#61afef"
+    },
+    "editor": {
+        "base": "vs-dark",
+        "inherit": true,
+        "background": "#282c34",
+        "foreground": "#abb2bf",
+        "lineHighlight": "#2c313c",
+        "selection": "#3e4451",
+        "cursor": "#528bff",
+        "lineNumber": "#495162",
+        "lineNumberActive": "#abb2bf",
+        "scrollbar": "#4b516050",
+        "scrollbarHover": "#5c637070",
+        "scrollbarActive": "#61afef80",
+        "syntax": {
+            "comment": {
+                "color": "5c6370",
+                "fontStyle": "italic"
+            },
+            "keyword": {
+                "color": "c678dd"
+            },
+            "string": {
+                "color": "98c379"
+            },
+            "number": {
+                "color": "d19a66"
+            },
+            "type": {
+                "color": "e5c07b"
+            },
+            "function": {
+                "color": "61afef"
+            },
+            "variable": {
+                "color": "e06c75"
+            },
+            "operator": {
+                "color": "56b6c2"
+            }
+        }
+    },
+    "terminal": {
+        "background": "#21252b",
+        "foreground": "#abb2bf",
+        "cursor": "#528bff",
+        "ansi": {
+            "black": "#282c34",
+            "red": "#e06c75",
+            "green": "#98c379",
+            "yellow": "#e5c07b",
+            "blue": "#61afef",
+            "magenta": "#c678dd",
+            "cyan": "#56b6c2",
+            "white": "#abb2bf"
+        }
+    }
+}

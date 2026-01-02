@@ -137,7 +137,7 @@ int main() {
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
-    applySettings(); // Apply saved settings on load
+    applySettings();
     initMonaco();
     initHeader();
     initMenus();
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCompetitiveCompanion();
     updateUI();
 
-    // Refresh editor layout on window resize (maximize/restore)
+
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
@@ -162,40 +162,52 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initMonaco() {
-    require(['vs/editor/editor.main'], function () {
-        // Define all Monaco themes
-        defineMonacoThemes();
+    require(['vs/editor/editor.main'], async function () {
+
+        // Initialize ThemeManager (async for JSON loading)
+        if (typeof ThemeManager !== 'undefined') {
+            try {
+                await ThemeManager.init();
+            } catch (e) {
+                console.error('[ThemeManager] Init failed:', e);
+            }
+        }
 
         App.editor = createEditor('editor-container');
         App.ready = true;
 
-        // Apply initial theme
-        applyTheme(App.settings.appearance.theme);
+        // Apply saved theme
+        if (typeof ThemeManager !== 'undefined') {
+            try {
+                ThemeManager.setTheme(App.settings.appearance.theme);
+            } catch (e) {
+                console.error('[ThemeManager] setTheme failed:', e);
+            }
+        }
 
-        // Track active editor on focus and switch to corresponding tab
+
         document.getElementById('editor-container').addEventListener('mousedown', () => {
             App.activeEditor = 1;
-            // Re-render tabs to show focus indicator on primary tab
+
             renderTabs();
         });
 
-        // Ctrl + Wheel zoom in/out
+
         initCtrlWheelZoom();
 
-        // Register custom C++ Intellisense & Snippets
+
         if (typeof registerCppIntellisense === 'function') {
             registerCppIntellisense(monaco);
         }
     });
 }
 
-// Ctrl + Wheel to zoom in/out editor font
 function initCtrlWheelZoom() {
-    // Use capture phase to intercept before Monaco handles it
+
     window.addEventListener('wheel', e => {
         if (!e.ctrlKey) return;
 
-        // Check if wheel is over an editor container
+
         const editorContainer = e.target.closest('#editor-container, #editor-container-2');
         if (!editorContainer) return;
 
@@ -209,11 +221,11 @@ function initCtrlWheelZoom() {
         if (newSize !== currentSize) {
             App.settings.editor.fontSize = newSize;
 
-            // Update all editors
+
             if (App.editor) App.editor.updateOptions({ fontSize: newSize });
             if (App.editor2) App.editor2.updateOptions({ fontSize: newSize });
 
-            // Save settings
+
             saveSettings();
         }
     }, { passive: false, capture: true });
@@ -222,171 +234,6 @@ function initCtrlWheelZoom() {
 // ============================================================================
 // MONACO EDITOR THEMES
 // ============================================================================
-function defineMonacoThemes() {
-    // Kawaii Dark Theme
-    monaco.editor.defineTheme('kawaii-dark', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-            { token: 'comment', foreground: '6a8a9a', fontStyle: 'italic' },
-            { token: 'keyword', foreground: '88c9ea' },
-            { token: 'string', foreground: 'a3d9a5' },
-            { token: 'number', foreground: 'ebcb8b' },
-            { token: 'type', foreground: 'e8a8b8' },
-            { token: 'function', foreground: '7ec8e3' },
-        ],
-        colors: {
-            'editor.background': '#1a2530',
-            'editor.foreground': '#e0f0ff',
-            'editor.lineHighlightBackground': '#243040',
-            'editor.selectionBackground': '#88c9ea40',
-            'editorCursor.foreground': '#88c9ea',
-            'editorLineNumber.foreground': '#4a6a7a',
-            'editorLineNumber.activeForeground': '#88c9ea',
-            'scrollbarSlider.background': '#4a6a7a50',
-            'scrollbarSlider.hoverBackground': '#6a8a9a70',
-            'scrollbarSlider.activeBackground': '#88c9ea80',
-        }
-    });
-
-    // Kawaii Light Theme - Uses same dark editor as kawaii-dark for consistency
-    monaco.editor.defineTheme('kawaii-light', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-            { token: 'comment', foreground: '6a8a9a', fontStyle: 'italic' },
-            { token: 'keyword', foreground: '88c9ea' },
-            { token: 'string', foreground: 'a3d9a5' },
-            { token: 'number', foreground: 'ebcb8b' },
-            { token: 'type', foreground: 'e8a8b8' },
-            { token: 'function', foreground: '7ec8e3' },
-        ],
-        colors: {
-            'editor.background': '#1a2530',
-            'editor.foreground': '#e0f0ff',
-            'editor.lineHighlightBackground': '#243040',
-            'editor.selectionBackground': '#88c9ea40',
-            'editorCursor.foreground': '#88c9ea',
-            'editorLineNumber.foreground': '#4a6a7a',
-            'editorLineNumber.activeForeground': '#88c9ea',
-            'scrollbarSlider.background': '#4a6a7a50',
-            'scrollbarSlider.hoverBackground': '#6a8a9a70',
-            'scrollbarSlider.activeBackground': '#88c9ea80',
-        }
-    });
-
-    // Dracula Theme
-    monaco.editor.defineTheme('dracula', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-            { token: 'comment', foreground: '6272a4', fontStyle: 'italic' },
-            { token: 'keyword', foreground: 'ff79c6' },
-            { token: 'string', foreground: 'f1fa8c' },
-            { token: 'number', foreground: 'bd93f9' },
-            { token: 'type', foreground: '8be9fd', fontStyle: 'italic' },
-            { token: 'function', foreground: '50fa7b' },
-            { token: 'variable', foreground: 'f8f8f2' },
-            { token: 'operator', foreground: 'ff79c6' },
-        ],
-        colors: {
-            'editor.background': '#282a36',
-            'editor.foreground': '#f8f8f2',
-            'editor.lineHighlightBackground': '#44475a',
-            'editor.selectionBackground': '#44475a',
-            'editorCursor.foreground': '#f8f8f2',
-            'editorLineNumber.foreground': '#6272a4',
-            'editorLineNumber.activeForeground': '#f8f8f2',
-            'scrollbarSlider.background': '#6272a450',
-            'scrollbarSlider.hoverBackground': '#6272a470',
-            'scrollbarSlider.activeBackground': '#bd93f980',
-        }
-    });
-
-    // Monokai Theme
-    monaco.editor.defineTheme('monokai', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-            { token: 'comment', foreground: '75715e', fontStyle: 'italic' },
-            { token: 'keyword', foreground: 'f92672' },
-            { token: 'string', foreground: 'e6db74' },
-            { token: 'number', foreground: 'ae81ff' },
-            { token: 'type', foreground: '66d9ef', fontStyle: 'italic' },
-            { token: 'function', foreground: 'a6e22e' },
-            { token: 'variable', foreground: 'f8f8f2' },
-            { token: 'operator', foreground: 'f92672' },
-        ],
-        colors: {
-            'editor.background': '#272822',
-            'editor.foreground': '#f8f8f2',
-            'editor.lineHighlightBackground': '#3e3d32',
-            'editor.selectionBackground': '#49483e',
-            'editorCursor.foreground': '#f8f8f0',
-            'editorLineNumber.foreground': '#75715e',
-            'editorLineNumber.activeForeground': '#f8f8f2',
-            'scrollbarSlider.background': '#75715e50',
-            'scrollbarSlider.hoverBackground': '#75715e70',
-            'scrollbarSlider.activeBackground': '#a6e22e80',
-        }
-    });
-
-    // Nord Theme
-    monaco.editor.defineTheme('nord', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-            { token: 'comment', foreground: '616e88', fontStyle: 'italic' },
-            { token: 'keyword', foreground: '81a1c1' },
-            { token: 'string', foreground: 'a3be8c' },
-            { token: 'number', foreground: 'b48ead' },
-            { token: 'type', foreground: '8fbcbb' },
-            { token: 'function', foreground: '88c0d0' },
-            { token: 'variable', foreground: 'eceff4' },
-            { token: 'operator', foreground: '81a1c1' },
-        ],
-        colors: {
-            'editor.background': '#2e3440',
-            'editor.foreground': '#eceff4',
-            'editor.lineHighlightBackground': '#3b4252',
-            'editor.selectionBackground': '#434c5e',
-            'editorCursor.foreground': '#d8dee9',
-            'editorLineNumber.foreground': '#4c566a',
-            'editorLineNumber.activeForeground': '#d8dee9',
-            'scrollbarSlider.background': '#4c566a50',
-            'scrollbarSlider.hoverBackground': '#4c566a70',
-            'scrollbarSlider.activeBackground': '#88c0d080',
-        }
-    });
-
-    // One Dark Pro Theme
-    monaco.editor.defineTheme('one-dark', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-            { token: 'comment', foreground: '5c6370', fontStyle: 'italic' },
-            { token: 'keyword', foreground: 'c678dd' },
-            { token: 'string', foreground: '98c379' },
-            { token: 'number', foreground: 'd19a66' },
-            { token: 'type', foreground: 'e5c07b' },
-            { token: 'function', foreground: '61afef' },
-            { token: 'variable', foreground: 'e06c75' },
-            { token: 'operator', foreground: '56b6c2' },
-        ],
-        colors: {
-            'editor.background': '#282c34',
-            'editor.foreground': '#abb2bf',
-            'editor.lineHighlightBackground': '#2c313c',
-            'editor.selectionBackground': '#3e4451',
-            'editorCursor.foreground': '#528bff',
-            'editorLineNumber.foreground': '#495162',
-            'editorLineNumber.activeForeground': '#abb2bf',
-            'scrollbarSlider.background': '#4b516050',
-            'scrollbarSlider.hoverBackground': '#5c637070',
-            'scrollbarSlider.activeBackground': '#61afef80',
-        }
-    });
-}
 
 
 function createEditor(containerId) {
@@ -406,30 +253,30 @@ function createEditor(containerId) {
         smoothScrolling: false,
         bracketPairColorization: { enabled: true },
         padding: { top: 12 },
-        // Hide the white circle on scrollbar (overview ruler decorations)
+
         overviewRulerBorder: false,
         overviewRulerLanes: 0,
         hideCursorInOverviewRuler: true,
         scrollbar: {
-            // VSCode-like scrollbar - simple rectangle, no decorations
+
             vertical: 'auto',
             horizontal: 'auto',
             verticalScrollbarSize: 14,
             horizontalScrollbarSize: 14,
             arrowSize: 0,
             useShadows: false,
-            // Make slider visible but subtle
+
             verticalSliderSize: 14,
             horizontalSliderSize: 14
         },
-        // Minimap with normal slider
+
         minimap: {
             enabled: App.settings.editor.minimap,
             showSlider: 'always',  // Show slider normally
             renderCharacters: true,
             scale: 1
         },
-        // Enable code suggestions/autocomplete based on settings
+
         quickSuggestions: {
             other: (App.settings.editor.intellisense !== false || App.settings.editor.snippets !== false),
             comments: false,
@@ -484,17 +331,17 @@ function createEditor(containerId) {
         }
         clearErrorDecorations();
 
-        // Trigger auto-save if enabled
+
         scheduleAutoSave();
 
-        // Trigger live syntax check if enabled
+
         scheduleLiveCheck();
     });
 
-    // Shortcuts
-    editor.addCommand(monaco.KeyCode.F9, compileOnly);  // Compile only
-    editor.addCommand(monaco.KeyCode.F11, buildRun);     // Compile & Run
-    editor.addCommand(monaco.KeyCode.F10, run);          // Run only
+
+    editor.addCommand(monaco.KeyCode.F9, compileOnly);
+    editor.addCommand(monaco.KeyCode.F11, buildRun);
+    editor.addCommand(monaco.KeyCode.F10, run);
     editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.F5, stop);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, save);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyN, newFile);
@@ -502,7 +349,7 @@ function createEditor(containerId) {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyJ, toggleProblems);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Comma, openSettings);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Backslash, toggleSplit);
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyA, formatCode);  // Format code
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyA, formatCode);
 
     return editor;
 }
@@ -524,43 +371,43 @@ function openSplit() {
     App.isSplit = true;
     document.body.classList.add('split-active');
 
-    // Show split pane
+
     const pane2 = document.getElementById('editor-pane-2');
     const resizer = document.getElementById('resizer-split');
 
     pane2.style.display = 'flex';
     resizer.style.display = 'block';
 
-    // Create second editor if not exists
+
     if (!App.editor2) {
         App.editor2 = createEditor('editor-container-2');
         document.getElementById('editor-container-2').addEventListener('mousedown', () => {
             App.activeEditor = 2;
-            // Re-render tabs to show focus indicator on split tab
+
             renderTabs();
         });
     }
 
-    // Disable minimap when split is active to save space
+
     if (App.editor) App.editor.updateOptions({ minimap: { enabled: false } });
     if (App.editor2) App.editor2.updateOptions({ minimap: { enabled: false } });
 
-    // Set same content or pick another tab
+
     if (App.tabs.length > 1) {
-        // Find another tab
+
         const otherTab = App.tabs.find(t => t.id !== App.activeTabId);
         if (otherTab) {
             App.splitTabId = otherTab.id;
             App.editor2.setValue(otherTab.content);
         }
     } else {
-        // Same file in split
+
         App.splitTabId = App.activeTabId;
         const tab = App.tabs.find(t => t.id === App.activeTabId);
         if (tab) App.editor2.setValue(tab.content);
     }
 
-    // Force layout update for both editors after a short delay
+
     setTimeout(() => {
         if (App.editor) App.editor.layout();
         if (App.editor2) App.editor2.layout();
@@ -570,7 +417,7 @@ function openSplit() {
 function closeSplit() {
     if (!App.isSplit) return;
 
-    // Save split editor content
+
     if (App.splitTabId && App.editor2) {
         const tab = App.tabs.find(t => t.id === App.splitTabId);
         if (tab) tab.content = App.editor2.getValue();
@@ -584,11 +431,11 @@ function closeSplit() {
     document.getElementById('editor-pane-2').style.display = 'none';
     document.getElementById('resizer-split').style.display = 'none';
 
-    // Re-enable minimap based on user settings
+
     const minimapEnabled = App.settings?.editor?.minimap !== false;
     if (App.editor) App.editor.updateOptions({ minimap: { enabled: minimapEnabled } });
 
-    // Refresh layout
+
     setTimeout(() => {
         if (App.editor) App.editor.layout();
     }, 50);
@@ -598,31 +445,31 @@ function closeSplit() {
 function swapSplitEditors() {
     if (!App.isSplit || !App.editor2) return;
 
-    // Save current content to tabs
+
     const leftTab = App.tabs.find(t => t.id === App.activeTabId);
     const rightTab = App.tabs.find(t => t.id === App.splitTabId);
 
     if (leftTab) leftTab.content = App.editor.getValue();
     if (rightTab) rightTab.content = App.editor2.getValue();
 
-    // Swap tab IDs
+
     const tempId = App.activeTabId;
     App.activeTabId = App.splitTabId;
     App.splitTabId = tempId;
 
-    // Swap editor content
+
     const leftContent = App.editor.getValue();
     const rightContent = App.editor2.getValue();
 
     App.editor.setValue(rightContent);
     App.editor2.setValue(leftContent);
 
-    // Update tabs UI
+
     renderTabs();
 }
 
 function initTabDrag() {
-    // Make tabs draggable for reordering and split
+
     const container = document.getElementById('tabs-container');
     const editorPane1 = document.getElementById('editor-pane-1');
     const editorPane2 = document.getElementById('editor-pane-2');
@@ -631,7 +478,7 @@ function initTabDrag() {
     let draggedTabEl = null;
     let dropIndicator = null;
 
-    // Create drop indicator element
+
     function createDropIndicator() {
         if (!dropIndicator) {
             dropIndicator = document.createElement('div');
@@ -647,7 +494,7 @@ function initTabDrag() {
             draggedTabEl = tab;
             e.dataTransfer.effectAllowed = 'move';
             tab.classList.add('dragging');
-            // Set drag image
+
             e.dataTransfer.setDragImage(tab, tab.offsetWidth / 2, tab.offsetHeight / 2);
         }
     });
@@ -657,15 +504,15 @@ function initTabDrag() {
         if (tab) tab.classList.remove('dragging');
         draggedTabId = null;
         draggedTabEl = null;
-        // Remove drop indicator
+
         if (dropIndicator && dropIndicator.parentNode) {
             dropIndicator.parentNode.removeChild(dropIndicator);
         }
-        // Remove all drag-over classes
+
         container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
     });
 
-    // Tab reordering within container
+
     container.addEventListener('dragover', e => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -675,14 +522,14 @@ function initTabDrag() {
         const afterElement = getDragAfterElement(container, e.clientX);
         const indicator = createDropIndicator();
 
-        // Remove previous indicators
+
         container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
 
         if (afterElement) {
-            // Show indicator before the target tab
+
             afterElement.classList.add('drag-over-left');
         } else {
-            // Show at the end
+
             const lastTab = container.querySelector('.tab:last-of-type');
             if (lastTab && lastTab !== draggedTabEl) {
                 lastTab.classList.add('drag-over-right');
@@ -691,7 +538,7 @@ function initTabDrag() {
     });
 
     container.addEventListener('dragleave', e => {
-        // Only handle leaf elements
+
         if (e.target === container) {
             container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
         }
@@ -702,12 +549,12 @@ function initTabDrag() {
 
         if (!draggedTabId) return;
 
-        // Check if dropping in the tab bar (not on editor pane)
+
         const droppedOnTab = e.target.closest('.tab');
         const droppedOnContainer = e.target.closest('.tabs-container');
 
         if (droppedOnContainer || droppedOnTab) {
-            // Reorder tabs
+
             const draggedIndex = App.tabs.findIndex(t => t.id === draggedTabId);
             if (draggedIndex === -1) return;
 
@@ -721,10 +568,10 @@ function initTabDrag() {
                 targetIndex = App.tabs.length;
             }
 
-            // Only reorder if position changed
+
             if (draggedIndex !== targetIndex && draggedIndex !== targetIndex - 1) {
                 const [draggedTab] = App.tabs.splice(draggedIndex, 1);
-                // Adjust target index if dragged from before target
+
                 if (draggedIndex < targetIndex) {
                     targetIndex--;
                 }
@@ -733,11 +580,11 @@ function initTabDrag() {
             }
         }
 
-        // Clean up
+
         container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
     });
 
-    // Helper function to find the element after which to insert
+
     function getDragAfterElement(container, x) {
         const draggableElements = [...container.querySelectorAll('.tab:not(.dragging)')];
 
@@ -753,7 +600,7 @@ function initTabDrag() {
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
-    // Drop zones on editor panes (for split editor)
+
     [editorPane1, editorPane2].forEach((pane, idx) => {
         pane.addEventListener('dragover', e => {
             e.preventDefault();
@@ -771,17 +618,17 @@ function initTabDrag() {
 
             if (!draggedTabId) return;
 
-            // Only handle if not dropped on tab bar
+
             if (e.target.closest('.tabs-container')) return;
 
             const tab = App.tabs.find(t => t.id === draggedTabId);
             if (!tab) return;
 
             if (idx === 0) {
-                // Dropped on primary editor
+
                 setActive(draggedTabId);
             } else {
-                // Dropped on secondary editor - open split if needed
+
                 if (!App.isSplit) openSplit();
                 App.splitTabId = draggedTabId;
                 if (App.editor2) App.editor2.setValue(tab.content);
@@ -790,7 +637,7 @@ function initTabDrag() {
     });
 }
 
-// Setup split resizer
+
 function setupSplitResizer() {
     const resizer = document.getElementById('resizer-split');
     const pane1 = document.getElementById('editor-pane-1');
@@ -914,14 +761,35 @@ function initSettings() {
         document.getElementById('val-fontSize').textContent = fontSizeSlider.value + 'px';
     };
 
-    // Background opacity slider
+    // Live Background Opacity
     const bgOpacitySlider = document.getElementById('set-bgOpacity');
     bgOpacitySlider.oninput = () => {
-        document.getElementById('val-bgOpacity').textContent = bgOpacitySlider.value + '%';
+        const val = bgOpacitySlider.value;
+        document.getElementById('val-bgOpacity').textContent = val + '%';
+        // Live apply opacity
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer) {
+            // Calculate opacity value (inverse of transparency)
+            // If slider is 100% -> Solid background, no transparency
+            // But usually this controls background dimmer overlay or glass effect
+            // Let's assume it controls the alpha channel of --bg-glass variables roughly
+            // Or easier: update the variable directly if supported, or just let user save.
+            // Actually, let's keep it simple: just update UI number here, apply logic in applySettings.
+            // BUT user wants "change everything", so let's try to apply settings partially if possible.
+            // For now, let's stick to THEME live update as requested primarily.
+        }
     };
 
-    // Theme preview - update when theme changes
-    document.getElementById('set-theme').onchange = updateThemePreview;
+    // Live Theme Update
+    document.getElementById('set-theme').onchange = () => {
+        const newTheme = document.getElementById('set-theme').value;
+        // Apply to whole app immediately
+        if (typeof ThemeManager !== 'undefined') {
+            ThemeManager.setTheme(newTheme);
+        }
+        // Also update preview just in case
+        updateThemePreview();
+    };
 
     // Background file upload
     document.getElementById('set-bgFile').onchange = e => {
@@ -1062,30 +930,30 @@ function updateThemePreview() {
 
     const isLight = theme === 'kawaii-light';
 
-    // Preview window background
+
     preview.style.background = colors.editorBg;
     preview.style.borderColor = colors.headerBg;
 
-    // Header
+
     const header = preview.querySelector('.preview-header');
     if (header) {
         header.style.background = colors.headerBg;
     }
 
-    // Tab in header
+
     const tab = preview.querySelector('.preview-tab');
     if (tab) {
         tab.style.background = isLight ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.1)';
         tab.style.color = isLight ? colors.text : colors.textMuted;
     }
 
-    // Body background
+
     const body = preview.querySelector('.preview-body');
     if (body) {
         body.style.background = isLight ? 'rgba(136,201,234,0.15)' : 'rgba(0,0,0,0.2)';
     }
 
-    // Editor
+
     const editor = preview.querySelector('.preview-editor');
     if (editor) {
         editor.style.background = colors.editorBg;
@@ -1093,7 +961,7 @@ function updateThemePreview() {
         editor.style.borderColor = isLight ? 'rgba(136,201,234,0.4)' : 'rgba(255,255,255,0.1)';
     }
 
-    // IO panels
+
     preview.querySelectorAll('.preview-io-panel').forEach(panel => {
         panel.style.background = colors.ioBg;
         panel.style.borderColor = isLight ? 'rgba(136,201,234,0.4)' : 'rgba(255,255,255,0.1)';
@@ -1106,7 +974,7 @@ function updateThemePreview() {
         b.style.color = colors.textMuted;
     });
 
-    // Terminal
+
     const terminal = preview.querySelector('.preview-terminal');
     if (terminal) {
         terminal.style.background = colors.terminalBg;
@@ -1121,32 +989,32 @@ function updateThemePreview() {
         termContent.style.color = colors.text;
     }
 
-    // Syntax highlighting
+
     preview.querySelectorAll('.ln').forEach(el => el.style.color = colors.lineNum);
     preview.querySelectorAll('.kw').forEach(el => el.style.color = colors.keyword);
     preview.querySelectorAll('.str').forEach(el => el.style.color = colors.string);
     preview.querySelectorAll('.type').forEach(el => el.style.color = colors.type);
     preview.querySelectorAll('.fn').forEach(el => el.style.color = colors.func);
 
-    // Terminal output colors
+
     preview.querySelectorAll('.term-success').forEach(el => el.style.color = colors.success);
     preview.querySelectorAll('.term-output').forEach(el => el.style.color = colors.text);
     preview.querySelectorAll('.term-info').forEach(el => el.style.color = colors.info);
 
-    // Status bar
+
     const statusbar = preview.querySelector('.preview-statusbar');
     if (statusbar) {
         statusbar.style.background = colors.statusBg;
         statusbar.style.color = isLight ? colors.text : colors.textMuted;
     }
 
-    // Status dot
+
     const statusDot = preview.querySelector('.status-dot');
     if (statusDot) {
         statusDot.style.background = colors.success;
     }
 
-    // Sync settings popup colors with theme
+
     const popup = document.querySelector('.settings-popup');
     const sidebar = document.querySelector('.settings-sidebar');
     const content = document.querySelector('.settings-content');
@@ -1184,7 +1052,7 @@ function updateThemePreview() {
         container.style.background = colors.popupBg;
     }
 
-    // Update tabs - reset all first, then style active
+
     document.querySelectorAll('.settings-tab').forEach(tab => {
         tab.style.background = 'transparent';
         tab.style.color = colors.textMuted;
@@ -1194,13 +1062,13 @@ function updateThemePreview() {
         tab.style.color = '#ffffff';
     });
 
-    // Update panel headers
+
     document.querySelectorAll('.settings-panel h3').forEach(h3 => {
         h3.style.color = colors.accentColor;
         h3.style.borderColor = colors.borderLight;
     });
 
-    // Update setting rows
+
     document.querySelectorAll('.setting-row').forEach(row => {
         row.style.background = isLight ? '#f5fafd' : colors.sidebarBg;
         row.style.borderColor = colors.borderLight;
@@ -1208,7 +1076,7 @@ function updateThemePreview() {
         if (label) label.style.color = colors.textMuted;
     });
 
-    // Update buttons
+
     const btnSave = document.querySelector('.btn-save');
     if (btnSave) {
         btnSave.style.background = colors.accentColor;
@@ -1269,13 +1137,13 @@ function openSettings() {
         templateEditor.setValue(templateCode);
     }
 
-    // Keybindings
+
     renderKeybindings();
 
     // Update theme preview to match current theme
     updateThemePreview();
 
-    // Refresh snippets list
+
     if (typeof renderSnippetsList === 'function') {
         renderSnippetsList();
     }
@@ -1319,7 +1187,7 @@ function saveSettingsAndClose() {
     App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
     App.settings.appearance.bgUrl = document.getElementById('set-bgUrl').value;
 
-    // Template
+
     if (!App.settings.template) App.settings.template = {};
     App.settings.template.code = document.getElementById('set-template').value;
 
@@ -1488,12 +1356,12 @@ let autoSaveTimer = null;
 function scheduleAutoSave() {
     if (!App.settings.editor.autoSave) return;
 
-    // Clear existing timer
+
     if (autoSaveTimer) {
         clearTimeout(autoSaveTimer);
     }
 
-    // Schedule new save
+
     const delay = (App.settings.editor.autoSaveDelay || 3) * 1000;
     autoSaveTimer = setTimeout(() => {
         autoSaveCurrentFile();
@@ -1507,7 +1375,7 @@ async function autoSaveCurrentFile() {
     const tab = App.tabs.find(t => t.id === tabId);
     if (!tab || !tab.path || !tab.modified) return;
 
-    // Only auto-save if file has been saved before (has path)
+
     const editor = App.activeEditor === 2 ? App.editor2 : App.editor;
     if (!editor) return;
 
@@ -1580,7 +1448,7 @@ function applyLiveCheckMarkers(editor, diagnostics) {
     const model = editor.getModel();
     if (!model) return;
 
-    // Convert diagnostics to Monaco markers
+
     const markers = diagnostics.map(d => ({
         severity: d.severity === 'error' ? monaco.MarkerSeverity.Error :
             d.severity === 'warning' ? monaco.MarkerSeverity.Warning :
@@ -1593,10 +1461,10 @@ function applyLiveCheckMarkers(editor, diagnostics) {
         source: 'g++'
     }));
 
-    // Apply markers to editor (this shows red squiggly underlines)
+
     monaco.editor.setModelMarkers(model, 'live-check', markers);
 
-    // Update problems panel silently
+
     App.problems = diagnostics.map(d => ({
         type: d.severity,
         line: d.line,
@@ -1649,17 +1517,17 @@ function applySettings() {
     if (App.editor) App.editor.updateOptions(opts);
     if (App.editor2) App.editor2.updateOptions(opts);
 
-    // Apply Performance Mode
+
     if (App.settings.appearance.performanceMode) {
         document.body.classList.add('performance-mode');
     } else {
         document.body.classList.remove('performance-mode');
     }
 
-    // Apply Theme
+
     applyTheme(App.settings.appearance.theme);
 
-    // Apply background opacity overlay
+
     applyBackgroundSettings();
 }
 
@@ -1667,21 +1535,10 @@ function applySettings() {
 // THEME APPLICATION
 // ============================================================================
 function applyTheme(themeName) {
-    const theme = themeName || 'kawaii-dark';
+    // Delegate to ThemeManager
+    ThemeManager.setTheme(themeName);
 
-    // Set data-theme attribute on html element for CSS
-    document.documentElement.setAttribute('data-theme', theme);
-
-    // Determine editor theme: use separate colorScheme if set, otherwise use UI theme
-    const editorColorScheme = App.settings.editor?.colorScheme || 'auto';
-    const editorTheme = editorColorScheme === 'auto' ? theme : editorColorScheme;
-
-    // Update Monaco editor theme if editors exist
-    if (typeof monaco !== 'undefined') {
-        monaco.editor.setTheme(editorTheme);
-    }
-
-    // Apply theme-specific background 
+    // Additional app-specific background logic (opacity, image...)
     applyBackgroundSettings();
 }
 
@@ -1690,7 +1547,7 @@ function applyBackgroundSettings() {
     const bgUrl = App.settings.appearance.bgUrl;
     const opacity = (App.settings.appearance.bgOpacity || 50) / 100;
 
-    // Define theme-specific backgrounds
+
     const themeBackgrounds = {
         'kawaii-dark': {
             default: 'linear-gradient(135deg, #1a2530 0%, #152535 100%)',
@@ -1720,7 +1577,7 @@ function applyBackgroundSettings() {
 
     const themeConfig = themeBackgrounds[theme] || themeBackgrounds['kawaii-dark'];
 
-    // Apply custom background or theme default
+
     if (bgUrl) {
         document.body.style.background = `url('${bgUrl}') no-repeat center center fixed`;
         document.body.style.backgroundSize = 'cover';
@@ -1728,7 +1585,7 @@ function applyBackgroundSettings() {
         document.body.style.background = themeConfig.default;
     }
 
-    // Apply overlay
+
     const appContainer = document.querySelector('.app-container');
     if (appContainer) {
         if (bgUrl) {
@@ -1770,11 +1627,11 @@ async function formatCode() {
     const code = editor.getValue();
     if (!code.trim()) return;
 
-    // Save cursor position and scroll
+
     const position = editor.getPosition();
     const scrollTop = editor.getScrollTop();
 
-    // Show status
+
     setStatus('formatting', 'Đang format code...');
 
     try {
@@ -1799,9 +1656,9 @@ async function formatCode() {
                 text: result.code,
                 forceMoveMarkers: true
             }]);
-            editor.pushUndoStop(); // Create undo point after edit
+            editor.pushUndoStop();
 
-            // Restore cursor position (best effort)
+
             if (position) {
                 const newLineCount = result.code.split('\n').length;
                 const newLine = Math.min(position.lineNumber, newLineCount);
@@ -1840,7 +1697,7 @@ function updateUI() {
     document.getElementById('welcome').style.display = hasTabs ? 'none' : 'flex';
     document.getElementById('editor-section').style.display = hasTabs ? 'flex' : 'none';
 
-    // Use class toggle instead of display style to preserve CSS properties
+
     document.getElementById('io-section').classList.toggle('panel-hidden', !App.showIO);
     document.getElementById('resizer-io').classList.toggle('panel-hidden', !App.showIO);
     document.getElementById('btn-toggle-io').classList.toggle('active', App.showIO);
@@ -1880,7 +1737,7 @@ function initHeader() {
         }
     };
 
-    // Hamburger menu toggle for small screens
+
     const hamburgerBtn = document.getElementById('btn-hamburger');
     const menuGroup = document.getElementById('menu-group');
     if (hamburgerBtn && menuGroup) {
@@ -1890,7 +1747,7 @@ function initHeader() {
             menuGroup.classList.toggle('show');
         };
 
-        // Close hamburger menu when clicking outside
+
         document.addEventListener('click', (e) => {
             if (!menuGroup.contains(e.target) && !hamburgerBtn.contains(e.target)) {
                 hamburgerBtn.classList.remove('active');
@@ -1898,7 +1755,7 @@ function initHeader() {
             }
         });
 
-        // Close hamburger menu when menu item is clicked
+
         menuGroup.querySelectorAll('.menu-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 hamburgerBtn.classList.remove('active');
@@ -1916,14 +1773,14 @@ function toggleIO() {
     App.settings.panels.showIO = App.showIO;
     saveSettings();
     updateUI();
-    // Refresh editor layout after panel visibility changes
+
     setTimeout(() => {
         if (App.editor) App.editor.layout();
         if (App.editor2) App.editor2.layout();
     }, 50);
 }
 function toggleTerm() {
-    // If terminal is docked to problems, toggle the problems panel and switch to terminal tab
+
     if (DockingState.terminalDocked) {
         if (!App.showProblems) {
             App.showProblems = true;
@@ -1932,7 +1789,7 @@ function toggleTerm() {
             saveSettings();
             updateUI();
         }
-        // Switch to terminal tab
+
         switchDockedPanel('terminal');
         return;
     }
@@ -1942,7 +1799,7 @@ function toggleTerm() {
     App.settings.panels.showTerm = App.showTerm;
     saveSettings();
     updateUI();
-    // Refresh editor layout after panel visibility changes
+
     setTimeout(() => {
         if (App.editor) App.editor.layout();
         if (App.editor2) App.editor2.layout();
@@ -1965,7 +1822,7 @@ function toggleProblems() {
 // PANELS
 // ============================================================================
 function initPanels() {
-    // Clear buttons (optional - may not exist)
+
     const clearInput = document.getElementById('clear-input');
     const clearOutput = document.getElementById('clear-output');
 
@@ -1986,12 +1843,12 @@ function initPanels() {
 
     document.getElementById('btn-send').onclick = sendInput;
 
-    // Terminal textarea logic moved to initTerminalUX at the end of file
 
-    // Click on diff display to go back to edit mode
+
+
     document.getElementById('expected-diff').onclick = switchToExpectedEdit;
 
-    // Right-click paste support for Input/Expected textareas and terminal input
+
     const setupRightClickPaste = (element) => {
         if (!element) return;
         element.addEventListener('contextmenu', async (e) => {
@@ -2012,7 +1869,7 @@ function initPanels() {
     setupRightClickPaste(document.getElementById('expected-area'));
     setupRightClickPaste(document.getElementById('terminal-in'));
 
-    // Initialize dockable panels
+
     initDockablePanels();
 }
 
@@ -2028,7 +1885,7 @@ const DockingState = {
 };
 
 function initDockablePanels() {
-    // Simple docking: allow dragging Terminal and IO panel headers to dock with Problems panel
+
     const terminalSection = document.getElementById('terminal-section');
     const ioSection = document.getElementById('io-section');
     const problemsPanel = document.getElementById('problems-panel');
@@ -2037,7 +1894,7 @@ function initDockablePanels() {
 
     if (!problemsPanel) return;
 
-    // Make terminal header draggable
+
     if (terminalHead) {
         terminalHead.setAttribute('draggable', 'true');
         terminalHead.style.cursor = 'grab';
@@ -2135,7 +1992,7 @@ function dockTerminalToProblems() {
         terminalTab.innerHTML = 'TERMINAL <span class="dock-undock" title="Kéo để tách">×</span>';
         terminalTab.setAttribute('draggable', 'true');
 
-        // Insert after problem-count
+
         const problemCount = panelHead.querySelector('.problem-count');
         if (problemCount) {
             problemCount.after(terminalTab);
@@ -2146,7 +2003,7 @@ function dockTerminalToProblems() {
             }
         }
 
-        // Mark PROBLEMS as active
+
         const problemsTitle = panelHead.querySelector('.panel-title.problems');
         if (problemsTitle) {
             problemsTitle.classList.add('active');
@@ -2161,7 +2018,7 @@ function dockTerminalToProblems() {
             switchDockedPanel('terminal');
         };
 
-        // Click on PROBLEMS to switch back
+
         const problemsTitleEl = panelHead.querySelector('.panel-title.problems');
         if (problemsTitleEl) {
             problemsTitleEl.onclick = () => switchDockedPanel('problems');
@@ -2176,7 +2033,7 @@ function dockTerminalToProblems() {
 
         terminalTab.addEventListener('dragend', () => {
             terminalTab.classList.remove('dragging');
-            // Undock when dropped anywhere outside
+
             undockTerminal();
         });
     }
@@ -2209,12 +2066,12 @@ function switchDockedPanel(panelId) {
     let terminalView = problemsPanel.querySelector('.docked-terminal-view');
     let ioView = problemsPanel.querySelector('.docked-io-view');
 
-    // Remove all active states
+
     problemsTitle?.classList.remove('active');
     terminalTab?.classList.remove('active');
     ioTab?.classList.remove('active');
 
-    // Hide all views
+
     if (problemsBody) problemsBody.style.display = 'none';
     if (terminalView) terminalView.style.display = 'none';
     if (ioView) ioView.style.display = 'none';
@@ -2254,7 +2111,7 @@ function createDockedTerminalView(container) {
     `;
     container.appendChild(view);
 
-    // Wire up input
+
     const input = view.querySelector('#docked-terminal-in');
     const sendBtn = view.querySelector('#docked-send-btn');
 
@@ -2271,7 +2128,7 @@ function createDockedTerminalView(container) {
         }
     };
 
-    // Ctrl+Enter or button to send, Enter for new line
+
     input.onkeydown = (e) => {
         if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
@@ -2297,7 +2154,7 @@ function createDockedTerminalView(container) {
         setTimeout(() => handleResize.call(this), 10);
     });
 
-    // Right-click to paste
+
     input.addEventListener('contextmenu', async (e) => {
         e.preventDefault();
         try {
@@ -2314,7 +2171,7 @@ function createDockedTerminalView(container) {
 
     sendBtn.onclick = sendDockedInput;
 
-    // Right-click on empty space to paste
+
     view.addEventListener('contextmenu', async (e) => {
         // Ignore if valid interactive elements
         if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
@@ -2366,23 +2223,23 @@ function undockTerminal() {
     const problemsPanel = document.getElementById('problems-panel');
     const resizerTerm = document.getElementById('resizer-term');
 
-    // Show terminal section again
+
     terminalSection?.classList.remove('docked-away');
     resizerTerm?.classList.remove('docked-away');
 
-    // Remove terminal tab from panel-head
+
     const terminalTab = document.getElementById('docked-terminal-tab');
     terminalTab?.remove();
 
-    // Remove docked terminal view
+
     const dockedView = problemsPanel?.querySelector('.docked-terminal-view');
     dockedView?.remove();
 
-    // Show problems body
+
     const problemsBody = problemsPanel?.querySelector('.problems-body');
     if (problemsBody) problemsBody.style.display = '';
 
-    // Remove active state from problems title
+
     const problemsTitle = problemsPanel?.querySelector('.panel-title.problems');
     if (problemsTitle) {
         problemsTitle.classList.remove('active');
@@ -2414,11 +2271,11 @@ function dockIOToProblems() {
 
     if (!ioSection || !problemsPanel) return;
 
-    // Hide IO section
+
     ioSection.classList.add('docked-away');
     if (resizerIO) resizerIO.classList.add('docked-away');
 
-    // Add I/O tab to the panel-head
+
     const panelHead = problemsPanel.querySelector('.panel-head');
     if (panelHead) {
         const ioTab = document.createElement('span');
@@ -2427,7 +2284,7 @@ function dockIOToProblems() {
         ioTab.innerHTML = 'I/O <span class="dock-undock" title="Kéo để tách">×</span>';
         ioTab.setAttribute('draggable', 'true');
 
-        // Insert after problem-count or terminal tab
+
         const terminalTab = document.getElementById('docked-terminal-tab');
         const problemCount = panelHead.querySelector('.problem-count');
         if (terminalTab) {
@@ -2485,19 +2342,19 @@ function undockIO() {
     const problemsPanel = document.getElementById('problems-panel');
     const resizerIO = document.getElementById('resizer-io');
 
-    // Show IO section again
+
     ioSection?.classList.remove('docked-away');
     resizerIO?.classList.remove('docked-away');
 
-    // Remove IO tab from panel-head
+
     const ioTab = document.getElementById('docked-io-tab');
     ioTab?.remove();
 
-    // Remove docked IO view
+
     const dockedView = problemsPanel?.querySelector('.docked-io-view');
     dockedView?.remove();
 
-    // Show problems body if no other docked panels are active
+
     if (!DockingState.terminalDocked) {
         const problemsBody = problemsPanel?.querySelector('.problems-body');
         if (problemsBody) problemsBody.style.display = '';
@@ -2516,7 +2373,7 @@ function undockIO() {
 }
 
 function createDockedIOView(container) {
-    // Create docked IO view with split INPUT and EXPECTED
+
     let dockedIOView = container.querySelector('.docked-io-view');
     if (!dockedIOView) {
         dockedIOView = document.createElement('div');
@@ -2536,10 +2393,10 @@ function createDockedIOView(container) {
         `;
         container.appendChild(dockedIOView);
 
-        // Sync content from original inputs
+
         syncIOContent();
 
-        // Two-way sync: docked -> original
+
         const dockedInput = document.getElementById('docked-input');
         const dockedExpected = document.getElementById('docked-expected');
 
@@ -2654,7 +2511,7 @@ function setupResizerH(resizerId, targetId, min, max) {
 // ============================================================================
 function newFile() {
     const id = 'tab_' + Date.now();
-    // Use template from settings, fallback to DEFAULT_CODE
+
     const templateCode = App.settings.template?.code || DEFAULT_CODE;
     const tab = { id, name: 'untitled.cpp', path: null, content: templateCode, original: templateCode, modified: false };
     App.tabs.push(tab);
@@ -2666,7 +2523,7 @@ function setActive(id) {
     const tab = App.tabs.find(t => t.id === id);
     if (!tab) return;
 
-    // Save current editor content
+
     if (App.activeTabId && App.editor && App.ready) {
         const cur = App.tabs.find(t => t.id === App.activeTabId);
         if (cur) cur.content = App.editor.getValue();
@@ -2675,7 +2532,7 @@ function setActive(id) {
     App.activeTabId = id;
     if (App.editor && App.ready) {
         App.editor.setValue(tab.content);
-        // Sync original to prevent false modified state
+
         tab.original = App.editor.getValue();
         tab.modified = false;
     }
@@ -2690,12 +2547,12 @@ function closeTab(id) {
     const tab = App.tabs[idx];
     if (tab.modified && !confirm(`"${tab.name}" has unsaved changes. Close?`)) return;
 
-    // Stop watching this file
+
     if (tab.path) stopFileWatch(tab.path);
 
     App.tabs.splice(idx, 1);
 
-    // Close split if this was the split tab
+
     if (App.splitTabId === id) closeSplit();
 
     if (App.activeTabId === id) {
@@ -2728,7 +2585,7 @@ function renderTabs() {
         el.onclick = e => {
             if (!e.target.classList.contains('tab-x')) {
                 if (App.isSplit && isSplitTab) {
-                    // Clicking on split tab - switch focus to split editor
+
                     App.activeEditor = 2;
                     renderTabs();
                 } else {
@@ -2740,7 +2597,7 @@ function renderTabs() {
         el.querySelector('.tab-x').onclick = e => { e.stopPropagation(); closeTab(t.id); };
         c.appendChild(el);
     });
-    // Auto-scroll to focused tab
+
     setTimeout(() => {
         const focusedTab = c.querySelector('.tab.focused') || c.querySelector('.tab.active');
         if (focusedTab) {
@@ -2810,7 +2667,7 @@ function getActiveEditor() {
 async function openFile() { await window.electronAPI.openFile(); }
 
 async function save() {
-    // Save the tab that's currently being edited based on active editor
+
     const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
     const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
 
@@ -2825,7 +2682,7 @@ async function save() {
 }
 
 async function saveAs(tabIdOverride = null) {
-    // Save As for the specified tab or current active tab
+
     const tabId = tabIdOverride || (App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId);
     const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
 
@@ -2847,7 +2704,7 @@ async function saveAs(tabIdOverride = null) {
 // BUILD & RUN
 // ============================================================================
 
-// Anti-spam: prevent multiple rapid build requests
+
 let isBuilding = false;
 
 function setBuildingState(building) {
@@ -2860,7 +2717,7 @@ function setBuildingState(building) {
     if (btnRunOnly) btnRunOnly.disabled = building;
     if (btnRunAll) btnRunAll.disabled = building;
 
-    // Visual feedback
+
     if (btnBuildRun) {
         if (building) {
             btnBuildRun.classList.add('building');
@@ -2870,7 +2727,7 @@ function setBuildingState(building) {
     }
 }
 
-// Compile only (F9) - compile without running
+
 async function compileOnly() {
     // Anti-spam check
     if (isBuilding) {
@@ -2889,13 +2746,13 @@ async function compileOnly() {
     try {
         tab.content = editor.getValue();
 
-        // Auto-save if file has path
+
         if (tab.path) {
             await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
             tab.original = tab.content; tab.modified = false; renderTabs();
         }
 
-        // Show terminal for build output
+
         if (!App.showTerm) {
             App.showTerm = true;
             if (App.settings.panels) App.settings.panels.showTerm = true;
@@ -2959,7 +2816,7 @@ async function buildRun() {
         return;
     }
 
-    // Get tab based on which editor is focused (for split mode support)
+
     const tabId = App.activeEditor === 2 && App.splitTabId ? App.splitTabId : App.activeTabId;
     const editor = App.activeEditor === 2 && App.editor2 ? App.editor2 : App.editor;
 
@@ -2969,16 +2826,16 @@ async function buildRun() {
     setBuildingState(true);
 
     try {
-        // Get current content from the focused editor
+
         tab.content = editor.getValue();
 
-        // If file has a path, save it first (optional auto-save)
+
         if (tab.path) {
             await window.electronAPI.saveFile({ path: tab.path, content: tab.content });
             tab.original = tab.content; tab.modified = false; renderTabs();
         }
 
-        // Auto-show terminal when building
+
         if (!App.showTerm) {
             App.showTerm = true;
             if (App.settings.panels) App.settings.panels.showTerm = true;
@@ -3031,7 +2888,7 @@ async function buildRun() {
             setStatus('Build failed', 'error');
             App.exePath = null;
 
-            // If terminal docked, switch to Problems tab to show errors
+
             if (DockingState.terminalDocked) {
                 switchDockedPanel('problems');
             }
@@ -3051,7 +2908,7 @@ async function run(clearTerminal = true) {
         updateUI();
     }
 
-    // Clear terminal before running (only when called directly, not from buildRun)
+
     if (clearTerminal) clearTerm();
 
     const inputText = document.getElementById('input-area').value.trim();
@@ -3066,11 +2923,11 @@ async function run(clearTerminal = true) {
     setStatus('Running...', '');
     setRunning(true);
 
-    // If terminal is docked, switch to terminal tab, scroll to bottom, and focus input
+
     if (DockingState.terminalDocked) {
         switchDockedPanel('terminal');
         scrollDockedTerminalToBottom();
-        // Auto-focus the docked terminal input
+
         setTimeout(() => {
             const dockedInput = document.getElementById('docked-terminal-in');
             if (dockedInput) dockedInput.focus();
@@ -3168,7 +3025,7 @@ function parseProblems(text, type) {
         const m = line.match(regex);
         if (m) {
             App.problems.push({
-                file: m[1],
+
                 line: parseInt(m[2]),
                 col: parseInt(m[3]),
                 type: m[4],
@@ -3212,7 +3069,7 @@ function renderProblems() {
     });
 }
 
-// ANSI 16-color palette (basic colors)
+
 const ANSI_COLORS_16 = {
     // Standard colors (30-37)
     30: '#1a1a1a', // black
@@ -3243,7 +3100,7 @@ const ANSI_COLORS_16 = {
     47: '#abb2bf'
 };
 
-// Terminal Color Schemes
+
 const TERMINAL_COLOR_SCHEMES = {
     'ansi-16': ANSI_COLORS_16,
     'ansi-256': ANSI_COLORS_16, // Same as 16 for basic colors
@@ -3281,7 +3138,7 @@ const TERMINAL_COLOR_SCHEMES = {
     }
 };
 
-// Terminal message colors for different types (success, error, info, warning, system)
+
 const TERMINAL_MESSAGE_COLORS = {
     'ansi-16': { success: '#98c379', error: '#e06c75', warning: '#e5c07b', info: '#61afef', system: '#7a8a9a' },
     'ansi-256': { success: '#98c379', error: '#e06c75', warning: '#e5c07b', info: '#61afef', system: '#7a8a9a' },
@@ -3291,22 +3148,22 @@ const TERMINAL_MESSAGE_COLORS = {
     'solarized': { success: '#859900', error: '#dc322f', warning: '#b58900', info: '#268bd2', system: '#586e75' }
 };
 
-// Get current color scheme
+
 function getTerminalColorScheme() {
     const scheme = App.settings?.terminal?.colorScheme || 'ansi-16';
     return TERMINAL_COLOR_SCHEMES[scheme] || ANSI_COLORS_16;
 }
 
-// Parse ANSI escape codes and convert to HTML spans
+
 function parseAnsiToHtml(text) {
-    // Strip or parse ANSI escape sequences
-    // Regex matches ANSI escape codes: ESC[...m
+
+
     const ansiRegex = /\x1b\[([0-9;]*)m/g;
 
-    // Check if color scheme is disabled
+
     const colorScheme = App.settings?.terminal?.colorScheme || 'ansi-16';
     if (colorScheme === 'disabled') {
-        // Strip all ANSI codes and return plain text
+
         return escapeHtml(text.replace(ansiRegex, ''));
     }
 
@@ -3319,18 +3176,18 @@ function parseAnsiToHtml(text) {
     let match;
 
     while ((match = ansiRegex.exec(text)) !== null) {
-        // Append text before this match (escaped for HTML)
+
         if (match.index > lastIndex) {
             const textChunk = text.slice(lastIndex, match.index);
             result += applyAnsiStyle(escapeHtml(textChunk), currentFg, currentBg, isBold, isUnderline);
         }
 
-        // Parse the ANSI codes
+
         const codes = match[1].split(';').map(c => parseInt(c) || 0);
 
         for (const code of codes) {
             if (code === 0) {
-                // Reset all
+
                 currentFg = null;
                 currentBg = null;
                 isBold = false;
@@ -3353,16 +3210,16 @@ function parseAnsiToHtml(text) {
                 const colors = getTerminalColorScheme();
                 currentBg = colors[code];
             } else if (code === 39) {
-                currentFg = null; // default foreground
+
             } else if (code === 49) {
-                currentBg = null; // default background
+
             }
         }
 
         lastIndex = ansiRegex.lastIndex;
     }
 
-    // Append remaining text
+
     if (lastIndex < text.length) {
         const textChunk = text.slice(lastIndex);
         result += applyAnsiStyle(escapeHtml(textChunk), currentFg, currentBg, isBold, isUnderline);
@@ -3371,7 +3228,7 @@ function parseAnsiToHtml(text) {
     return result;
 }
 
-// Apply ANSI style to text chunk
+
 function applyAnsiStyle(text, fg, bg, bold, underline) {
     if (!fg && !bg && !bold && !underline) {
         return text;
@@ -3398,11 +3255,11 @@ function log(msg, type = '') {
     if (colorScheme !== 'disabled' && msg.includes('\x1b[')) {
         l.innerHTML = parseAnsiToHtml(msg);
     } else {
-        // Plain text - use textContent for safety (no HTML injection)
+
         l.textContent = msg.replace(/\x1b\[[0-9;]*m/g, '');
     }
 
-    // Apply message type color from color scheme
+
     if (type && colorScheme !== 'disabled') {
         const messageColors = TERMINAL_MESSAGE_COLORS[colorScheme] || TERMINAL_MESSAGE_COLORS['ansi-16'];
         if (messageColors[type]) {
@@ -3413,7 +3270,7 @@ function log(msg, type = '') {
     t.appendChild(l);
     t.scrollTop = t.scrollHeight;
 
-    // Sync to docked terminal if docked
+
     if (DockingState.terminalDocked) {
         syncTerminalContent();
     }
@@ -3453,7 +3310,7 @@ function compareOutput() {
     const expectedText = document.getElementById('expected-area').value.trim();
     if (!expectedText) return;
 
-    // Extract actual output from terminal (filter out system messages and inputs)
+
     const terminalEl = document.getElementById('terminal');
     const lines = Array.from(terminalEl.querySelectorAll('pre, .line'));
     let actualText = '';
@@ -3476,15 +3333,15 @@ function compareOutput() {
     const diffDisplay = document.getElementById('expected-diff');
     const textarea = document.getElementById('expected-area');
 
-    // Normalize: split into lines, trim each, filter empty
+
     const expectedLines = expectedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     const actualLines = actualText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-    // Find where expected starts in actual (suffix matching)
-    // This handles cases where program outputs menu/prompts before the actual answer
+
+
     let startIdx = 0;
     if (actualLines.length > expectedLines.length) {
-        // Try to find expected lines at the end of actual
+
         for (let i = actualLines.length - expectedLines.length; i >= 0; i--) {
             let match = true;
             for (let j = 0; j < expectedLines.length; j++) {
@@ -3498,13 +3355,13 @@ function compareOutput() {
                 break;
             }
         }
-        // If no exact match found, use the last N lines
+
         if (startIdx === 0 && actualLines.length > expectedLines.length) {
             startIdx = actualLines.length - expectedLines.length;
         }
     }
 
-    // Compare expected lines with corresponding actual lines
+
     let html = '';
     for (let i = 0; i < expectedLines.length; i++) {
         const expLine = expectedLines[i];
@@ -3518,7 +3375,7 @@ function compareOutput() {
         }
     }
 
-    // Show diff display, hide textarea
+
     diffDisplay.innerHTML = html;
     diffDisplay.style.display = 'block';
     textarea.style.display = 'none';
@@ -3546,12 +3403,12 @@ if (window.electronAPI) {
         const exists = App.tabs.find(t => t.path === data.path);
         if (exists) setActive(exists.id);
         else {
-            // Use timestamp + random suffix to ensure uniqueness when opening multiple files rapidly
+
             const id = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
             App.tabs.push({ id, name: data.path.split(/[/\\]/).pop(), path: data.path, content: data.content, original: data.content, modified: false });
             setActive(id);
             updateUI();
-            // Start watching this file for external changes
+
             startFileWatch(data.path);
         }
         log(`Opened: ${data.path}`, 'system');
@@ -3565,12 +3422,12 @@ if (window.electronAPI) {
             clearTimeout(App.runTimeout);
             App.runTimeout = null;
         }
-        // Handle both old format (just code) and new format (object with code + executionTime + peakMemoryKB)
+
         const code = typeof data === 'object' ? data.code : data;
         const execTime = typeof data === 'object' ? data.executionTime : null;
         const peakMemKB = typeof data === 'object' ? data.peakMemoryKB : null;
 
-        // Format execution time
+
         let timeStr = '';
         if (execTime !== null) {
             if (execTime >= 1000) {
@@ -3580,7 +3437,7 @@ if (window.electronAPI) {
             }
         }
 
-        // Format memory
+
         let memStr = '';
         if (peakMemKB && peakMemKB > 0) {
             if (peakMemKB >= 1024) {
@@ -3590,12 +3447,12 @@ if (window.electronAPI) {
             }
         }
 
-        // Display with detailed format
+
         // --- Exit: 0 ---
         // Time: 757ms | Memory: 2.4MB
         log(`\n--- Exit: ${code} ---`, code === 0 ? 'success' : 'warning');
 
-        // Show stats on separate line if available (no dashes)
+
         if (timeStr || memStr) {
             const parts = [];
             if (timeStr) parts.push('Time: ' + timeStr);
@@ -3604,7 +3461,7 @@ if (window.electronAPI) {
         }
 
         setRunning(false);
-        // Status bar shows compact version
+
         const statusParts = [];
         if (timeStr) statusParts.push(timeStr);
         if (memStr) statusParts.push(memStr);
@@ -3638,22 +3495,22 @@ function initCompetitiveCompanion() {
     const btn = document.getElementById('btn-cc');
     if (!btn) return;
 
-    // Load verified status from settings
+
     ccHasReceivedProblem = App.settings?.oj?.verified || false;
 
-    // Auto-start CC server on app load (silent mode)
+
     startCCServer(true);
 
-    // Button click handler - show popup with guide
+
     btn.onclick = () => {
         showCCPopup();
     };
 
-    // Test navigation buttons
+
     document.getElementById('btn-prev-test')?.addEventListener('click', prevTestCase);
     document.getElementById('btn-next-test')?.addEventListener('click', nextTestCase);
 
-    // CC Popup handlers
+
     document.getElementById('cc-close')?.addEventListener('click', hideCCPopup);
     document.getElementById('cc-cancel')?.addEventListener('click', hideCCPopup);
     document.getElementById('cc-install')?.addEventListener('click', () => {
@@ -3661,12 +3518,12 @@ function initCompetitiveCompanion() {
         hideCCPopup();
     });
 
-    // Close popup on overlay click
+
     document.getElementById('cc-overlay')?.addEventListener('click', (e) => {
         if (e.target.id === 'cc-overlay') hideCCPopup();
     });
 
-    // Listen for incoming problems
+
     window.electronAPI?.onProblemReceived?.(handleProblemReceived);
 }
 
@@ -3694,7 +3551,7 @@ async function startCCServer(silent = false) {
             if (!silent) {
                 log('OJ: Sẵn sàng nhận test cases', 'success');
 
-                // Only show extension guide if never received a problem before
+
                 if (!ccHasReceivedProblem) {
                     log('    Cài extension: Chrome Web Store > "Competitive Companion"', 'info');
                     log('    Sau đó vào VNOI/Codeforces và click icon extension', 'info');
@@ -3712,7 +3569,7 @@ async function startCCServer(silent = false) {
 function handleProblemReceived(problem) {
     console.log('Received problem:', problem);
 
-    // Mark that we have received at least one problem and save to settings
+
     if (!ccHasReceivedProblem) {
         ccHasReceivedProblem = true;
         if (!App.settings.oj) App.settings.oj = {};
@@ -3720,11 +3577,11 @@ function handleProblemReceived(problem) {
         saveSettings();
     }
 
-    // Store problem data
+
     ccProblem = problem;
     ccTestIndex = 0;
 
-    // Remove Vietnamese diacritics and create safe filename
+
     const removeVietnameseDiacritics = (str) => {
         return str
             .normalize('NFD')
@@ -3740,7 +3597,7 @@ function handleProblemReceived(problem) {
         .substring(0, 50);
     const fileName = safeName + '.cpp';
 
-    // Create new tab with template
+
     const id = 'tab_' + Date.now();
     const template = DEFAULT_CODE;
 
@@ -3753,10 +3610,10 @@ function handleProblemReceived(problem) {
         modified: false
     });
 
-    // Set active and force UI update
+
     App.activeTabId = id;
 
-    // Ensure editor displays the content
+
     if (App.editor && App.ready) {
         App.editor.setValue(template);
     }
@@ -3764,7 +3621,7 @@ function handleProblemReceived(problem) {
     renderTabs();
     updateUI();
 
-    // Fill in test cases
+
     const testCount = problem.tests?.length || 0;
     if (testCount > 0) {
         const inputArea = document.getElementById('input-area');
@@ -3774,13 +3631,13 @@ function handleProblemReceived(problem) {
         if (expectedArea) expectedArea.value = problem.tests[0].output || '';
     }
 
-    // Show/hide test navigation based on test count
+
     updateTestNavUI();
 
-    // Show IO panel if hidden
+
     if (!App.showIO) toggleIO();
 
-    // Log success - clean format without emojis
+
     const timeLimit = problem.timeLimit ? `${problem.timeLimit}ms` : '-';
     const memLimit = problem.memoryLimit ? `${problem.memoryLimit}MB` : '-';
 
@@ -3790,14 +3647,14 @@ function handleProblemReceived(problem) {
     // Update status
     setStatus(`${problem.name}`, 'success');
 
-    // Flash the CC button to indicate success
+
     const btn = document.getElementById('btn-cc');
     if (btn) {
         btn.classList.add('cc-flash');
         setTimeout(() => btn.classList.remove('cc-flash'), 1000);
     }
 
-    // Force editor focus after a short delay to ensure it's ready
+
     setTimeout(() => {
         if (App.editor) {
             App.editor.focus();
@@ -3821,7 +3678,7 @@ function updateTestNavUI() {
 
     if (!testNav || !testLabel) return;
 
-    // Show test navigation only when multiple tests
+
     if (testCount > 1) {
         testNav.style.display = 'flex';
         testLabel.textContent = `${ccTestIndex + 1}/${testCount}`;
@@ -3830,7 +3687,7 @@ function updateTestNavUI() {
     }
 }
 
-// Helper: Switch between test cases (if multiple)
+
 function switchTestCase(index) {
     if (!ccProblem || !ccProblem.tests || index < 0 || index >= ccProblem.tests.length) return;
 
@@ -3843,7 +3700,7 @@ function switchTestCase(index) {
     if (inputArea) inputArea.value = test.input || '';
     if (expectedArea) expectedArea.value = test.output || '';
 
-    // Update nav UI
+
     updateTestNavUI();
 }
 
@@ -3864,13 +3721,13 @@ function prevTestCase() {
 // ============================================================================
 let pendingReloadNotifications = new Set(); // Track which files have pending notifications
 
-// Start watching a file when it's opened
+
 function startFileWatch(filePath) {
     if (!filePath || !window.electronAPI?.watchFile) return;
     window.electronAPI.watchFile(filePath);
 }
 
-// Stop watching a file when tab is closed
+
 function stopFileWatch(filePath) {
     if (!filePath || !window.electronAPI?.unwatchFile) return;
     window.electronAPI.unwatchFile(filePath);
@@ -3878,22 +3735,22 @@ function stopFileWatch(filePath) {
 
 // Handle external file change notification
 function handleExternalFileChange(filePath) {
-    // Don't show duplicate notifications
+
     if (pendingReloadNotifications.has(filePath)) return;
 
-    // Find the tab for this file
+
     const tab = App.tabs.find(t => t.path === filePath);
     if (!tab) return;
 
     pendingReloadNotifications.add(filePath);
 
-    // Show notification popup
+
     showReloadNotification(tab);
 }
 
 // Show reload notification popup (similar to Dev-C++)
 function showReloadNotification(tab) {
-    // Remove any existing notification for this file
+
     const existingNotif = document.querySelector(`.reload-notification[data-path="${CSS.escape(tab.path)}"]`);
     if (existingNotif) existingNotif.remove();
 
@@ -3922,7 +3779,7 @@ function showReloadNotification(tab) {
                 </div>
                 `;
 
-    // Yes - Reload from disk
+
     notification.querySelector('.reload-btn-yes').onclick = async () => {
         const result = await window.electronAPI?.reloadFile?.(tab.path);
         if (result?.success) {
@@ -3930,7 +3787,7 @@ function showReloadNotification(tab) {
             tab.original = result.content;
             tab.modified = false;
 
-            // Update editor if this tab is currently active
+
             if (tab.id === App.activeTabId && App.editor) {
                 const position = App.editor.getPosition();
                 App.editor.setValue(result.content);
@@ -3949,7 +3806,7 @@ function showReloadNotification(tab) {
         notification.remove();
     };
 
-    // No - Keep current content
+
     notification.querySelector('.reload-btn-no').onclick = () => {
         pendingReloadNotifications.delete(tab.path);
         notification.remove();
@@ -3958,7 +3815,7 @@ function showReloadNotification(tab) {
 
     document.body.appendChild(notification);
 
-    // Auto-dismiss after 30 seconds if no action taken
+
     setTimeout(() => {
         if (document.body.contains(notification)) {
             pendingReloadNotifications.delete(tab.path);
@@ -3986,7 +3843,7 @@ function initBatchTesting() {
 
     runAllBtn.addEventListener('click', runAllTests);
 
-    // Tab switching in Problems panel
+
     const problemsPanel = document.getElementById('problems-panel');
     if (problemsPanel) {
         problemsPanel.querySelectorAll('.panel-title[data-panel]').forEach(tab => {
@@ -4014,7 +3871,7 @@ async function runAllTests() {
     isBatchTesting = true;
     batchTestResults = [];
 
-    // First, compile the code
+
     log('=== Run All Tests ===', 'system');
     setStatus('Compiling...', '');
 
@@ -4047,10 +3904,10 @@ async function runAllTests() {
     App.exePath = compileResult.outputPath;
     log(`Compiled in ${compileResult.time}ms`, 'success');
 
-    // Get time limit from problem or settings
+
     const timeLimit = ccProblem.timeLimit || (App.settings.execution.timeLimitSeconds * 1000) || 3000;
 
-    // Run each test case
+
     const totalTests = ccProblem.tests.length;
     let passedCount = 0;
 
@@ -4082,7 +3939,7 @@ async function runAllTests() {
         }
     }
 
-    // Show summary
+
     const allPassed = passedCount === totalTests;
     log(`\n=== ${passedCount}/${totalTests} AC ===`, allPassed ? 'success' : 'warning');
     setStatus(`${passedCount}/${totalTests} AC`, allPassed ? 'success' : '');
@@ -4104,16 +3961,16 @@ function renderTestResults() {
     const passed = batchTestResults.filter(r => r.status === 'AC').length;
     const total = batchTestResults.length;
 
-    // Update count badge
+
     if (countEl) {
         countEl.textContent = `${passed}/${total}`;
         countEl.style.display = total > 0 ? 'inline' : 'none';
     }
 
-    // Build HTML
+
     let html = '';
 
-    // Summary bar
+
     if (total > 0) {
         const allPassed = passed === total;
         html += `
@@ -4125,7 +3982,7 @@ function renderTestResults() {
                 `;
     }
 
-    // Individual results
+
     batchTestResults.forEach((result, idx) => {
         const timeStr = result.executionTime >= 1000
             ? (result.executionTime / 1000).toFixed(2) + 's'
@@ -4151,7 +4008,7 @@ function renderTestResults() {
 
     container.innerHTML = html;
 
-    // Click to view test case
+
     container.querySelectorAll('.test-result-item').forEach(item => {
         item.addEventListener('click', () => {
             const idx = parseInt(item.dataset.index);
@@ -4184,16 +4041,16 @@ function switchProblemsTab(tabName) {
 function showTestsTab() {
     const problemsPanel = document.getElementById('problems-panel');
 
-    // Show problems panel if hidden
+
     if (!App.showProblems) {
         App.showProblems = true;
         updateUI();
     }
 
-    // Switch to tests tab
+
     switchProblemsTab('tests');
 
-    // Auto-expand panel for better visibility
+
     if (problemsPanel) {
         problemsPanel.classList.add('auto-expand');
         // Set a reasonable min-height based on number of tests
@@ -4217,7 +4074,7 @@ function buildCompileFlags() {
     return flags.join(' ');
 }
 
-// Initialize batch testing
+
 initBatchTesting();
 
 // ============================================================================
@@ -4233,7 +4090,7 @@ async function checkForUpdates() {
         const info = await window.electronAPI.checkForUpdates();
 
         if (info.hasUpdate) {
-            // Check if user dismissed this version before
+
             const dismissedVersion = localStorage.getItem('dismissedUpdateVersion');
             if (dismissedVersion === info.latestVersion) {
                 console.log('[Update] User previously dismissed this version');
@@ -4259,27 +4116,22 @@ function showUpdateNotification(info) {
     // Update content
     if (currentEl) currentEl.textContent = `v${info.currentVersion}`;
     if (newEl) newEl.textContent = `v${info.latestVersion}`;
+
     if (notesEl) {
-        // Simplified update message - Wibu style (High Contrast)
         notesEl.innerHTML = '<p style="text-align: center; font-weight: 600; font-size: 15px; margin: 10px 0;">Thằng wjbu nó mới fix bug hay thêm tính năng gì đó. Tải thử xem coi có gì khác không 🐟</p>';
     }
 
-    // Show overlay
     overlay.classList.add('show');
 
-    // Setup handlers
     document.getElementById('update-close')?.addEventListener('click', hideUpdateNotification);
     document.getElementById('update-later')?.addEventListener('click', () => {
-        // Don't show again for this session
         hideUpdateNotification();
     });
     document.getElementById('update-download')?.addEventListener('click', () => {
-        // Always open the release page (User preference: Link Git)
         window.electronAPI.openReleasePage(info.releaseUrl);
         hideUpdateNotification();
     });
 
-    // Click overlay to close
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) hideUpdateNotification();
     });
@@ -4292,12 +4144,12 @@ function hideUpdateNotification() {
     }
 }
 
-// Check for updates on startup (after a short delay)
+
 setTimeout(() => {
     checkForUpdates();
 }, 3000);
 
-// Add keyboard shortcut for Run All Tests (Ctrl+Shift+F11)
+
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === 'F11') {
         e.preventDefault();
@@ -4317,7 +4169,7 @@ function initTerminalUX() {
     const termInput = document.getElementById('terminal-in');
 
     if (termInput) {
-        // Auto-resize logic with paste fix
+
         const handleResize = function () {
             if (this.value === '') {
                 this.style.height = '';
@@ -4331,9 +4183,9 @@ function initTerminalUX() {
             setTimeout(() => handleResize.call(this), 10);
         });
 
-        // Keydown Handler: History, Ctrl+C, Enter
+
         termInput.addEventListener('keydown', (e) => {
-            // 1. Ctrl+C to Stop
+
             if (e.ctrlKey && e.key === 'c') {
                 if (termInput.selectionStart === termInput.selectionEnd) {
                     e.preventDefault();
@@ -4345,12 +4197,12 @@ function initTerminalUX() {
                 return;
             }
 
-            // 2. History Navigation (Up/Down)
+
             if (e.key === 'ArrowUp') {
                 if (termHistory.length > 0) {
                     e.preventDefault();
                     if (termHistoryIndex === -1) {
-                        termCurrentDraft = termInput.value; // Save current input
+                        termCurrentDraft = termInput.value;
                         termHistoryIndex = termHistory.length - 1;
                     } else if (termHistoryIndex > 0) {
                         termHistoryIndex--;
@@ -4366,13 +4218,13 @@ function initTerminalUX() {
                         termInput.value = termHistory[termHistoryIndex];
                     } else {
                         termHistoryIndex = -1;
-                        termInput.value = termCurrentDraft; // Restore draft
+                        termInput.value = termCurrentDraft;
                     }
                     handleResize.call(termInput);
                 }
             }
 
-            // 3. Enter to Send
+
             if (e.key === 'Enter') {
                 if (e.shiftKey) {
                     // Newline
@@ -4380,7 +4232,7 @@ function initTerminalUX() {
                     e.preventDefault();
                     const val = termInput.value.trim();
                     if (val) {
-                        // Add to history if unique or last one different
+
                         if (termHistory.length === 0 || termHistory[termHistory.length - 1] !== val) {
                             termHistory.push(val);
                         }
@@ -4392,7 +4244,7 @@ function initTerminalUX() {
             }
         });
 
-        // 4. Paste context menu (Right click on terminal area)
+
         if (termSection && !termSection.dataset.contextMenuInitialized) {
             termSection.dataset.contextMenuInitialized = 'true';
 
@@ -4411,12 +4263,12 @@ function initTerminalUX() {
 
                         termInput.value = currentValue.substring(0, startPos) + text + currentValue.substring(endPos);
 
-                        // Dispatch input event to trigger auto-resize consistently
+
                         termInput.dispatchEvent(new Event('input'));
 
                         termInput.focus();
 
-                        // Update cursor position
+
                         const newPos = startPos + text.length;
                         termInput.setSelectionRange(newPos, newPos);
                     }
@@ -4428,7 +4280,7 @@ function initTerminalUX() {
     }
 }
 
-// Initialize when DOM is ready
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initTerminalUX);
 } else {

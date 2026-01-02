@@ -29,18 +29,18 @@
     --bg-glass-heavy: rgba(37, 64, 90, 0.97);
     --bg-glass-border: rgba(40, 60, 80, 0.9);
 
-    --accent: #ff8fb8;
-    --accent-hover: #ffb3d0;
+    --accent: #88c9ea;
+    --accent-hover: #5eb7e0;
     --text-primary: #e0f0ff;
     --text-secondary: #a0c0d0;
-    --text-muted: #607080;
+    --text-muted: #7990a0;
 
     --success: #7dcea0;
-    --error: #ff8fab;
+    --error: #222c61;
     --warning: #fcd5ce;
 
-    --border: #3a5060;
-    --border-strong: #4a7090;
+    --border: #3a6075;
+    --border-strong: #88c9ea;
 
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -92,8 +92,8 @@
     --error: #ff5555;
     --warning: #ffb86c;
 
-    --border: #44475a;
-    --border-strong: #6272a4;
+    --border: #6272a4;
+    --border-strong: #bd93f9;
 
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -136,8 +136,8 @@
     --error: #f92672;
     --warning: #fd971f;
 
-    --border: #49483e;
-    --border-strong: #75715e;
+    --border: #75715e;
+    --border-strong: #a6e22e;
 
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -170,18 +170,18 @@
     --bg-glass-heavy: rgba(36, 41, 51, 0.97);
     --bg-glass-border: rgba(59, 66, 82, 0.9);
 
-    --accent: #bf616a;
-    --accent-hover: #d08770;
+    --accent: #88c0d0;
+    --accent-hover: #81a1c1;
     --text-primary: #eceff4;
-    --text-secondary: #88c0d0;
-    --text-muted: #9eabc7;
+    --text-secondary: #8fbcbb;
+    --text-muted: #d8dee9;
 
     --success: #a3be8c;
     --error: #bf616a;
     --warning: #ebcb8b;
 
-    --border: #727f9c;
-    --border-strong: #b0bace;
+    --border: #81a1c1;
+    --border-strong: #88c0d0;
 
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -224,8 +224,8 @@
     --error: #e06c75;
     --warning: #e5c07b;
 
-    --border: #3e4451;
-    --border-strong: #5c6370;
+    --border: #4b5263;
+    --border-strong: #61afef;
 
     --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -1776,4 +1776,9 @@ html[data-theme="one-dark"] .setting-row>label:not(.switch) {
 [data-theme="nord"] .docked-io-divider,
 [data-theme="one-dark"] .docked-io-divider {
     background: var(--border);
+}
+
+/* Fix Nord sidebar text color contrast */
+[data-theme="nord"] .settings-tab {
+    color: #eceff4 !important;
 }
