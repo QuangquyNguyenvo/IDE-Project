@@ -60,12 +60,12 @@
             "src/**/*",
             "node_modules/**/*",
             "mingw64/**/*",
-            "!TDM-GCC-64/**/*"
+            "!Sameko-GCC/**/*"
         ],
         "extraResources": [
             {
-                "from": "TDM-GCC-64",
-                "to": "TDM-GCC-64",
+                "from": "Sameko-GCC",
+                "to": "Sameko-GCC",
                 "filter": [
                     "**/*"
                 ]

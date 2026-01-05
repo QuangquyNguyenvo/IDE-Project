@@ -72,7 +72,7 @@
 
 |                                                                     |                                                                |
 | :------------------------------------------------------------------ | :------------------------------------------------------------- |
-| 🚀 **Zero Setup** — TDM-GCC 9.2.0 bundled, no MinGW needed           | ⚡ **Instant Run** — F11 to compile & run without saving        |
+| 🚀 **Zero Setup** — GCC 16.0.0 (Sameko-GCC) bundled, no MinGW needed | ⚡ **Instant Run** — F11 to compile & run without saving        |
 | 🔗 **Smart Header Linking** — Auto-links .cpp when #include headers  | 👁️ **File Watcher** — Detects external changes, prompts reload  |
 | 🏆 **Competitive Companion** — Auto-fetch tests from CF, AtCoder, LC | ✂️ **Snippet Editor** — Custom IntelliSense snippets & manager  |
 | 🎨 **6 Beautiful Themes** — Kawaii, Dracula, Monokai, Nord, One Dark | 🧹 **AStyle Formatting** — Clean code with `Ctrl + Shift + A`   |

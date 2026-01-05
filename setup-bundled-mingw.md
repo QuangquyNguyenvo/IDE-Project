@@ -39,10 +39,10 @@ D:\Code\Project\IDE\
 ```
 
 **Các tên folder được hỗ trợ:**
-- `mingw64` (khuyến nghị)
+- `Sameko-GCC` (khuyến nghị cho Sameko IDE)
+- `mingw64`
 - `mingw32`
 - `MinGW`
-- `TDM-GCC-64`
 - `compiler`
 
 ## Bước 3: Kiểm tra
@@ -59,11 +59,11 @@ D:\Code\Project\IDE\
 Khi build app (`npm run build`), folder mingw64 sẽ được đóng gói cùng app.
 
 ### Lưu ý kích thước:
-| Option | Kích thước | bits/stdc++.h |
-|--------|-----------|---------------|
-| WinLibs minimal | ~150MB | ✅ Có |
-| TDM-GCC | ~300MB | ✅ Có |
-| Full WinLibs + LLVM | ~800MB | ✅ Có |
+| Option              | Kích thước | bits/stdc++.h |
+| ------------------- | ---------- | ------------- |
+| WinLibs minimal     | ~150MB     | ✅ Có          |
+| TDM-GCC             | ~300MB     | ✅ Có          |
+| Full WinLibs + LLVM | ~800MB     | ✅ Có          |
 
 ## Cấu trúc thư mục MinGW cần thiết (tối thiểu)
 

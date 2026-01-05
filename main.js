@@ -134,9 +134,9 @@ const resourcesPath = getResourcesPath();
 // Bundled MinGW path (inside app folder - HIGHEST PRIORITY)
 const BUNDLED_MINGW_PATHS = [
     // Check extraResources location first (for packaged app)
-    path.join(resourcesPath, 'TDM-GCC-64', 'bin', 'g++.exe'),
+    path.join(resourcesPath, 'Sameko-GCC', 'bin', 'g++.exe'),
     // Then check app folder (for development)
-    path.join(basePath, 'TDM-GCC-64', 'bin', 'g++.exe'),
+    path.join(basePath, 'Sameko-GCC', 'bin', 'g++.exe'),
     path.join(basePath, 'mingw64', 'bin', 'g++.exe'),
     path.join(basePath, 'mingw32', 'bin', 'g++.exe'),
     path.join(basePath, 'MinGW', 'bin', 'g++.exe'),
@@ -156,7 +156,7 @@ const SYSTEM_COMPILER_PATHS = [
 ];
 
 let detectedCompiler = null;
-let compilerInfo = { name: 'Unknown', version: '', path: '', bundled: false };
+let compilerInfo = { name: 'Unknown', version: '', path: '', bundled: false, hasLLD: false };
 
 // Find the best available compiler
 function detectCompiler() {
@@ -167,7 +167,12 @@ function detectCompiler() {
             compilerInfo.name = 'Bundled MinGW';
             compilerInfo.path = compilerPath;
             compilerInfo.bundled = true;
-            console.log(`[Compiler] Found bundled MinGW: ${compilerPath}`);
+
+            // Pre-detect LLD for faster builds
+            const binDir = path.dirname(compilerPath);
+            compilerInfo.hasLLD = fs.existsSync(path.join(binDir, 'ld.lld.exe'));
+
+            console.log(`[Compiler] Found bundled MinGW: ${compilerPath} (LLD: ${compilerInfo.hasLLD})`);
             return compilerPath;
         }
     }
@@ -232,20 +237,31 @@ function performCompilerWarmup() {
     // This reduces "Cold Start" latency for the first user actual compilation
     setTimeout(() => {
         const compiler = detectedCompiler || 'g++';
-        console.log('[System] Warming up compiler binaries...');
-        // Compile trivial code, output to NUL (discard), use pipes and strip to match optimized config
+        const binDir = path.isAbsolute(compiler) ? path.dirname(compiler) : '';
+        const env = { ...process.env };
+        if (binDir) env.PATH = `${binDir}${path.delimiter}${env.PATH}`;
+
+        console.log('[System] Warming up compiler and linker binaries...');
+
+        // Warm up Compiler
         const child = spawn(compiler, ['-x', 'c++', '-', '-o', 'NUL', '-pipe', '-s', '-O0'], {
             stdio: ['pipe', 'ignore', 'ignore'],
-            windowsHide: true
+            windowsHide: true,
+            env: env
         });
-
-        child.on('error', () => { }); // Ignore errors
-
+        child.on('error', () => { });
         if (child.stdin) {
             child.stdin.write('int main(){return 0;}');
             child.stdin.end();
         }
-    }, 1000); // Wait 1s for app to settle first
+
+        // Warm up LLD Linker
+        if (compilerInfo.hasLLD && binDir) {
+            const lldPath = path.join(binDir, 'ld.lld.exe');
+            const lldWarmup = spawn(lldPath, ['--version'], { windowsHide: true });
+            lldWarmup.on('error', () => { });
+        }
+    }, 1000);
 }
 
 function createWindow() {
@@ -439,8 +455,8 @@ ipcMain.on('load-settings', (event) => {
 });
 
 // Global PCH cache path
-// Global PCH cache path - Use TEMP for better performance (and RamDisk support)
-const pchDir = path.join(app.getPath('temp'), 'sameko-cpp-pch');
+// Global PCH cache path - Use Workspace directory for reliability
+const pchDir = path.join(basePath, 'local_build_cache', 'pch');
 let pchReady = false;
 
 // Ensure PCH is created on startup (or rebuild if compiler changed)
@@ -458,9 +474,14 @@ async function ensurePCH(flags = '') {
     }
 
     const pchKey = getPCHKey(flags);
-    const pchHeader = path.join(pchDir, 'stdc++.h');
-    const pchFile = path.join(pchDir, `stdc++.h_${pchKey}.gch`);
-    const pchInfoFile = path.join(pchDir, `pch-info_${pchKey}.json`);
+    const pchSubDir = path.join(pchDir, pchKey);
+    if (!fs.existsSync(pchSubDir)) {
+        fs.mkdirSync(pchSubDir, { recursive: true });
+    }
+
+    const pchHeader = path.join(pchSubDir, 'stdc++.h');
+    const pchFile = path.join(pchSubDir, `stdc++.h.gch`);
+    const pchInfoFile = path.join(pchSubDir, `pch-info.json`);
 
     const compilerExe = detectedCompiler || 'g++';
 
@@ -468,14 +489,14 @@ async function ensurePCH(flags = '') {
         try {
             const pchInfo = JSON.parse(fs.readFileSync(pchInfoFile, 'utf-8'));
             if (pchInfo.compiler === compilerExe && pchInfo.version === compilerInfo.version) {
-                return { ready: true, pchFile, pchKey };
+                return { ready: true, pchSubDir, pchKey };
             }
         } catch (e) { }
     }
 
     const optMatch = flags.match(/-O[0-3|s|fast]/);
     const stdMatch = flags.match(/-std=[^ ]+/);
-    const buildArgs = ['-x', 'c++-header', pchHeader, '-o', pchFile];
+    const buildArgs = ['-x', 'c++-header', 'stdc++.h', '-o', 'stdc++.h.gch'];
     if (optMatch) buildArgs.push(optMatch[0]);
     if (stdMatch) buildArgs.push(stdMatch[0]);
 
@@ -486,12 +507,19 @@ async function ensurePCH(flags = '') {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('system-message', {
             type: 'info',
-            message: `Đang tối ưu thư viện cho cấu hình ${optMatch ? optMatch[0] : '-O0'}...`
+            message: `Đang tối ưu thư viện cho cấu hình ${optMatch ? optMatch[0] : '-O0'}${stdMatch ? ' ' + stdMatch[0] : ''}...`
         });
     }
 
     return new Promise((resolve) => {
-        const compiler = spawn(compilerExe, buildArgs, { cwd: pchDir });
+        // Inject compiler path into environment to find DLLs
+        const env = { ...process.env };
+        if (compilerExe && path.isAbsolute(compilerExe)) {
+            const binDir = path.dirname(compilerExe);
+            env.PATH = `${binDir}${path.delimiter}${env.PATH}`;
+        }
+
+        const compiler = spawn(compilerExe, buildArgs, { cwd: pchSubDir, env: env });
         compiler.on('close', (code) => {
             if (code === 0) {
                 fs.writeFileSync(pchInfoFile, JSON.stringify({
@@ -499,7 +527,7 @@ async function ensurePCH(flags = '') {
                     version: compilerInfo.version,
                     flags: buildArgs.join(' ')
                 }), 'utf-8');
-                resolve({ ready: true, pchFile, pchKey });
+                resolve({ ready: true, pchSubDir, pchKey });
             } else {
                 resolve({ ready: false });
             }
@@ -606,7 +634,6 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
             ...sourceFiles,
             '-o', outputPath,
             '-I', dir,
-            '-fno-enforce-eh-specs', // Minor speed optimization for EH analysis
             '-pipe',                 // Use pipes instead of temp files (faster I/O)
             '-s'                     // Strip symbols (smaller exe, faster linking)
         ];
@@ -619,18 +646,30 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
             args.push('-O0', '-w');
         }
 
-        if (pch.ready) {
-            // Important: Use the EXACT filename we generated for the .gch
-            // We tell g++ where it is and force include it
-            args.push('-I', pchDir);
-            args.push('-include', path.basename(pch.pchFile, '.gch'));
-            console.log(`[Compile] Using PCH: ${pch.pchKey}`);
-        }
-
         // Use detected compiler (TDM-GCC, MinGW, or fallback)
         const compilerExe = detectedCompiler || 'g++';
+
+        // LLD Linker support (Ultra fast linking)
+        if (compilerInfo.hasLLD) {
+            args.push('-fuse-ld=lld');
+        }
+
+        if (pch.ready) {
+            // New robust approach: each config has its own subdir with stdc++.h and stdc++.h.gch
+            args.push('-I', pch.pchSubDir);
+            args.push('-include', 'stdc++.h');
+            console.log(`[Compile] Using PCH from: ${pch.pchSubDir}`);
+        }
+
         console.log(`[Compile] Command: ${compilerExe} ${args.join(' ')}`);
-        const compiler = spawn(compilerExe, args, { cwd: dir });
+        // Inject compiler path into environment to find DLLs
+        const env = { ...process.env };
+        if (compilerExe && path.isAbsolute(compilerExe)) {
+            const binDir = path.dirname(compilerExe);
+            env.PATH = `${binDir}${path.delimiter}${env.PATH}`;
+        }
+
+        const compiler = spawn(compilerExe, args, { cwd: dir, env: env });
 
         let stderr = '';
 
@@ -643,6 +682,11 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
             console.log(`[Compile] Finished in ${compileTime}ms`);
 
             if (code !== 0) {
+                // LOG ERROR FOR DEBUGGING
+                try {
+                    fs.writeFileSync(path.join(basePath, 'compile_error.log'), stderr);
+                } catch (e) { }
+
                 resolve({
                     success: false,
                     error: stderr || `Compilation failed with code ${code}`,
@@ -686,8 +730,17 @@ ipcMain.handle('run', async (event, { exePath, cwd }) => {
         let peakMemoryKB = 0;
 
         // Run the executable
+        // Inject compiler path into environment so the running exe can find DLLs (like libstdc++-6.dll)
+        const env = { ...process.env };
+        // Use the detected compiler's bin directory if available
+        if (detectedCompiler && path.isAbsolute(detectedCompiler)) {
+            const binDir = path.dirname(detectedCompiler);
+            env.PATH = `${binDir}${path.delimiter}${env.PATH}`;
+        }
+
         runningProcess = spawn(exePath, [], {
             cwd: workingDir,
+            env: env,
             stdio: ['pipe', 'pipe', 'pipe']
         });
         runningExeName = path.basename(exePath); // Save for stopProcess
@@ -798,9 +851,9 @@ ipcMain.handle('get-compiler-info', async () => {
 // Detect AStyle executable (bundled with TDM-GCC or system-installed)
 function detectAStyle() {
     const possiblePaths = [
-        // Bundled with app (in TDM-GCC-64)
-        path.join(resourcesPath, 'TDM-GCC-64', 'bin', 'astyle.exe'),
-        path.join(basePath, 'TDM-GCC-64', 'bin', 'astyle.exe'),
+        // Bundled with app (in Sameko-GCC)
+        path.join(resourcesPath, 'Sameko-GCC', 'bin', 'astyle.exe'),
+        path.join(basePath, 'Sameko-GCC', 'bin', 'astyle.exe'),
         // System paths
         'C:\\TDM-GCC-64\\bin\\astyle.exe',
         'C:\\Program Files\\AStyle\\bin\\astyle.exe',
@@ -830,7 +883,7 @@ ipcMain.handle('format-code', async (event, { code, style = 'google' }) => {
     if (!detectedAStyle) {
         return {
             success: false,
-            error: 'AStyle không được tìm thấy. Vui lòng tải astyle.exe và đặt vào thư mục TDM-GCC-64\\bin\\'
+            error: 'AStyle không được tìm thấy. Vui lòng tải astyle.exe và đặt vào thư mục Sameko-GCC\\bin\\'
         };
     }
 
