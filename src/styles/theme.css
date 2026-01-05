@@ -62,9 +62,8 @@
     /* Terminal usually keeps dark for better contrast */
 
     /* Effect Variables (Quality Mode) */
-    --shadow-soft: 0 8px 32px rgba(136, 201, 234, 0.2);
-    --shadow-card: 0 4px 12px rgba(136, 201, 234, 0.1);
-    --glow: 0 0 12px rgba(136, 201, 234, 0.4);
+    --shadow-soft: 0 8px 16px rgba(136, 201, 234, 0.2);
+    --shadow-card: 0 4px 8px rgba(136, 201, 234, 0.1);
     --blur-filter: blur(8px);
     --blur-filter-light: blur(2px);
     /* Professional sleek easing, no bounce for better performance feeling */
@@ -291,8 +290,6 @@ body {
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    gap: 8px;
-    overflow-x: auto;
     padding: 6px 4px;
     -webkit-app-region: no-drag;
     /* Add this so tabs are clickable/scrollable */
@@ -378,6 +375,7 @@ body {
     font-weight: 800;
     transition: all 0.2s;
     -webkit-app-region: no-drag;
+    flex-shrink: 0;
 }
 
 .tab-add:hover {

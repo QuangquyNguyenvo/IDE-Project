@@ -42,9 +42,8 @@
     --border: #3a6075;
     --border-strong: #88c9ea;
 
-    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --glow: 0 0 15px rgba(136, 201, 234, 0.4);
+    --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
 
     --bg-header: rgba(21, 37, 53, 0.97);
     --bg-panel: rgba(26, 37, 48, 0.95);
@@ -97,9 +96,8 @@
     --border: #ffcad4;
     --border-strong: #ffb7c5;
 
-    --shadow-soft: 0 8px 32px rgba(255, 182, 193, 0.25);
-    --shadow-card: 0 4px 12px rgba(255, 105, 180, 0.15);
-    --glow: 0 0 15px rgba(255, 182, 193, 0.4);
+    --shadow-soft: 0 8px 16px rgba(255, 182, 193, 0.25);
+    --shadow-card: 0 4px 8px rgba(255, 105, 180, 0.15);
 
     --bg-header: rgba(255, 228, 225, 0.97);
     --bg-panel: rgba(255, 245, 248, 0.95);
@@ -153,9 +151,8 @@
     --border: #6272a4;
     --border-strong: #bd93f9;
 
-    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --glow: 0 0 15px rgba(189, 147, 249, 0.4);
+    --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     --bg-header: rgba(33, 34, 44, 0.97);
     --bg-panel: rgba(40, 42, 54, 0.95);
@@ -197,9 +194,8 @@
     --border: #75715e;
     --border-strong: #a6e22e;
 
-    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --glow: 0 0 15px rgba(166, 226, 46, 0.3);
+    --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     --bg-header: rgba(30, 31, 28, 0.97);
     --bg-panel: rgba(39, 40, 34, 0.95);
@@ -241,9 +237,8 @@
     --border: #81a1c1;
     --border-strong: #88c0d0;
 
-    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --glow: 0 0 15px rgba(154, 204, 218, 0.3);
+    --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
 
     --bg-header: rgba(36, 41, 51, 0.97);
     --bg-panel: rgba(46, 52, 64, 0.95);
@@ -285,9 +280,8 @@
     --border: #4b5263;
     --border-strong: #61afef;
 
-    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --glow: 0 0 15px rgba(97, 175, 239, 0.3);
+    --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
 
     --bg-header: rgba(33, 37, 43, 0.97);
     --bg-panel: rgba(40, 44, 52, 0.95);
