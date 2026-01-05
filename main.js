@@ -223,7 +223,30 @@ async function getCompilerVersion() {
 }
 
 // Initialize compiler on startup
+// Initialize compiler on startup
 detectCompiler();
+performCompilerWarmup();
+
+function performCompilerWarmup() {
+    // Background Compilation to force Windows to cache g++.exe, cc1plus.exe, as.exe, ld.exe into RAM
+    // This reduces "Cold Start" latency for the first user actual compilation
+    setTimeout(() => {
+        const compiler = detectedCompiler || 'g++';
+        console.log('[System] Warming up compiler binaries...');
+        // Compile trivial code, output to NUL (discard), use pipes and strip to match optimized config
+        const child = spawn(compiler, ['-x', 'c++', '-', '-o', 'NUL', '-pipe', '-s', '-O0'], {
+            stdio: ['pipe', 'ignore', 'ignore'],
+            windowsHide: true
+        });
+
+        child.on('error', () => { }); // Ignore errors
+
+        if (child.stdin) {
+            child.stdin.write('int main(){return 0;}');
+            child.stdin.end();
+        }
+    }, 1000); // Wait 1s for app to settle first
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -416,7 +439,8 @@ ipcMain.on('load-settings', (event) => {
 });
 
 // Global PCH cache path
-const pchDir = path.join(app.getPath('userData'), 'pch');
+// Global PCH cache path - Use TEMP for better performance (and RamDisk support)
+const pchDir = path.join(app.getPath('temp'), 'sameko-cpp-pch');
 let pchReady = false;
 
 // Ensure PCH is created on startup (or rebuild if compiler changed)
@@ -510,10 +534,22 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
             usingTempFile = true;
         }
 
-        // Save current content
-        fs.writeFileSync(actualFilePath, content, 'utf-8');
-        // Update file watcher mtime to prevent false "file changed" notifications
-        updateFileWatcherMtime(actualFilePath);
+        // OPTIMIZATION: Only write file if different (avoid redundant I/O and AV scans)
+        let needsWrite = true;
+        try {
+            if (!usingTempFile && fs.existsSync(actualFilePath)) {
+                const existingContent = fs.readFileSync(actualFilePath, 'utf-8');
+                if (existingContent === content) {
+                    needsWrite = false;
+                }
+            }
+        } catch (e) { }
+
+        if (needsWrite) {
+            fs.writeFileSync(actualFilePath, content, 'utf-8');
+            // Update file watcher mtime to prevent false "file changed" notifications
+            updateFileWatcherMtime(actualFilePath);
+        }
 
         const dir = path.dirname(actualFilePath);
         const baseName = path.basename(actualFilePath, path.extname(actualFilePath));
@@ -570,7 +606,9 @@ ipcMain.handle('compile', async (event, { filePath, content, flags }) => {
             ...sourceFiles,
             '-o', outputPath,
             '-I', dir,
-            '-fno-enforce-eh-specs' // Minor speed optimization for EH analysis
+            '-fno-enforce-eh-specs', // Minor speed optimization for EH analysis
+            '-pipe',                 // Use pipes instead of temp files (faster I/O)
+            '-s'                     // Strip symbols (smaller exe, faster linking)
         ];
 
         // Apply user settings flags

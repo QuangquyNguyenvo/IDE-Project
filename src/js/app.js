@@ -2246,7 +2246,7 @@ function createDockedTerminalView(container) {
     view.innerHTML = `
         <div class="docked-terminal-body" id="docked-terminal-output"></div>
         <div class="docked-terminal-input">
-            <span class="prompt">></span>
+            <span class="prompt"></span>
             <textarea id="docked-terminal-in" rows="1" placeholder="Input..."></textarea>
             <button class="send-btn" id="docked-send-btn">➤</button>
         </div>
@@ -2262,7 +2262,7 @@ function createDockedTerminalView(container) {
             // Send each line separately
             const lines = input.value.split('\n');
             lines.forEach(line => {
-                log('> ' + line, '');
+                log(line, '');
                 window.electronAPI?.sendInput(line);
             });
             input.value = '';
@@ -3179,7 +3179,7 @@ async function run(clearTerminal = true) {
 function sendNextInput() {
     if (App.inputIndex < App.inputLines.length && App.isRunning) {
         const line = App.inputLines[App.inputIndex];
-        log('> ' + line, '');
+        log(line, '');
         window.electronAPI.sendInput(line);
         App.inputIndex++;
         setTimeout(sendNextInput, 50);
@@ -3507,7 +3507,7 @@ async function sendInput() {
         // Send each line separately
         const lines = inp.value.split('\n');
         for (const line of lines) {
-            log('> ' + line, '');
+            log(line, '');
             await window.electronAPI.sendInput(line);
         }
         inp.value = '';
