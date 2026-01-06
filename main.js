@@ -193,7 +193,11 @@ function detectCompiler() {
             }
             compilerInfo.path = compilerPath;
             compilerInfo.bundled = false;
-            console.log(`[Compiler] Found system compiler: ${compilerPath}`);
+            // Pre-detect LLD for faster builds
+            const binDir = path.dirname(compilerPath);
+            compilerInfo.hasLLD = fs.existsSync(path.join(binDir, 'ld.lld.exe'));
+
+            console.log(`[Compiler] Found system compiler: ${compilerPath} (LLD: ${compilerInfo.hasLLD})`);
             return compilerPath;
         }
     }
@@ -454,9 +458,11 @@ ipcMain.on('load-settings', (event) => {
     }
 });
 
+
+
 // Global PCH cache path
-// Global PCH cache path - Use Workspace directory for reliability
-const pchDir = path.join(basePath, 'local_build_cache', 'pch');
+// Global PCH cache path - Optimization: Use %TEMP% (RAM-backed) to reduce disk I/O
+const pchDir = path.join(app.getPath('temp'), 'cpp-ide-pch');
 let pchReady = false;
 
 // Ensure PCH is created on startup (or rebuild if compiler changed)
@@ -1416,46 +1422,56 @@ function compareVersions(v1, v2) {
 }
 
 ipcMain.handle('check-for-updates', async () => {
-    // Skip update check in Dev
-    if (!app.isPackaged) {
-        return { hasUpdate: false, currentVersion };
-    }
+    // Enable check in dev mode for testing
+    // if (!app.isPackaged) return { success: true, hasUpdate: false, currentVersion };
 
-    try {
-        const release = await fetchLatestRelease();
-
-        if (!release) {
-            return { hasUpdate: false, currentVersion };
-        }
-
-        const latestVersion = release.tag_name.replace(/^v/, '');
-        const hasUpdate = compareVersions(latestVersion, currentVersion) > 0;
-
-        // Find download URL (prefer .exe or .rar for Windows)
-        let downloadUrl = release.html_url;
-        if (release.assets && release.assets.length > 0) {
-            const winAsset = release.assets.find(a =>
-                a.name.endsWith('.exe') || a.name.endsWith('.rar') || a.name.endsWith('.zip')
-            );
-            if (winAsset) {
-                downloadUrl = winAsset.browser_download_url;
+    const https = require('https');
+    return new Promise((resolve) => {
+        const options = {
+            hostname: 'api.github.com',
+            path: '/repos/QuangquyNguyenvo/Sameko-Dev-CPP/releases?per_page=1',
+            method: 'GET',
+            headers: {
+                'User-Agent': 'Sameko-Dev-CPP'
             }
-        }
-
-        return {
-            hasUpdate,
-            currentVersion,
-            latestVersion,
-            releaseNotes: release.body || '',
-            releaseName: release.name || `v${latestVersion}`,
-            downloadUrl,
-            releaseUrl: release.html_url,
-            publishedAt: release.published_at
         };
-    } catch (error) {
-        console.error('[Update] Check failed:', error.message);
-        return { hasUpdate: false, currentVersion, error: error.message };
-    }
+
+        const req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', (chunk) => {
+                body += chunk;
+            });
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    try {
+                        const releases = JSON.parse(body);
+                        // Releases endpoint returns an array. We take the first one (latest).
+                        const latestRelease = Array.isArray(releases) && releases.length > 0 ? releases[0] : null;
+
+                        if (latestRelease) {
+                            resolve({ success: true, data: latestRelease });
+                        } else {
+                            resolve({ success: false, error: 'No releases found' });
+                        }
+                    } catch (e) {
+
+                        resolve({ success: false, error: 'Failed to parse update info' });
+                    }
+                } else if (res.statusCode === 404) {
+                    // 404 means no releases found - valid result, just no update
+                    resolve({ success: false, error: 'GitHub API returned 404 (No releases found)' });
+                } else {
+                    resolve({ success: false, error: `GitHub API returned ${res.statusCode}` });
+                }
+            });
+        });
+
+        req.on('error', (error) => {
+            resolve({ success: false, error: error.message });
+        });
+
+        req.end();
+    });
 });
 
 ipcMain.handle('get-current-version', () => {

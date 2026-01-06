@@ -99,13 +99,15 @@
                 <span class="sep"></span>
 
                 <!-- Settings button -->
-                <button class="toggle-btn" id="btn-settings" title="Cài đặt (Ctrl+,)">
+                <button class="toggle-btn" id="btn-settings" title="Cài đặt (Ctrl+,)" style="position: relative;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                         stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3" />
                         <path
                             d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
                     </svg>
+                    <span class="badge-dot" id="badge-settings-main"
+                        style="display:none; position:absolute; top:6px; right:6px; background:var(--error); width:8px; height:8px; border-radius:50%; border:1px solid var(--bg-primary);"></span>
                 </button>
             </div>
 
@@ -319,6 +321,17 @@
                                 <polyline points="8 6 2 12 8 18" />
                             </svg>
                             Snippets
+                        </button>
+                        <button class="settings-tab" data-tab="about" style="position: relative;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            About
+                            <span class="badge-dot" id="badge-settings-tab"
+                                style="display:none; position:absolute; top:10px; right:10px; background:var(--error); width:8px; height:8px; border-radius:50%;"></span>
                         </button>
                     </div>
 
@@ -685,6 +698,61 @@
                                     </svg>
                                     Add New Snippet
                                 </button>
+                            </div>
+                        </div>
+
+                        <!-- About Tab -->
+                        <div class="settings-panel" id="panel-about">
+                            <div style="text-align: center; padding: 20px 0;">
+                                <img src="assets/icon.png" alt="Logo"
+                                    style="width: 80px; height: 80px; margin-bottom: 10px;">
+                                <h3 style="margin: 0; font-size: 24px;">Sameko Dev C++</h3>
+                                <p style="opacity: 0.7; margin: 5px 0 20px;">Fast, Modern & Beautiful</p>
+
+                                <div
+                                    style="background: var(--bg-secondary); padding: 20px; border-radius: 8px; max-width: 400px; margin: 0 auto; text-align: left;">
+                                    <div class="setting-row">
+                                        <label>Version</label>
+                                        <span class="setting-value" id="about-version">1.0.0</span>
+                                    </div>
+                                    <div class="setting-row">
+                                        <label>Electron</label>
+                                        <span class="setting-value" id="about-electron">...</span>
+                                    </div>
+                                    <div class="setting-row">
+                                        <label>Chrome</label>
+                                        <span class="setting-value" id="about-chrome">...</span>
+                                    </div>
+                                    <div class="setting-row">
+                                        <label>Node</label>
+                                        <span class="setting-value" id="about-node">...</span>
+                                    </div>
+                                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                                        <button id="btn-check-update" class="action-btn primary"
+                                            style="width: auto; padding: 8px 16px;">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                                stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                                <path
+                                                    d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
+                                            </svg>
+                                            Check for Updates
+                                            <span class="badge-dot" id="badge-update-btn"
+                                                style="display:none; position:absolute; top:-4px; right:-4px; background:var(--error); width:10px; height:10px; border-radius:50%; border:2px solid var(--bg-secondary);"></span>
+                                        </button>
+                                        <button id="btn-github" class="action-btn"
+                                            style="width: auto; padding: 8px 16px;">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
+                                                style="margin-right: 6px;">
+                                                <path
+                                                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.065 1.815 2.805 1.29 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.527.105-3.176 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.545 3.3-1.23 3.3-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                                            </svg>
+                                            GitHub
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 30px; font-size: 12px; opacity: 0.5;">
+                                    &copy; 2025 Sameko Project. All rights reserved.
+                                </div>
                             </div>
                         </div>
                     </div>

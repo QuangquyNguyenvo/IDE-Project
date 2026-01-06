@@ -44,7 +44,7 @@ const DEFAULT_SETTINGS = {
     appearance: {
         theme: 'kawaii-light',
         bgOpacity: 50,
-        bgUrl: 'assets/background.jpg',
+        bgUrl: '',
         performanceMode: false
     },
     terminal: {
@@ -177,7 +177,9 @@ function initMonaco() {
         App.ready = true;
 
         // Apply saved theme
-        if (typeof ThemeManager !== 'undefined') {
+        if (typeof applyTheme === 'function') {
+            applyTheme(App.settings.appearance.theme);
+        } else if (typeof ThemeManager !== 'undefined') {
             try {
                 ThemeManager.setTheme(App.settings.appearance.theme);
             } catch (e) {
@@ -694,6 +696,12 @@ function loadSettings() {
                 compiler: { ...DEFAULT_SETTINGS.compiler, ...saved.compiler },
                 execution: { ...DEFAULT_SETTINGS.execution, ...saved.execution },
                 appearance: { ...DEFAULT_SETTINGS.appearance, ...saved.appearance },
+                // Ensure perTheme exists if added later
+                appearance: {
+                    ...DEFAULT_SETTINGS.appearance,
+                    ...saved.appearance,
+                    perTheme: saved.appearance?.perTheme || {}
+                },
                 terminal: { ...DEFAULT_SETTINGS.terminal, ...saved.terminal },
                 panels: { ...DEFAULT_SETTINGS.panels, ...saved.panels },
                 oj: { ...DEFAULT_SETTINGS.oj, ...saved.oj },
@@ -786,26 +794,59 @@ function initSettings() {
         // Apply to whole app immediately
         if (typeof ThemeManager !== 'undefined') {
             ThemeManager.setTheme(newTheme);
+            // Update background input for this theme
+            const perTheme = App.settings.appearance.perTheme || {};
+            const themeSettings = perTheme[newTheme] || {};
+            const themeBgUrl = themeSettings.bgUrl || '';
+            document.getElementById('set-bgUrl').value = themeBgUrl;
+
+            // Force apply background settings immediately to preview
+            // Note: This temporarily applies to the app (Live Preview behavior)
+            // We need to temporarily mock the setting for applyBackgroundSettings to work on the new theme
+            const oldTheme = App.settings.appearance.theme;
+            App.settings.appearance.theme = newTheme;
+            applyBackgroundSettings(); // Apply new theme's background
+            App.settings.appearance.theme = oldTheme; // Revert until Saved (optional, but keeps state clean)
+            // Actually, for "Live Preview" usually we want it to stay until Cancel.
+            // But App.settings.appearance.theme is the source of truth for "Active Theme".
+            // The dropdown change implies "I want to see this theme".
+
+            // Also update color preview
+            updateThemePreview();
         }
-        // Also update preview just in case
-        updateThemePreview();
     };
 
-    // Background file upload
+    // Background file upload - OPTIMIZED: Use path instead of base64
     document.getElementById('set-bgFile').onchange = e => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = ev => {
-                document.getElementById('set-bgUrl').value = ev.target.result;
-            };
-            reader.readAsDataURL(file);
+            // Electron specific: use direct file path to avoid massive Base64 strings causing lag
+            if (file.path) {
+                // Fix path separators for CSS url()
+                const cleanPath = file.path.replace(/\\/g, '/');
+                document.getElementById('set-bgUrl').value = cleanPath;
+                // Live preview if Settings is open
+                if (typeof ThemeManager !== 'undefined') {
+                    // Update the preview variable or temp apply
+                    // Actually applyBackgroundSettings reads from settings, so we might want to 
+                    // temporarily override or just let user see it in the input.
+                    // For better UX, let's try to preview it on the body immediately?
+                    // No, that might be confusing if they Cancel.
+                }
+            } else {
+                // Fallback for web mode
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    document.getElementById('set-bgUrl').value = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
         }
     };
 
     // Reset background button
     document.getElementById('btn-reset-bg').onclick = () => {
-        document.getElementById('set-bgUrl').value = 'assets/background.jpg';
+        document.getElementById('set-bgUrl').value = '';
     };
 
     document.getElementById('btn-save-settings').onclick = saveSettingsAndClose;
@@ -819,11 +860,15 @@ function initSettings() {
 
     // Template Monaco editor will be initialized when settings panel opens
 
+
     // Keybindings reset button
     const keybindingsResetBtn = document.getElementById('btn-keybindings-reset');
     if (keybindingsResetBtn) {
         keybindingsResetBtn.onclick = resetKeybindings;
     }
+
+    // Initialize About & Updates
+    initAbout();
 }
 
 // Template editor (Monaco mini editor for settings)
@@ -1186,7 +1231,14 @@ function openSettings() {
     document.getElementById('set-performanceMode').checked = App.settings.appearance.performanceMode || false;
     document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
     document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
-    document.getElementById('set-bgUrl').value = App.settings.appearance.bgUrl || '';
+    document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
+    document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
+
+    // Load per-theme setting
+    const currentTheme = App.settings.appearance.theme;
+    const perThemeStore = App.settings.appearance.perTheme || {};
+    const themeSpecific = perThemeStore[currentTheme] || {};
+    document.getElementById('set-bgUrl').value = themeSpecific.bgUrl || '';
 
     // Template - sync to hidden textarea and update Monaco editor
     const templateCode = App.settings.template?.code || DEFAULT_SETTINGS.template.code;
@@ -1250,7 +1302,19 @@ function saveSettingsAndClose() {
     App.settings.appearance.theme = document.getElementById('set-theme').value;
     App.settings.appearance.performanceMode = document.getElementById('set-performanceMode').checked;
     App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
-    App.settings.appearance.bgUrl = document.getElementById('set-bgUrl').value;
+    App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
+
+    // Save per-theme background setting
+    const targetTheme = document.getElementById('set-theme').value;
+    const targetBgUrl = document.getElementById('set-bgUrl').value;
+
+    if (!App.settings.appearance.perTheme) App.settings.appearance.perTheme = {};
+    if (!App.settings.appearance.perTheme[targetTheme]) App.settings.appearance.perTheme[targetTheme] = {};
+
+    App.settings.appearance.perTheme[targetTheme].bgUrl = targetBgUrl;
+
+    // Also update global for cache/fallback if needed, but per-theme logic should take precedence
+    App.settings.appearance.bgUrl = targetBgUrl;
 
 
     if (!App.settings.template) App.settings.template = {};
@@ -1653,11 +1717,11 @@ function applyBackgroundSettings() {
         },
         'kawaii-light': {
             default: 'linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 50%, #c5e3f6 100%)',
-            overlay: `rgba(255, 255, 255, ${opacity * 0.3})`
+            overlay: `rgba(255, 255, 255, ${opacity * 0.15})`
         },
         'sakura': {
             default: 'linear-gradient(135deg, #fff0f5 0%, #ffe4e1 50%, #ffb7c5 100%)',
-            overlay: `rgba(255, 240, 245, ${opacity * 0.3})`
+            overlay: `rgba(255, 240, 245, ${opacity * 0.15})`
         },
         'dracula': {
             default: 'linear-gradient(135deg, #282a36 0%, #21222c 100%)',
@@ -1679,9 +1743,20 @@ function applyBackgroundSettings() {
 
     const themeConfig = themeBackgrounds[theme] || themeBackgrounds['kawaii-dark'];
 
+    // Get theme-specific background from USER settings
+    const perTheme = App.settings.appearance.perTheme || {};
+    const userThemeBg = perTheme[theme]?.bgUrl;
 
-    if (bgUrl) {
-        document.body.style.background = `url('${bgUrl}') no-repeat center center fixed`;
+    // Get theme-specific background from THEME definition (default)
+    const themeObj = ThemeManager.themes.get(theme);
+    const themeDefaultBg = themeObj?.colors?.appBackground; // e.g. 'assets/pink.gif'
+
+
+    if (userThemeBg) {
+        document.body.style.background = `url('${userThemeBg}') no-repeat center center fixed`;
+        document.body.style.backgroundSize = 'cover';
+    } else if (themeDefaultBg) {
+        document.body.style.background = `url('${themeDefaultBg}') no-repeat center center fixed`;
         document.body.style.backgroundSize = 'cover';
     } else {
         document.body.style.background = themeConfig.default;
@@ -1690,7 +1765,7 @@ function applyBackgroundSettings() {
 
     const appContainer = document.querySelector('.app-container');
     if (appContainer) {
-        if (bgUrl) {
+        if (userThemeBg || themeDefaultBg) {
             appContainer.style.background = themeConfig.overlay;
         } else {
             appContainer.style.background = 'transparent';
@@ -4687,4 +4762,122 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initTerminalUX);
 } else {
     initTerminalUX();
+}
+
+// ============================================================================
+// ABOUT & UPDATE CHECK
+// ============================================================================
+async function initAbout() {
+    if (!window.electronAPI) return;
+
+    try {
+        const version = await window.electronAPI.getCurrentVersion();
+        const verEl = document.getElementById('about-version');
+        if (verEl) verEl.textContent = version;
+
+        // Populate system versions
+        const sysVersions = window.electronAPI.getSystemVersions();
+        if (sysVersions) {
+            const elElectron = document.getElementById('about-electron');
+            const elChrome = document.getElementById('about-chrome');
+            const elNode = document.getElementById('about-node');
+
+            if (elElectron) elElectron.textContent = sysVersions.electron || 'Unknown';
+            if (elChrome) elChrome.textContent = sysVersions.chrome || 'Unknown';
+            if (elNode) elNode.textContent = sysVersions.node || 'Unknown';
+        }
+
+        // Auto check on startup (silent)
+        checkForUpdates(false);
+    } catch (e) {
+        console.error('[About] Init failed', e);
+    }
+
+    const checkBtn = document.getElementById('btn-check-update');
+    // Remove old listeners to avoid duplicates if re-init
+    if (checkBtn) {
+        const newBtn = checkBtn.cloneNode(true);
+        checkBtn.parentNode.replaceChild(newBtn, checkBtn);
+        newBtn.onclick = () => checkForUpdates(true);
+    }
+
+    const githubBtn = document.getElementById('btn-github');
+    if (githubBtn) {
+        githubBtn.onclick = () => {
+            window.electronAPI.openReleasePage('https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP');
+        };
+    }
+
+    // Wire up Update Overlay buttons
+    const overlay = document.getElementById('update-overlay');
+    const closeBtn = document.getElementById('update-close');
+    const laterBtn = document.getElementById('update-later');
+    const downloadBtn = document.getElementById('update-download');
+
+    if (overlay) {
+        const close = () => { overlay.style.display = 'none'; };
+        if (closeBtn) closeBtn.onclick = close;
+        if (laterBtn) laterBtn.onclick = close;
+        if (downloadBtn) downloadBtn.onclick = () => {
+            window.electronAPI.openReleasePage('https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases/latest');
+            close();
+        };
+    }
+}
+
+async function checkForUpdates(manual = false) {
+    if (!window.electronAPI) return;
+
+    try {
+        const result = await window.electronAPI.checkForUpdates();
+
+        if (result.success) {
+            const latestVer = result.data.tag_name.replace('v', '');
+            const currentVer = document.getElementById('about-version').textContent;
+
+            // Simple comparison (assuming strict X.Y.Z format or at least string inequality)
+            // Ideally use semver, but string compare works if versions are clean
+            if (latestVer !== currentVer) {
+                // Show Badges
+                const badgeMain = document.getElementById('badge-settings-main');
+                const badgeTab = document.getElementById('badge-settings-tab');
+                const badgeBtn = document.getElementById('badge-update-btn');
+
+                if (badgeMain) badgeMain.style.display = 'block';
+                if (badgeTab) badgeTab.style.display = 'block';
+                if (badgeBtn) badgeBtn.style.display = 'block';
+
+                // Update Overlay Info
+                const upNew = document.getElementById('update-new');
+                const upCur = document.getElementById('update-current');
+
+                if (upNew) upNew.textContent = 'v' + latestVer;
+                if (upCur) upCur.textContent = 'v' + currentVer;
+
+                if (manual) {
+                    const overlay = document.getElementById('update-overlay');
+                    if (overlay) overlay.style.display = 'flex';
+                }
+            } else {
+                if (manual) {
+                    alert('You are using the latest version!');
+                }
+            }
+        } else {
+            if (manual) {
+                // Show specific error for debugging
+                const msg = result.error || 'Check your internet connection.';
+                if (msg.includes('404')) {
+                    alert('No releases found on GitHub. Please publish a release first.');
+                } else if (msg.includes('403')) {
+                    alert('Update check limit exceeded (API Rate Limit). Try again later.');
+                } else {
+                    alert('Failed to check for updates: ' + msg);
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Update check error:', e);
+        if (manual) alert('An error occurred while checking for updates.');
+    }
 }

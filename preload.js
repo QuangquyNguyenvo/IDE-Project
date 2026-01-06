@@ -84,6 +84,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     checkAStyle: () => ipcRenderer.invoke('check-astyle'),
 
     // Real-time syntax checking
-    syntaxCheck: (content, filePath) => ipcRenderer.invoke('syntax-check', { content, filePath })
+    syntaxCheck: (content, filePath) => ipcRenderer.invoke('syntax-check', { content, filePath }),
+
+    // System info
+    getSystemVersions: () => process.versions
 });
 

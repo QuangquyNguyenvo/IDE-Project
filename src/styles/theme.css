@@ -136,6 +136,8 @@ body {
     overflow: hidden;
     font-size: 14px;
     user-select: none;
+    image-rendering: -webkit-optimize-contrast;
+    /* Try to make upscaled images sharper */
 }
 
 .app-container {

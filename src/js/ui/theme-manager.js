@@ -107,7 +107,7 @@ const ThemeManager = {
         return {
             'kawaii-dark': {
                 meta: { id: 'kawaii-dark', name: 'Kawaii Dark', type: 'dark' },
-                colors: {},
+                colors: { appBackground: 'assets/background.jpg' },
                 editor: {
                     base: 'vs-dark', inherit: true,
                     background: '#1a2530', foreground: '#e0f0ff',
@@ -123,7 +123,7 @@ const ThemeManager = {
             },
             'kawaii-light': {
                 meta: { id: 'kawaii-light', name: 'Kawaii Light', type: 'light' },
-                colors: {},
+                colors: { appBackground: 'assets/background.jpg' },
                 editor: {
                     base: 'vs-dark', inherit: true,
                     background: '#1a2530', foreground: '#e0f0ff',
@@ -140,6 +140,7 @@ const ThemeManager = {
             'sakura': {
                 meta: { id: 'sakura', name: 'Sakura', type: 'light' },
                 colors: {
+                    appBackground: 'assets/pink.gif',
                     bgOceanLight: '#fff0f5',
                     bgOceanMedium: '#ffe4e1',
                     bgOceanDeep: '#ffb7c5',
