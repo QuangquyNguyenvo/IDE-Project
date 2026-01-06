@@ -1,6 +1,6 @@
 {
     "name": "sameko-dev-cpp",
-    "version": "1.0.0-beta.8",
+    "version": "1.0.0-beta.9",
     "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
     "main": "main.js",
     "author": "QuangquyNguyenvo",
@@ -50,7 +50,8 @@
     },
     "build": {
         "appId": "com.quangquy.cppide",
-        "productName": "C++ IDE",
+        "productName": "Sameko Dev C++",
+        "artifactName": "${productName}-${version}.${ext}",
         "directories": {
             "output": "release_build"
         },

@@ -1,6 +1,6 @@
 # ===== Dependencies =====
 node_modules/
-
+# docs/
 # ===== Build Output =====
 dist/
 out/
