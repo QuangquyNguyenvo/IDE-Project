@@ -1,0 +1,373 @@
+/**
+ * Checkpoints (Local History) Styles
+ * 
+ * Styles for the Checkpoints feature
+ * Uses subtle solid borders for clean appearance across all themes
+ */
+
+/* ============================================================================
+   CHECKPOINTS OVERLAY & MODAL
+   ============================================================================ */
+
+.local-history-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.local-history-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.local-history-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 90%;
+    max-width: 520px;
+    max-height: 70vh;
+    background: var(--bg-panel, #f5faff);
+    border: 2px solid var(--border, rgba(136, 201, 234, 0.3));
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    z-index: 2001;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.local-history-modal.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Header */
+.local-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--bg-panel, #f5faff);
+    border-bottom: 1px solid var(--border, rgba(136, 201, 234, 0.2));
+}
+
+.local-history-header h2 {
+    margin: 0;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #3a5a78);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.local-history-close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border, rgba(136, 201, 234, 0.3));
+    background: var(--bg-input, #ffffff);
+    color: var(--text-muted, #8bc4e0);
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.local-history-close:hover {
+    background: var(--bg-hover, #e8f4fc);
+    border-color: var(--error, #ff8fab);
+    color: var(--error, #ff8fab);
+}
+
+/* Content */
+.local-history-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    background: var(--bg-input, #ffffff);
+}
+
+/* Empty state */
+.history-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    text-align: center;
+    color: var(--text-secondary, #5a9fc8);
+    background: var(--bg-input, #ffffff);
+}
+
+.history-empty svg {
+    opacity: 0.4;
+    margin-bottom: 14px;
+    color: var(--text-muted, #8bc4e0);
+}
+
+.history-empty p {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--text-primary, #3a5a78);
+    font-weight: 600;
+}
+
+.history-empty span {
+    font-size: 12px;
+    color: var(--text-secondary, #5a9fc8);
+}
+
+/* History entry */
+.history-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--bg-panel, #f8fbff);
+    border-bottom: 1px solid var(--border, rgba(136, 201, 234, 0.15));
+    transition: background 0.15s ease;
+}
+
+.history-entry:hover {
+    background: var(--bg-hover, #e8f4fc);
+}
+
+.history-entry:last-child {
+    border-bottom: none;
+}
+
+.history-entry-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.history-entry-time {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary, #3a5a78);
+}
+
+.history-entry-size {
+    font-size: 11px;
+    color: var(--text-secondary, #5a9fc8);
+}
+
+.history-entry-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-history-view,
+.btn-history-restore {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-history-view {
+    background: var(--bg-input, #ffffff);
+    color: var(--text-secondary, #5a9fc8);
+    border: 1px solid var(--border, rgba(136, 201, 234, 0.3));
+}
+
+.btn-history-view:hover {
+    background: var(--bg-hover, #e8f4fc);
+    border-color: var(--accent, #5a9fc8);
+    transform: translateY(-1px);
+}
+
+.btn-history-restore {
+    background: var(--accent, #5a9fc8);
+    color: white;
+}
+
+.btn-history-restore:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(90, 159, 200, 0.3);
+}
+
+.btn-history-restore:active {
+    transform: translateY(0);
+}
+
+/* Footer */
+.local-history-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--bg-panel, #f5faff);
+    border-top: 1px solid var(--border, rgba(136, 201, 234, 0.2));
+}
+
+.btn-history-clear {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid var(--error, #ff8fab);
+    background: transparent;
+    color: var(--error, #ff8fab);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-history-clear:hover {
+    background: rgba(255, 143, 171, 0.1);
+}
+
+.local-history-footer span {
+    font-size: 11px;
+    color: var(--text-muted, #8bc4e0);
+}
+
+/* ============================================================================
+   PREVIEW MODAL
+   ============================================================================ */
+
+.history-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 2100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-preview-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.history-preview-container {
+    width: 90%;
+    max-width: 800px;
+    height: 75vh;
+    background: var(--bg-panel, #f5faff);
+    border: 2px solid var(--border, rgba(136, 201, 234, 0.3));
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.history-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--bg-panel, #f5faff);
+    border-bottom: 1px solid var(--border, rgba(136, 201, 234, 0.2));
+}
+
+.history-preview-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary, #3a5a78);
+}
+
+.btn-close-preview {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border, rgba(136, 201, 234, 0.3));
+    background: var(--bg-input, #ffffff);
+    color: var(--text-muted, #8bc4e0);
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-close-preview:hover {
+    background: var(--bg-hover, #e8f4fc);
+    border-color: var(--error, #ff8fab);
+    color: var(--error, #ff8fab);
+}
+
+#history-preview-editor {
+    flex: 1;
+    margin: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border, rgba(136, 201, 234, 0.2));
+}
+
+/* ============================================================================
+   SETTINGS PANEL STYLES
+   ============================================================================ */
+
+.setting-section-divider {
+    height: 1px;
+    background: var(--border, rgba(136, 201, 234, 0.3));
+    margin: 24px 0 14px;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 600px) {
+    .local-history-modal {
+        width: 95%;
+        max-height: 85vh;
+        border-radius: 16px;
+    }
+
+    .history-entry {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .history-entry-actions {
+        width: 100%;
+    }
+
+    .btn-history-restore {
+        flex: 1;
+        justify-content: center;
+    }
+}

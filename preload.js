@@ -86,7 +86,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Real-time syntax checking
     syntaxCheck: (content, filePath) => ipcRenderer.invoke('syntax-check', { content, filePath }),
 
+    // Local History - backup before save
+    createHistoryBackup: (data) => ipcRenderer.invoke('create-history-backup', data),
+    getFileHistory: (filePath) => ipcRenderer.invoke('get-file-history', filePath),
+    getHistoryContent: (backupPath) => ipcRenderer.invoke('get-history-content', backupPath),
+    clearFileHistory: (filePath) => ipcRenderer.invoke('clear-file-history', filePath),
+
     // System info
     getSystemVersions: () => process.versions
 });
+
 

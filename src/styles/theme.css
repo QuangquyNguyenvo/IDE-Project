@@ -306,8 +306,8 @@ body {
     align-items: center;
     gap: 8px;
     padding: 6px 16px;
-    background: white;
-    border: 2px solid white;
+    background: var(--bg-input, #ffffff);
+    border: 2px solid var(--border, #c8e6f8);
     border-radius: 20px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -315,21 +315,22 @@ body {
     font-weight: 700;
     white-space: nowrap;
     transition: transform var(--transition-duration) var(--transition-timing), box-shadow var(--transition-duration), color var(--transition-duration);
-    box-shadow: 0 2px 4px rgba(136, 201, 234, 0.1);
+    box-shadow: 0 2px 4px rgba(136, 201, 234, 0.15);
     flex-shrink: 0;
 }
 
 .tab:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(136, 201, 234, 0.2);
+    box-shadow: 0 4px 8px rgba(136, 201, 234, 0.25);
     color: var(--bg-ocean-dark);
+    background: var(--bg-panel, #f5faff);
 }
 
 .tab.active {
-    background: var(--bg-ocean-medium);
-    border-color: var(--bg-ocean-deep);
+    background: var(--bg-ocean-medium, #c8e6f8);
+    border-color: var(--bg-ocean-deep, #5a9fc8);
     color: var(--text-primary);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .tab-x {
@@ -1469,6 +1470,18 @@ input[type="number"] {
     font-size: 13px;
     font-family: inherit;
     transition: all 0.2s ease;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 select:focus,

@@ -1483,4 +1483,186 @@ ipcMain.handle('open-release-page', async (event, url) => {
     return { success: true };
 });
 
+// ============================================================================
+// LOCAL HISTORY - File backup before save
+// ============================================================================
+const crypto = require('crypto');
+
+// Get local history directory
+const localHistoryDir = path.join(app.getPath('userData'), 'local-history');
+
+// Ensure local history directory exists
+if (!fs.existsSync(localHistoryDir)) {
+    fs.mkdirSync(localHistoryDir, { recursive: true });
+}
+
+/**
+ * Generate a hash-based folder name from file path
+ */
+function getHistoryFolderName(filePath) {
+    const hash = crypto.createHash('md5').update(filePath).digest('hex').substring(0, 12);
+    const fileName = path.basename(filePath);
+    // Sanitize filename for folder name
+    const safeName = fileName.replace(/[^a-zA-Z0-9_.-]/g, '_');
+    return `${safeName}_${hash}`;
+}
+
+/**
+ * Format timestamp for display
+ */
+function formatTimestamp(date) {
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+/**
+ * Format file size for display
+ */
+function formatSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+// Create a backup of a file
+ipcMain.handle('create-history-backup', async (event, { filePath, content, maxVersions, maxAgeDays }) => {
+    try {
+        const folderName = getHistoryFolderName(filePath);
+        const historyFolder = path.join(localHistoryDir, folderName);
+
+        // Ensure folder exists
+        if (!fs.existsSync(historyFolder)) {
+            fs.mkdirSync(historyFolder, { recursive: true });
+        }
+
+        // Create metadata file if not exists
+        const metaPath = path.join(historyFolder, 'meta.json');
+        let meta = { originalPath: filePath, fileName: path.basename(filePath) };
+
+        if (fs.existsSync(metaPath)) {
+            try {
+                meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+            } catch (e) { /* ignore parse errors */ }
+        }
+
+        fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+
+        // Create backup file with timestamp
+        const now = new Date();
+        const timestamp = now.toISOString().replace(/[:.]/g, '-');
+        const ext = path.extname(filePath) || '.txt';
+        const backupFileName = `${timestamp}${ext}`;
+        const backupPath = path.join(historyFolder, backupFileName);
+
+        // Write backup (async-like but synchronous for simplicity)
+        fs.writeFileSync(backupPath, content, 'utf-8');
+
+        // Cleanup old versions
+        const files = fs.readdirSync(historyFolder)
+            .filter(f => f !== 'meta.json')
+            .map(f => ({
+                name: f,
+                path: path.join(historyFolder, f),
+                stat: fs.statSync(path.join(historyFolder, f))
+            }))
+            .sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
+
+        // Remove files beyond maxVersions
+        if (maxVersions && files.length > maxVersions) {
+            for (let i = maxVersions; i < files.length; i++) {
+                try {
+                    fs.unlinkSync(files[i].path);
+                } catch (e) { /* ignore */ }
+            }
+        }
+
+        // Remove files older than maxAgeDays
+        if (maxAgeDays) {
+            const cutoff = Date.now() - (maxAgeDays * 24 * 60 * 60 * 1000);
+            for (const file of files) {
+                if (file.stat.mtimeMs < cutoff) {
+                    try {
+                        fs.unlinkSync(file.path);
+                    } catch (e) { /* ignore */ }
+                }
+            }
+        }
+
+        return { success: true, backupPath };
+    } catch (error) {
+        console.error('[LocalHistory] Backup error:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+// Get history entries for a file
+ipcMain.handle('get-file-history', async (event, filePath) => {
+    try {
+        const folderName = getHistoryFolderName(filePath);
+        const historyFolder = path.join(localHistoryDir, folderName);
+
+        if (!fs.existsSync(historyFolder)) {
+            return { success: true, entries: [] };
+        }
+
+        const files = fs.readdirSync(historyFolder)
+            .filter(f => f !== 'meta.json')
+            .map(f => {
+                const fullPath = path.join(historyFolder, f);
+                const stat = fs.statSync(fullPath);
+                return {
+                    name: f,
+                    path: fullPath,
+                    timestamp: stat.mtimeMs,
+                    formattedTime: formatTimestamp(new Date(stat.mtimeMs)),
+                    size: formatSize(stat.size)
+                };
+            })
+            .sort((a, b) => b.timestamp - a.timestamp);
+
+        return { success: true, entries: files };
+    } catch (error) {
+        console.error('[LocalHistory] Get history error:', error);
+        return { success: false, entries: [], error: error.message };
+    }
+});
+
+// Get content of a backup file
+ipcMain.handle('get-history-content', async (event, backupPath) => {
+    try {
+        if (!fs.existsSync(backupPath)) {
+            return { success: false, error: 'Backup file not found' };
+        }
+
+        const content = fs.readFileSync(backupPath, 'utf-8');
+        return { success: true, content };
+    } catch (error) {
+        console.error('[LocalHistory] Get content error:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+// Clear all history for a file
+ipcMain.handle('clear-file-history', async (event, filePath) => {
+    try {
+        const folderName = getHistoryFolderName(filePath);
+        const historyFolder = path.join(localHistoryDir, folderName);
+
+        if (fs.existsSync(historyFolder)) {
+            // Remove all files in the folder
+            const files = fs.readdirSync(historyFolder);
+            for (const file of files) {
+                fs.unlinkSync(path.join(historyFolder, file));
+            }
+            // Remove the folder itself
+            fs.rmdirSync(historyFolder);
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('[LocalHistory] Clear history error:', error);
+        return { success: false, error: error.message };
+    }
+});
+
 
