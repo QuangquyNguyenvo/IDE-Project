@@ -13,10 +13,12 @@
     display: none;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
 }
 
 .snippet-editor-modal.active {
     display: flex;
+    pointer-events: auto;
 }
 
 .snippet-editor-overlay {
@@ -92,7 +94,7 @@
     background: var(--error, #ff8fab);
     color: white;
     transform: rotate(90deg);
-    border-color: white;
+    border-color: var(--border);
 }
 
 .snippet-editor-body {

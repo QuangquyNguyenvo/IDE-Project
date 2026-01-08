@@ -275,13 +275,15 @@
         const ctx = canvas.getContext('2d');
         let width, height;
         let points = [];
-        const spacing = 40;
+        const spacing = 50; // Increased spacing for better performance (was 40)
         const mouse = { x: -1000, y: -1000 };
 
         function init() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
             points = [];
+            // Optimize: Create fewer points by adding margin logic if needed, 
+            // but simply increasing spacing is enough.
             for (let x = 0; x < width + spacing; x += spacing) {
                 for (let y = 0; y < height + spacing; y += spacing) {
                     points.push({
@@ -301,37 +303,57 @@
         });
 
         function animate() {
-            ctx.clearRect(0, 0, width, height);
+            // Optimization: Stop animating if user scrolled past the hero section
+            // The canvas is fixed, but it's only meaningful in the top area.
+            if (window.scrollY < window.innerHeight + 100) {
+                ctx.clearRect(0, 0, width, height);
 
-            // Draw Grid Lines - Stronger visibility
-            ctx.strokeStyle = 'rgba(137, 207, 240, 0.22)'; // Darker
-            ctx.lineWidth = 1;
+                // Batch Drawing: Single Path for all dots
+                ctx.fillStyle = 'rgba(100, 181, 246, 0.36)';
+                ctx.beginPath();
 
-            points.forEach(p => {
-                // Physics: Point gets pushed away/pulled by mouse
-                const dx = mouse.x - p.x;
-                const dy = mouse.y - p.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
                 const maxDist = 300;
+                const maxDistSq = maxDist * maxDist;
 
-                if (dist < maxDist) {
-                    const force = (maxDist - dist) / maxDist;
-                    const angle = Math.atan2(dy, dx);
-                    const move = force * 60; // Stronger distortion
-                    p.x = p.originX - Math.cos(angle) * move;
-                    p.y = p.originY - Math.sin(angle) * move;
-                } else {
-                    // Return to origin
-                    p.x += (p.originX - p.x) * 0.1;
-                    p.y += (p.originY - p.y) * 0.1;
+                for (let i = 0; i < points.length; i++) {
+                    const p = points[i];
+
+                    // Header physics
+                    const dx = mouse.x - p.x;
+                    const dy = mouse.y - p.y;
+                    const distSq = dx * dx + dy * dy;
+
+                    if (distSq < maxDistSq) {
+                        const dist = Math.sqrt(distSq);
+                        const force = (maxDist - dist) / maxDist;
+                        const angle = Math.atan2(dy, dx);
+                        const move = force * 60;
+                        p.x = p.originX - Math.cos(angle) * move;
+                        p.y = p.originY - Math.sin(angle) * move;
+                    } else {
+                        // Return to origin with stabilization
+                        const k = 0.1;
+                        const diffX = p.originX - p.x;
+                        const diffY = p.originY - p.y;
+
+                        // Micro-optimization: avoid tiny floating point shifts
+                        if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1) {
+                            p.x = p.originX;
+                            p.y = p.originY;
+                        } else {
+                            p.x += diffX * k;
+                            p.y += diffY * k;
+                        }
+                    }
+
+                    // Draw dot (Circle)
+                    // Move to the starting point of the arc to prevent connecting lines
+                    ctx.moveTo(p.x + 2, p.y);
+                    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
                 }
 
-                // Draw dot - More visible
-                ctx.fillStyle = 'rgba(100, 181, 246, 0.36)'; // Stronger Blue
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); // Bigger dot
                 ctx.fill();
-            });
+            }
 
             requestAnimationFrame(animate);
         }

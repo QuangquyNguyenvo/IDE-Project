@@ -53,17 +53,30 @@
 body {
     font-family: 'Nunito', 'Segoe UI', sans-serif;
     background-color: var(--bg-ocean-light);
-    /* Default Background Image */
-    background-image: url('../assets/background.jpg');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: cover;
-    background-attachment: fixed;
+    /* Default Background Image - moved to pseudo-element for opacity support */
+    background-image: none;
     color: var(--text-primary);
     height: 100vh;
     overflow: hidden;
     font-size: 14px;
     user-select: none;
+    position: relative;
+}
+
+/* App background image with opacity support using pseudo-element */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: var(--app-bg-image, url('../assets/background.jpg'));
+    background-repeat: no-repeat;
+    background-position: var(--app-bg-position, center center);
+    background-size: cover;
+    background-attachment: fixed;
+    opacity: var(--app-bg-opacity, 0.5);
+    filter: blur(var(--app-bg-blur, 0px));
+    z-index: -1;
+    pointer-events: none;
 }
 
 /* Mascot Decoration */

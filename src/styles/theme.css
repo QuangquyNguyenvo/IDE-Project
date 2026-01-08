@@ -125,12 +125,8 @@ body {
     font-family: 'Nunito', 'Segoe UI', sans-serif;
     /* Dark background underneath for transparency slider to work */
     background-color: #1a2530;
-    /* Default Background Image */
-    background-image: url('../assets/background.jpg');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: cover;
-    background-attachment: fixed;
+    /* Default Background Image - moved to pseudo-element for opacity support */
+    background-image: none;
     color: var(--text-primary);
     height: 100vh;
     overflow: hidden;
@@ -138,6 +134,23 @@ body {
     user-select: none;
     image-rendering: -webkit-optimize-contrast;
     /* Try to make upscaled images sharper */
+    position: relative;
+}
+
+/* App background image with opacity support using pseudo-element */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: var(--app-bg-image, url('../assets/background.jpg'));
+    background-repeat: no-repeat;
+    background-position: var(--app-bg-position, center center);
+    background-size: cover;
+    background-attachment: fixed;
+    opacity: var(--app-bg-opacity, 0.5);
+    filter: blur(var(--app-bg-blur, 0px));
+    z-index: -1;
+    pointer-events: none;
 }
 
 .app-container {
@@ -180,7 +193,7 @@ body {
     display: flex;
     align-items: center;
     height: var(--header-height);
-    background: var(--bg-glass-heavy);
+    background: var(--bg-header, var(--bg-glass-heavy));
     backdrop-filter: var(--blur-filter-light);
     /* Apply blur only here */
     border-bottom: 2px solid white;
@@ -1401,6 +1414,9 @@ html[data-theme="kawaii-light"] .setting-row>label:not(.switch) {
     color: var(--text-primary);
     font-size: 12px;
     transition: all 0.2s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .bg-url-input:focus {
@@ -1421,7 +1437,7 @@ html[data-theme="kawaii-light"] .setting-row>label:not(.switch) {
 
 .btn-save {
     background: var(--accent);
-    color: var(--bg-ocean-dark);
+    color: var(--button-text-on-accent, #ffffff);
     border: 3px solid var(--accent);
     padding: 12px 32px;
     border-radius: 25px 20px 22px 18px;
@@ -1431,6 +1447,7 @@ html[data-theme="kawaii-light"] .setting-row>label:not(.switch) {
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 4px 4px 0 var(--shadow-card);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .btn-save:hover {
@@ -2404,6 +2421,49 @@ body.split-active .editor-pane {
 .monaco-editor .scrollbar .slider::after {
     display: none !important;
     content: none !important;
+}
+
+/* ===== EDITOR BACKGROUND IMAGE SUPPORT ===== */
+/* 
+ * Monaco Editor overrides CSS backgrounds, so we use a pseudo-element
+ * to display the background image behind the editor content.
+ */
+.editor-area {
+    position: relative;
+}
+
+/* Background image layer using ::before */
+.editor-area::before {
+    content: '';
+    position: absolute;
+    inset: calc(-1 * var(--editor-bg-blur, 0px));
+    background-image: var(--editor-bg-image, none);
+    background-size: cover;
+    background-position: var(--editor-bg-position, center center);
+    background-repeat: no-repeat;
+    opacity: var(--editor-bg-opacity, 0.15);
+    filter: blur(var(--editor-bg-blur, 0px));
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+/* Make Monaco editor background transparent to show the background image */
+.editor-area .monaco-editor,
+.editor-area .monaco-editor .overflow-guard,
+.editor-area .monaco-editor .monaco-scrollable-element,
+.editor-area .monaco-editor .lines-content,
+.editor-area .monaco-editor .view-lines,
+.editor-area .monaco-editor .margin,
+.editor-area .monaco-editor .monaco-editor-background {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Keep the editor content above the background */
+.editor-area > * {
+    position: relative;
+    z-index: 1;
 }
 
 /* ===== RESPONSIVE LAYOUT FIXES ===== */

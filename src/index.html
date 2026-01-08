@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -400,7 +400,6 @@
                                     <option value="dracula">Dracula</option>
                                     <option value="monokai">Monokai</option>
                                     <option value="nord">Nord</option>
-                                    <option value="one-dark">One Dark</option>
                                 </select>
                             </div>
                             <div class="setting-row">
@@ -408,10 +407,10 @@
                                         title="Automatically save files after you stop typing">?</span></label>
                                 <div class="setting-control">
                                     <label class="switch">
-                                        <input type="checkbox" id="set-autoSave">
+                                        <input type="checkbox" id="set-autoSave" checked>
                                         <span class="slider"></span>
                                     </label>
-                                    <input type="number" id="set-autoSaveDelay" min="1" max="30" value="3"
+                                    <input type="number" id="set-autoSaveDelay" min="1" max="300" value="30"
                                         style="width:60px;margin-left:10px;text-align:center">
                                     <span>sec</span>
                                 </div>
@@ -555,126 +554,99 @@
 
                         <!-- Appearance Tab with Preview -->
                         <div class="settings-panel" id="panel-appearance">
-                            <div class="appearance-layout">
-                                <div class="appearance-controls">
-                                    <h3>Theme</h3>
-                                    <div class="setting-row">
-                                        <label>Color Theme</label>
-                                        <select id="set-theme">
-                                            <option value="kawaii-dark">Kawaii Dark</option>
-                                            <option value="kawaii-light">Kawaii Light</option>
-                                            <option value="sakura">Sakura</option>
-                                            <option value="dracula">Dracula</option>
-                                            <option value="monokai">Monokai</option>
-                                            <option value="nord">Nord</option>
-                                            <option value="one-dark">One Dark Pro</option>
-                                        </select>
-                                    </div>
-
-                                    <h3 style="margin-top:20px">Background</h3>
-                                    <div class="setting-row">
-                                        <label>Opacity</label>
-                                        <div class="setting-control">
-                                            <input type="range" id="set-bgOpacity" min="20" max="90" value="50">
-                                            <span class="setting-value" id="val-bgOpacity">50%</span>
-                                        </div>
-                                    </div>
-
-                                    <h3 style="margin-top:20px">Options</h3>
-                                    <div class="setting-row">
-                                        <label>Performance Mode</label>
-                                        <label class="switch">
-                                            <input type="checkbox" id="set-performanceMode">
-                                            <span class="slider"></span>
-                                        </label>
+                            <!-- Theme Selection Section -->
+                            <div class="theme-section">
+                                <div class="theme-section-header">
+                                    <h3>Color Theme</h3>
+                                    <div class="theme-actions-inline">
+                                        <button class="btn-theme-action" id="btn-open-marketplace"
+                                            title="Theme Marketplace">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <circle cx="9" cy="21" r="1" />
+                                                <circle cx="20" cy="21" r="1" />
+                                                <path
+                                                    d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                                            </svg>
+                                            Marketplace
+                                        </button>
+                                        <button class="btn-theme-action primary" id="btn-open-customizer"
+                                            title="Customize Theme">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                            </svg>
+                                            Customize
+                                        </button>
                                     </div>
                                 </div>
 
-                                <!-- Enhanced Live Preview -->
-                                <div class="appearance-preview">
-                                    <div class="preview-label">Live Preview</div>
-                                    <div class="preview-window" id="theme-preview">
-                                        <!-- Header with tabs -->
-                                        <div class="preview-header">
-                                            <span class="preview-dot red"></span>
-                                            <span class="preview-dot yellow"></span>
-                                            <span class="preview-dot green"></span>
-                                            <span class="preview-tab active">main.cpp</span>
-                                        </div>
-
-                                        <!-- Main content area -->
-                                        <div class="preview-body">
-                                            <!-- Editor section -->
-                                            <div class="preview-editor">
-                                                <div class="preview-line"><span class="ln">1</span><span
-                                                        class="kw">#include</span> <span
-                                                        class="str">&lt;iostream&gt;</span></div>
-                                                <div class="preview-line"><span class="ln">2</span><span
-                                                        class="kw">using</span> std;</div>
-                                                <div class="preview-line"><span class="ln">3</span></div>
-                                                <div class="preview-line"><span class="ln">4</span><span
-                                                        class="type">int</span> <span class="fn">main</span>() {</div>
-                                                <div class="preview-line"><span class="ln">5</span> cout << <span
-                                                        class="str">"Hi"</span>;</div>
-                                                <div class="preview-line"><span class="ln">6</span>}</div>
-                                            </div>
-
-                                            <!-- IO panels -->
-                                            <div class="preview-io-section">
-                                                <div class="preview-io-panel">
-                                                    <div class="preview-io-header">INPUT</div>
-                                                    <div class="preview-io-body">5</div>
-                                                </div>
-                                                <div class="preview-io-panel">
-                                                    <div class="preview-io-header">EXPECTED</div>
-                                                    <div class="preview-io-body">Hi</div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Terminal section -->
-                                            <div class="preview-terminal">
-                                                <div class="preview-term-header">TERMINAL</div>
-                                                <div class="preview-term-content">
-                                                    <span class="term-success">✓ Build OK</span><br>
-                                                    <span class="term-output">Hi</span><br>
-                                                    <span class="term-info">Exit: 0</span>
-                                                </div>
-                                                <div class="preview-term-input">
-                                                    <span class="term-prompt"></span>
-                                                    <span class="term-cursor">_</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status bar -->
-                                        <div class="preview-statusbar">
-                                            <span class="status-dot"></span>
-                                            <span>Ready</span>
-                                            <span class="status-right">Ln 1, Col 1</span>
-                                        </div>
+                                <!-- Horizontal Theme Carousel -->
+                                <div class="theme-carousel-container">
+                                    <button class="theme-carousel-arrow left" id="theme-carousel-left">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="15 18 9 12 15 6" />
+                                        </svg>
+                                    </button>
+                                    <div class="theme-carousel" id="theme-carousel">
+                                        <!-- Theme cards will be rendered here by JS -->
                                     </div>
+                                    <button class="theme-carousel-arrow right" id="theme-carousel-right">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="9 18 15 12 9 6" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <select id="set-theme" style="display:none;">
+                                    <!-- Hidden select for compatibility -->
+                                </select>
+                            </div>
 
-                                    <!-- Image URL and Upload below preview -->
-                                    <div class="preview-bg-controls">
-                                        <div class="bg-control-row">
-                                            <label>Image URL</label>
-                                            <input type="text" id="set-bgUrl" placeholder="https://..."
-                                                class="bg-url-input">
-                                        </div>
-                                        <div class="bg-control-buttons">
-                                            <label class="btn-upload">
-                                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
-                                                    stroke="currentColor" stroke-width="2">
-                                                    <path
-                                                        d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                                                </svg>
-                                                Upload
-                                                <input type="file" id="set-bgFile" accept="image/*"
-                                                    style="display:none">
-                                            </label>
-                                            <button class="btn-reset-bg" id="btn-reset-bg">Reset</button>
-                                        </div>
+                            <!-- Background Section -->
+                            <div class="appearance-section">
+                                <h3>Background</h3>
+                                <div class="setting-row">
+                                    <label>Opacity</label>
+                                    <div class="setting-control">
+                                        <input type="range" id="set-bgOpacity" min="20" max="90" value="50">
+                                        <span class="setting-value" id="val-bgOpacity">50%</span>
                                     </div>
+                                </div>
+                                <div class="setting-row">
+                                    <label>Image URL</label>
+                                    <div class="setting-control" style="flex:1">
+                                        <input type="text" id="set-bgUrl" placeholder="https://..." style="flex:1">
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <label>Upload</label>
+                                    <div class="setting-control">
+                                        <label class="btn-upload">
+                                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path
+                                                    d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                                            </svg>
+                                            Choose File
+                                            <input type="file" id="set-bgFile" accept="image/*" style="display:none">
+                                        </label>
+                                        <button class="btn-reset-bg" id="btn-reset-bg">Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Options Section -->
+                            <div class="appearance-section">
+                                <h3>Options</h3>
+                                <div class="setting-row">
+                                    <label>Reduce Animations <span class="tooltip"
+                                            title="Disable fancy animations and transitions for smoother experience on low-end devices">?</span></label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="set-performanceMode" checked>
+                                        <span class="slider"></span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -883,6 +855,129 @@
             </div>
         </div>
 
+        <!-- ===== THEME MARKETPLACE POPUP ===== -->
+        <div class="fullscreen-popup" id="marketplace-popup" style="display:none;">
+            <div class="fullscreen-popup-overlay"></div>
+            <div class="fullscreen-popup-container">
+                <div class="fullscreen-popup-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="9" cy="21" r="1" />
+                            <circle cx="20" cy="21" r="1" />
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                        </svg>
+                        Theme Marketplace
+                    </h2>
+                    <div class="fullscreen-popup-actions">
+                        <button class="btn-secondary" id="btn-import-file">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                            </svg>
+                            Import File
+                        </button>
+                        <button class="btn-secondary" id="btn-import-gist">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                                <path
+                                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.065 1.815 2.805 1.29 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.527.105-3.176 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.545 3.3-1.23 3.3-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            </svg>
+                            Import Gist
+                        </button>
+                        <button class="btn-secondary" id="btn-export-file">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                            </svg>
+                            Export
+                        </button>
+                        <button class="btn-primary" id="btn-create-theme">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            Create New
+                        </button>
+                    </div>
+                    <button class="fullscreen-popup-close" id="marketplace-close">×</button>
+                </div>
+                <div class="fullscreen-popup-body">
+                    <div id="marketplace-themes-list" class="marketplace-themes-list">
+                        <!-- Themes will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== THEME CUSTOMIZER POPUP ===== -->
+        <div class="fullscreen-popup" id="customizer-popup" style="display:none;">
+            <div class="fullscreen-popup-overlay"></div>
+            <div class="fullscreen-popup-container customizer-container">
+                <div class="fullscreen-popup-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                        </svg>
+                        <span id="customizer-title">Theme Customizer</span>
+                    </h2>
+                    <button class="fullscreen-popup-close" id="customizer-close">×</button>
+                </div>
+                <div class="fullscreen-popup-body customizer-body">
+                    <!-- Left: Live Preview UI -->
+                    <div class="customizer-preview-section">
+                        <div class="customizer-live-preview" id="customizer-live-preview">
+                            <!-- Clickable UI preview will be rendered here -->
+                        </div>
+                        <div class="customizer-preview-hint">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 16v-4M12 8h.01" />
+                            </svg>
+                            Click on any element to customize its color
+                        </div>
+                    </div>
+
+                    <!-- Right: Controls Panel -->
+                    <div class="customizer-controls-section">
+                        <div class="customizer-tabs">
+                            <button class="customizer-tab active" data-tab="info">Info</button>
+                            <button class="customizer-tab" data-tab="colors">UI Colors</button>
+                            <button class="customizer-tab" data-tab="editor">Editor</button>
+                        </div>
+                        <div class="customizer-tab-content" id="customizer-tab-content">
+                            <!-- Tab content will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="fullscreen-popup-footer">
+                    <button class="btn-secondary" id="customizer-cancel">Cancel</button>
+                    <button class="btn-secondary" id="customizer-reset">Reset</button>
+                    <div class="customizer-save-options">
+                        <button class="btn-primary" id="customizer-save">Save as New Theme</button>
+                        <button class="btn-secondary" id="customizer-overwrite" style="display:none;">Overwrite</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Picker Popover -->
+        <div class="color-picker-popover" id="color-picker-popover" style="display:none;">
+            <div class="color-picker-header">
+                <span id="color-picker-label">Color</span>
+                <button class="color-picker-close" id="color-picker-close">×</button>
+            </div>
+            <div class="color-picker-body">
+                <input type="color" id="color-picker-input" value="#ffffff">
+                <input type="text" id="color-picker-text" value="#ffffff" placeholder="#RRGGBB">
+            </div>
+            <div class="color-picker-footer">
+                <button class="btn-secondary btn-sm" id="color-picker-cancel">Cancel</button>
+                <button class="btn-primary btn-sm" id="color-picker-apply">Apply</button>
+            </div>
+        </div>
 
         <!-- ===== MAIN ===== -->
         <div class="main">
@@ -1044,6 +1139,8 @@
     <script src="js/cpp-suggestions.js"></script>
     <script src="js/snippet-editor.js"></script>
     <script src="js/ui/theme-manager.js"></script>
+    <script src="js/ui/theme-marketplace.js"></script>
+    <script src="js/ui/theme-customizer.js"></script>
     <script src="js/local-history.js"></script>
     <script src="js/app.js"></script>
 </body>

@@ -23,8 +23,8 @@ const DEFAULT_SETTINGS = {
         minimap: true,
         wordWrap: false,
         colorScheme: 'auto',
-        autoSave: false,
-        autoSaveDelay: 3,  // seconds
+        autoSave: true,
+        autoSaveDelay: 30,  // seconds
         liveCheck: false,  // Real-time syntax checking
         liveCheckDelay: 1000,  // milliseconds
         snippets: true,  // Enable snippet suggestions
@@ -45,7 +45,7 @@ const DEFAULT_SETTINGS = {
         theme: 'kawaii-light',
         bgOpacity: 50,
         bgUrl: '',
-        performanceMode: false
+        performanceMode: true
     },
     terminal: {
         colorScheme: 'ansi-16'
@@ -69,7 +69,7 @@ const DEFAULT_SETTINGS = {
 using namespace std;
 
 int main() {
-    
+    cout << "hello gaialime";
     return 0;
 }`
     },
@@ -133,7 +133,7 @@ const DEFAULT_CODE = `#include<bits/stdc++.h>
 using namespace std;
 
 int main() {
-    cout << "Toi yeu gai alimi";
+    cout << "hello gaialime";
     return 0;
 }
 `;
@@ -176,6 +176,15 @@ function initMonaco() {
                 await ThemeManager.init();
             } catch (e) {
                 console.error('[ThemeManager] Init failed:', e);
+            }
+        }
+
+        // Initialize ThemeMarketplace
+        if (typeof ThemeMarketplace !== 'undefined') {
+            try {
+                await ThemeMarketplace.init();
+            } catch (e) {
+                console.error('[ThemeMarketplace] Init failed:', e);
             }
         }
 
@@ -768,8 +777,34 @@ function initSettings() {
             if (tab.dataset.tab === 'snippets' && typeof renderSnippetsList === 'function') {
                 renderSnippetsList();
             }
+
+            // Initialize marketplace carousel when opening appearance tab
+            if (tab.dataset.tab === 'appearance' && typeof ThemeMarketplace !== 'undefined') {
+                ThemeMarketplace.renderCarousel();
+            }
         };
     });
+
+    // Appearance: open marketplace fullscreen
+    const openMarketplaceBtn = document.getElementById('btn-theme-marketplace');
+    if (openMarketplaceBtn) {
+        openMarketplaceBtn.onclick = () => {
+            if (typeof ThemeMarketplace !== 'undefined') {
+                ThemeMarketplace.openModal();
+            }
+        };
+    }
+
+    // Appearance: open customizer for current theme
+    const customizeBtn = document.getElementById('btn-theme-customize');
+    if (customizeBtn) {
+        customizeBtn.onclick = () => {
+            const currentThemeId = document.getElementById('set-theme')?.value || App.settings?.appearance?.theme;
+            if (typeof ThemeCustomizer !== 'undefined') {
+                ThemeCustomizer.open(currentThemeId || null);
+            }
+        };
+    }
 
     const fontSizeSlider = document.getElementById('set-fontSize');
     fontSizeSlider.oninput = () => {
@@ -850,6 +885,16 @@ function initSettings() {
             }
         }
     };
+
+    // AutoSave Checkbox Toggle
+    const autoSaveSwitch = document.getElementById('set-autoSave');
+    const autoSaveInput = document.getElementById('set-autoSaveDelay');
+    if (autoSaveSwitch && autoSaveInput) {
+        autoSaveSwitch.onchange = () => {
+            autoSaveInput.disabled = !autoSaveSwitch.checked;
+            autoSaveInput.style.opacity = autoSaveSwitch.checked ? '1' : '0.5';
+        };
+    }
 
     // Reset background button
     document.getElementById('btn-reset-bg').onclick = () => {
@@ -1033,14 +1078,187 @@ function populateThemeDropdowns() {
             editorColorSelect.value = currentValue;
         }
     }
+
+    // Also render horizontal theme carousel
+    populateThemeCarousel(themeList);
+}
+
+let _themeCarouselBound = false;
+function populateThemeCarousel(themeList) {
+    const carousel = document.getElementById('theme-carousel');
+    if (!carousel) return;
+
+    const selected = document.getElementById('set-theme')?.value || App.settings?.appearance?.theme || '';
+
+    carousel.innerHTML = '';
+    themeList.forEach(t => {
+        const themeObj = ThemeManager.themes.get(t.id);
+        const bg = themeObj?.editor?.background || themeObj?.colors?.editorBg || '#1a2530';
+        const accent = themeObj?.colors?.accent || '#88c9ea';
+
+        const pill = document.createElement('div');
+        pill.className = 'theme-pill' + (t.id === selected ? ' active' : '');
+        pill.dataset.themeId = t.id;
+        pill.innerHTML = `
+            <div class="theme-pill-swatch" style="background:${bg}; border-color:${accent}"></div>
+            <div class="theme-pill-title">
+                <div class="theme-pill-name">${t.name}</div>
+                <div class="theme-pill-meta">${t.isBuiltin ? 'Built-in' : 'Custom'} • ${t.type || ''}</div>
+            </div>
+        `;
+
+        // Note: Click handling is done in bindThemeCarouselInteractions via pointerup
+        // to properly distinguish between drag and click
+
+        carousel.appendChild(pill);
+    });
+
+    if (!_themeCarouselBound) {
+        _themeCarouselBound = true;
+        bindThemeCarouselInteractions();
+    }
+}
+
+function selectThemeFromCarousel(themeId, scrollIntoView = false) {
+    const select = document.getElementById('set-theme');
+    if (!select) return;
+    select.value = themeId;
+
+    // Update carousel active state
+    const carousel = document.getElementById('theme-carousel');
+    if (carousel) {
+        carousel.querySelectorAll('.theme-pill').forEach(el => {
+            el.classList.toggle('active', el.dataset.themeId === themeId);
+        });
+        if (scrollIntoView) {
+            const active = carousel.querySelector(`.theme-pill[data-theme-id="${themeId}"]`);
+            active?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+    }
+
+    // Trigger existing flow
+    select.dispatchEvent(new Event('change'));
+}
+
+function bindThemeCarouselInteractions() {
+    const carousel = document.getElementById('theme-carousel');
+    const leftBtn = document.getElementById('theme-carousel-left');
+    const rightBtn = document.getElementById('theme-carousel-right');
+    if (!carousel) return;
+
+    // Wheel: vertical scroll => horizontal browse
+    carousel.addEventListener('wheel', (e) => {
+        // Allow normal scrolling if user is using trackpad horizontal (deltaX)
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        carousel.scrollLeft += delta;
+        e.preventDefault();
+    }, { passive: false });
+
+    // Simple click to select theme - no drag functionality
+    carousel.addEventListener('click', (e) => {
+        const pill = e.target.closest('.theme-pill');
+        if (pill && pill.dataset.themeId) {
+            selectThemeFromCarousel(pill.dataset.themeId, false);
+        }
+    });
+
+    if (leftBtn) {
+        leftBtn.addEventListener('click', () => carousel.scrollBy({ left: -320, behavior: 'smooth' }));
+    }
+    if (rightBtn) {
+        rightBtn.addEventListener('click', () => carousel.scrollBy({ left: 320, behavior: 'smooth' }));
+    }
 }
 
 function updateThemePreview() {
     const theme = document.getElementById('set-theme').value;
-    const colors = THEME_COLORS[theme] || THEME_COLORS['kawaii-dark'];
     const preview = document.getElementById('theme-preview');
     if (!preview) return;
 
+    // Prefer ThemeManager data (supports custom themes)
+    const tmTheme = (typeof ThemeManager !== 'undefined') ? ThemeManager.themes.get(theme) : null;
+    if (tmTheme) {
+        const ui = tmTheme.colors || {};
+        const ed = tmTheme.editor || {};
+        const syntax = ed.syntax || {};
+
+        const headerBg = ui.bgHeader || ui.bgOceanDark || 'rgba(0,0,0,0.2)';
+        const panelBg = ui.bgPanel || ui.bgGlass || 'rgba(0,0,0,0.2)';
+        const editorBg = ed.background || ui.editorBg || '#1a2530';
+        const text = ui.textPrimary || ed.foreground || '#e0f0ff';
+        const muted = ui.textMuted || ui.textSecondary || '#7990a0';
+        const accent = ui.accent || '#88c9ea';
+
+        preview.style.background = editorBg;
+        preview.style.borderColor = headerBg;
+
+        const header = preview.querySelector('.preview-header');
+        if (header) header.style.background = headerBg;
+
+        const tab = preview.querySelector('.preview-tab');
+        if (tab) {
+            tab.style.background = panelBg;
+            tab.style.color = text;
+        }
+
+        const body = preview.querySelector('.preview-body');
+        if (body) body.style.background = panelBg;
+
+        const editor = preview.querySelector('.preview-editor');
+        if (editor) {
+            editor.style.background = editorBg;
+            editor.style.color = text;
+            editor.style.borderColor = ui.border || 'rgba(255,255,255,0.12)';
+        }
+
+        preview.querySelectorAll('.preview-io-panel').forEach(panel => {
+            panel.style.background = panelBg;
+            panel.style.borderColor = ui.border || 'rgba(255,255,255,0.12)';
+        });
+        preview.querySelectorAll('.preview-io-header').forEach(h => {
+            h.style.color = accent;
+            h.style.background = ui.bgButtonHover || 'rgba(0,0,0,0.12)';
+        });
+        preview.querySelectorAll('.preview-io-body').forEach(b => {
+            b.style.color = muted;
+        });
+
+        const term = preview.querySelector('.preview-terminal');
+        if (term) {
+            term.style.background = ui.terminalBg || ui.bgPanel || 'rgba(0,0,0,0.2)';
+            term.style.borderColor = ui.border || 'rgba(255,255,255,0.12)';
+        }
+        const termHeader = preview.querySelector('.preview-term-header');
+        if (termHeader) {
+            termHeader.style.color = accent;
+            termHeader.style.background = ui.bgButtonHover || 'rgba(0,0,0,0.12)';
+        }
+
+        const status = preview.querySelector('.preview-statusbar');
+        if (status) {
+            status.style.background = headerBg;
+            status.style.color = text;
+        }
+
+        // Syntax colors
+        const setSyntax = (sel, key, fallback) => {
+            const el = preview.querySelector(sel);
+            if (!el) return;
+            const raw = syntax?.[key]?.color;
+            el.style.color = raw ? (raw.startsWith('#') ? raw : `#${raw}`) : fallback;
+        };
+        setSyntax('.kw', 'keyword', accent);
+        setSyntax('.str', 'string', '#a3d9a5');
+        setSyntax('.type', 'type', '#e8a8b8');
+        setSyntax('.fn', 'function', '#7ec8e3');
+
+        // Line numbers
+        preview.querySelectorAll('.ln').forEach(ln => (ln.style.color = muted));
+
+        return;
+    }
+
+    const colors = THEME_COLORS[theme] || THEME_COLORS['kawaii-dark'];
     const isLight = theme === 'kawaii-light';
 
 
@@ -1194,6 +1412,12 @@ function updateThemePreview() {
     if (btnSave) {
         btnSave.style.background = colors.accentColor;
         btnSave.style.borderColor = colors.accent;
+        // Get button text color from CSS variable (set by ThemeManager)
+        const buttonTextColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--button-text-on-accent').trim();
+        if (buttonTextColor) {
+            btnSave.style.color = buttonTextColor;
+        }
     }
     const btnReset = document.querySelector('.btn-reset');
     if (btnReset) {
@@ -1207,14 +1431,23 @@ function openSettings() {
     // Populate theme dropdowns dynamically from ThemeManager first
     populateThemeDropdowns();
 
+    // Render theme carousel if marketplace is available
+    if (typeof ThemeMarketplace !== 'undefined') {
+        ThemeMarketplace.renderCarousel();
+    }
+
     document.getElementById('set-fontSize').value = App.settings.editor.fontSize;
     document.getElementById('val-fontSize').textContent = App.settings.editor.fontSize + 'px';
     document.getElementById('set-fontFamily').value = App.settings.editor.fontFamily;
     document.getElementById('set-tabSize').value = App.settings.editor.tabSize;
     document.getElementById('set-minimap').checked = App.settings.editor.minimap;
     document.getElementById('set-wordWrap').checked = App.settings.editor.wordWrap;
-    document.getElementById('set-autoSave').checked = App.settings.editor.autoSave || false;
-    document.getElementById('set-autoSaveDelay').value = App.settings.editor.autoSaveDelay || 3;
+    const autoSaveEnabled = App.settings.editor.autoSave || false;
+    document.getElementById('set-autoSave').checked = autoSaveEnabled;
+    const autoSaveDelayInput = document.getElementById('set-autoSaveDelay');
+    autoSaveDelayInput.value = App.settings.editor.autoSaveDelay || 3;
+    autoSaveDelayInput.disabled = !autoSaveEnabled;
+    autoSaveDelayInput.style.opacity = autoSaveEnabled ? '1' : '0.5';
     document.getElementById('set-liveCheck').checked = App.settings.editor.liveCheck || false;
     document.getElementById('set-liveCheckDelay').value = App.settings.editor.liveCheckDelay || 1000;
     document.getElementById('set-intellisense').checked = App.settings.editor.intellisense !== false;
@@ -1234,6 +1467,8 @@ function openSettings() {
 
     // Set theme values after dropdown is populated
     document.getElementById('set-theme').value = App.settings.appearance.theme;
+    // Sync carousel selection to saved theme
+    selectThemeFromCarousel(App.settings.appearance.theme, true);
     document.getElementById('set-editorColorScheme').value = App.settings.editor.colorScheme || 'auto';
     document.getElementById('set-performanceMode').checked = App.settings.appearance.performanceMode || false;
     document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
@@ -1287,7 +1522,13 @@ function saveSettingsAndClose() {
     App.settings.editor.wordWrap = document.getElementById('set-wordWrap').checked;
     App.settings.editor.colorScheme = document.getElementById('set-editorColorScheme').value;
     App.settings.editor.autoSave = document.getElementById('set-autoSave').checked;
-    App.settings.editor.autoSaveDelay = parseInt(document.getElementById('set-autoSaveDelay').value) || 3;
+
+    // Validate and clamp autoSaveDelay
+    let delay = parseInt(document.getElementById('set-autoSaveDelay').value);
+    if (isNaN(delay) || delay < 1) delay = 3;
+    if (delay > 300) delay = 300;
+    App.settings.editor.autoSaveDelay = delay;
+
     App.settings.editor.liveCheck = document.getElementById('set-liveCheck').checked;
     App.settings.editor.liveCheckDelay = parseInt(document.getElementById('set-liveCheckDelay').value) || 1000;
     App.settings.editor.intellisense = document.getElementById('set-intellisense').checked;
@@ -1308,7 +1549,6 @@ function saveSettingsAndClose() {
 
     App.settings.appearance.theme = document.getElementById('set-theme').value;
     App.settings.appearance.performanceMode = document.getElementById('set-performanceMode').checked;
-    App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
     App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
 
     // Save per-theme background setting
@@ -1760,13 +2000,23 @@ function applyBackgroundSettings() {
 
 
     if (userThemeBg) {
-        document.body.style.background = `url('${userThemeBg}') no-repeat center center fixed`;
+        // Use CSS variable for background-position (set by ThemeManager)
+        // Don't override background-position in inline style - let CSS variable handle it
+        document.body.style.backgroundImage = `url('${userThemeBg.replace(/'/g, "\\'")}')`;
+        document.body.style.backgroundRepeat = 'no-repeat';
+        // background-position is handled by CSS variable --app-bg-position
+        document.body.style.backgroundAttachment = 'fixed';
         document.body.style.backgroundSize = 'cover';
     } else if (themeDefaultBg) {
-        document.body.style.background = `url('${themeDefaultBg}') no-repeat center center fixed`;
+        document.body.style.backgroundImage = `url('${themeDefaultBg.replace(/'/g, "\\'")}')`;
+        document.body.style.backgroundRepeat = 'no-repeat';
+        // background-position is handled by CSS variable --app-bg-position
+        document.body.style.backgroundAttachment = 'fixed';
         document.body.style.backgroundSize = 'cover';
     } else {
         document.body.style.background = themeConfig.default;
+        // Clear background-image when using gradient
+        document.body.style.backgroundImage = 'none';
     }
 
 
@@ -3374,8 +3624,8 @@ function renderProblems() {
             ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'
             : '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>';
         el.innerHTML = `<span class="problem-icon">${icon}</span>
-      <span>${p.message}</span>
-      <span style="margin-left:auto;opacity:0.6">${p.file.split(/[/\\]/).pop()}:${p.line}</span>`;
+      <span class="problem-message">${p.message}</span>
+      <span class="problem-location" style="margin-left:auto;opacity:0.7;color:var(--text-secondary)">${p.file.split(/[/\\]/).pop()}:${p.line}</span>`;
         el.onclick = () => {
             if (App.editor) {
                 App.editor.revealLineInCenter(p.line);

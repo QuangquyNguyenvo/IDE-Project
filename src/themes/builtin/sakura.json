@@ -43,7 +43,8 @@
         "editorBg": "#2d1f2f",
         "terminalBg": "#251a26",
         "settingsLabelColor": "#8b5f65",
-        "settingsSectionColor": "#ff9aaf"
+        "settingsSectionColor": "#ff9aaf",
+        "buttonTextOnAccent": "#ffffff"
     },
     "editor": {
         "base": "vs-dark",
