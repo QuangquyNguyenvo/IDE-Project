@@ -172,6 +172,11 @@ body::before {
     pointer-events: none;
 }
 
+/* Hide app background when customizer is open to prevent overlap */
+body.customizer-open::before {
+    display: none !important;
+}
+
 .app-container {
     display: flex;
     flex-direction: column;
@@ -243,7 +248,7 @@ body::before {
     display: flex;
     gap: 4px;
     -webkit-app-region: no-drag;
-    background: white;
+    background: var(--btn-bg, white);
     padding: 4px;
     border-radius: 12px;
     flex-shrink: 0;
@@ -401,7 +406,7 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
+    background: var(--btn-bg, white);
     border: 2px dashed var(--bg-ocean-medium);
     border-radius: 50%;
     color: var(--bg-ocean-deep);
@@ -434,7 +439,7 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
+    background: var(--btn-bg, white);
     border: 2px solid transparent;
     border-radius: 12px;
     color: var(--bg-ocean-deep);
@@ -458,7 +463,7 @@ body::before {
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background: white;
+    background: var(--btn-bg, white);
     border: 2px solid var(--bg-ocean-medium);
     border-radius: 20px;
     color: var(--bg-ocean-dark);
@@ -619,8 +624,8 @@ body::before {
     align-items: center;
     gap: 6px;
     padding: 6px 10px 6px 12px;
-    background: rgba(239, 248, 254, 0.8);
-    border-bottom: 2px solid white;
+    background: var(--bg-glass-heavy, rgba(239, 248, 254, 0.8));
+    border-bottom: 2px solid var(--border, white);
     flex-wrap: nowrap;
     min-height: 32px;
 }
@@ -639,13 +644,13 @@ body::before {
 }
 
 .panel-title:hover {
-    background: white;
+    background: var(--btn-bg-hover, white);
     color: var(--bg-ocean-dark);
 }
 
 .terminal-section {
     background: var(--bg-glass-heavy);
-    border: 2px solid white;
+    border: 2px solid var(--border, white);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-card);
     display: flex;
@@ -664,8 +669,8 @@ body::before {
 }
 
 .terminal-body {
-    background: #1e2933;
-    color: #e0f0ff;
+    background: var(--terminal-bg, #1e2933);
+    color: var(--text-primary, #e0f0ff);
     flex: 1;
     padding: 12px;
     font-family: 'JetBrains Mono', monospace;
@@ -750,12 +755,18 @@ body::before {
 
 .welcome-box {
     text-align: center;
-    background: white;
+    background: var(--bg-panel, rgba(255, 255, 255, 0.95));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     padding: 40px 60px;
     border-radius: 30px;
-    box-shadow: 0 20px 60px rgba(136, 201, 234, 0.3);
-    border: 4px solid var(--bg-ocean-light);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    border: 4px solid var(--border-strong, var(--bg-ocean-light));
     max-width: 500px;
+    position: relative;
+    z-index: 10;
 }
 
 .welcome-box h1 {
@@ -775,27 +786,85 @@ body::before {
 }
 
 .welcome-btn {
-    background: var(--btn-primary-bg, var(--bg-ocean-deep));
-    border: 2px solid var(--btn-primary-bg, var(--bg-ocean-medium));
+    background: var(--bg-panel, rgba(255, 255, 255, 0.8));
+    border: 1px solid var(--border-strong, var(--accent, #5a9fc8));
     border-radius: 20px;
-    color: var(--btn-primary-text, white);
+    color: var(--text-primary, #2a5a75);
     font-weight: 700;
     padding: 16px 28px;
     width: 140px;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    text-shadow: none;
+    backdrop-filter: blur(5px);
 }
 
 .welcome-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     stroke: currentColor;
+    stroke-width: 2.5px;
+    filter: none;
+    margin-bottom: 8px;
+    /* Assuming icon is above text or flex? No, flex row. */
+    /* Icon is usually inline or flex. Let's keep it simple. */
+    display: block;
+    margin: 0 auto 8px auto;
+    /* Center icon if flex-direction is column? Checking HTML... */
+}
+
+/* Wait, HTML structure:
+<button ...> <svg>...</svg> Text </button>
+Flex direction? theme.css doesn't show flex.
+Let's check if .welcome-btn uses flex. 
+/* Vertical layout for welcome buttons */
+
+.welcome-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-panel, rgba(255, 255, 255, 0.8));
+    border: 2px solid var(--border-strong, var(--accent, #5a9fc8));
+    /* Slightly thicker border */
+    border-radius: 20px;
+    color: var(--text-primary, #2a5a75);
+    font-weight: 700;
+    padding: 16px 28px;
+    width: 140px;
+    height: 120px;
+    /* Give it some height for vertical look */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
+    gap: 12px;
+}
+
+.welcome-btn svg {
+    width: 32px;
+    /* Larger icon for vertical layout */
+    height: 32px;
+    stroke: currentColor;
+    stroke-width: 2.5px;
+    filter: none;
 }
 
 .welcome-btn:hover {
-    transform: translateY(-5px) rotate(-2deg);
-    background: white;
-    border-color: var(--bg-ocean-deep);
-    box-shadow: 0 8px 20px rgba(136, 201, 234, 0.2);
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    /* Remove background change to prevent "white flash" */
+    /* background: var(--bg-panel-hover, white); */
+
+    /* Use a strong blurry shadow instead */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px var(--bg-glass-heavy);
+    filter: brightness(1.05);
+    /* Very subtle lift */
+}
+
+.welcome-btn:hover svg {
+    stroke: currentColor;
+    filter: none;
+    /* No glow on icon */
 }
 
 /* Settings Popup - True Kawaii Style */

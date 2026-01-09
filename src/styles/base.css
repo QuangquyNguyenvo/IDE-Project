@@ -441,7 +441,7 @@ body::after {
     align-items: center;
     gap: 12px;
     padding: 8px 16px;
-    background: rgba(239, 248, 254, 0.8);
+    background: var(--bg-panel, rgba(239, 248, 254, 0.8));
     border-bottom: 2px solid white;
 }
 
@@ -473,8 +473,8 @@ body::after {
 }
 
 .terminal-body {
-    background: #1e2933;
-    color: #e0f0ff;
+    background: var(--terminal-bg, #1e2933);
+    color: var(--text-primary, #e0f0ff);
     flex: 1;
     padding: 12px;
     font-family: 'JetBrains Mono', monospace;

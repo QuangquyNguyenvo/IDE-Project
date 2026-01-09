@@ -910,12 +910,44 @@
 }
 
 /* Welcome screen */
-[data-theme="kawaii-dark"] .welcome-box,
-[data-theme="dracula"] .welcome-box,
-[data-theme="monokai"] .welcome-box,
+[data-theme="kawaii-dark"] .welcome-box {
+    background: rgba(26, 37, 48, 0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-color: var(--border-strong, var(--border));
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+[data-theme="dracula"] .welcome-box {
+    background: rgba(40, 42, 54, 0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-color: var(--border-strong, var(--border));
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+[data-theme="monokai"] .welcome-box {
+    background: rgba(39, 40, 34, 0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-color: var(--border-strong, var(--border));
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
 [data-theme="nord"] .welcome-box {
-    background: var(--bg-panel);
-    border-color: var(--border);
+    background: rgba(46, 52, 64, 0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-color: var(--border-strong, var(--border));
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 
 [data-theme="kawaii-dark"] .welcome-box h1,

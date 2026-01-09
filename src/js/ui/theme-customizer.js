@@ -55,9 +55,27 @@ const ThemeCustomizer = {
         this.historyStack = [this._deepClone(this.workingTheme)];
         this.historyIndex = 0;
 
+        // Temporarily hide app background to prevent overlap with live preview
+        // Store original values for restoration on close
+        const root = document.documentElement;
+        this._savedAppBgOpacity = root.style.getPropertyValue('--app-bg-opacity');
+        this._savedEditorBgOpacity = root.style.getPropertyValue('--editor-bg-opacity');
+        this._savedAppBgImage = root.style.getPropertyValue('--app-bg-image');
+        this._savedEditorBgImage = root.style.getPropertyValue('--editor-bg-image');
+
+        // Hide both opacity and image to prevent any overlap
+        root.style.setProperty('--app-bg-opacity', '0');
+        root.style.setProperty('--editor-bg-opacity', '0');
+        root.style.setProperty('--app-bg-image', 'none');
+        root.style.setProperty('--editor-bg-image', 'none');
+
+        // Add class to body to completely hide app background via CSS
+        document.body.classList.add('customizer-open');
+
         this._createUI();
         this._bindEvents();
         this._renderPreview();
+        this._setupBgDrag(); // Setup drag handlers for background positioning
         this._updateBgStyles(); // Force backgrounds to load immediately on open
         this._updateHistoryButtons(); // Initialize undo/redo button states
 
@@ -71,6 +89,11 @@ const ThemeCustomizer = {
      * Close customizer
      */
     close() {
+        // Exit drag mode first to reset state
+        if (this.bgDragMode) {
+            this._exitDragMode();
+        }
+
         // Cleanup drag handlers
         this._cleanupBgDrag();
 
@@ -84,9 +107,6 @@ const ThemeCustomizer = {
 
         this._hideColorPicker();
 
-        // Cleanup drag handlers
-        this._cleanupBgDrag();
-
         if (this._escHandler) {
             document.removeEventListener('keydown', this._escHandler);
             this._escHandler = null;
@@ -96,6 +116,58 @@ const ThemeCustomizer = {
             cancelAnimationFrame(this._renderTimeout);
             this._renderTimeout = null;
         }
+
+        // Restore app background opacity and images
+        const root = document.documentElement;
+        const activeTheme = ThemeManager.themes.get(ThemeManager.activeThemeId);
+
+        // Restore opacity
+        if (this._savedAppBgOpacity) {
+            root.style.setProperty('--app-bg-opacity', this._savedAppBgOpacity);
+        } else if (activeTheme?.colors?.bgOpacity !== undefined) {
+            root.style.setProperty('--app-bg-opacity', (activeTheme.colors.bgOpacity / 100).toString());
+        } else {
+            root.style.removeProperty('--app-bg-opacity');
+        }
+
+        if (this._savedEditorBgOpacity) {
+            root.style.setProperty('--editor-bg-opacity', this._savedEditorBgOpacity);
+        } else if (activeTheme?.colors?.editorBgOpacity !== undefined) {
+            root.style.setProperty('--editor-bg-opacity', (activeTheme.colors.editorBgOpacity / 100).toString());
+        } else {
+            root.style.removeProperty('--editor-bg-opacity');
+        }
+
+        // Restore background images
+        if (this._savedAppBgImage) {
+            root.style.setProperty('--app-bg-image', this._savedAppBgImage);
+        } else if (activeTheme?.colors?.appBackground) {
+            const bgUrl = activeTheme.colors.appBackground.startsWith('data:')
+                ? `url("${activeTheme.colors.appBackground}")`
+                : `url('${activeTheme.colors.appBackground.replace(/'/g, "\\'")}')`;
+            root.style.setProperty('--app-bg-image', bgUrl);
+        } else {
+            root.style.removeProperty('--app-bg-image');
+        }
+
+        if (this._savedEditorBgImage) {
+            root.style.setProperty('--editor-bg-image', this._savedEditorBgImage);
+        } else if (activeTheme?.colors?.editorBackground) {
+            const bgUrl = activeTheme.colors.editorBackground.startsWith('data:')
+                ? `url("${activeTheme.colors.editorBackground}")`
+                : `url('${activeTheme.colors.editorBackground.replace(/'/g, "\\'")}')`;
+            root.style.setProperty('--editor-bg-image', bgUrl);
+        } else {
+            root.style.removeProperty('--editor-bg-image');
+        }
+
+        this._savedAppBgOpacity = null;
+        this._savedEditorBgOpacity = null;
+        this._savedAppBgImage = null;
+        this._savedEditorBgImage = null;
+
+        // Remove customizer-open class from body
+        document.body.classList.remove('customizer-open');
 
         this.workingTheme = null;
         this.sourceThemeId = null;
@@ -1626,6 +1698,27 @@ const ThemeCustomizer = {
                         ${this._renderColorItem('border', 'Border Color')}
                     </div>
                 </div>
+                
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Button Colors</div>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('bgButton', 'Button Background')}
+                        ${this._renderColorItem('bgButtonHover', 'Button Hover')}
+                        ${this._renderColorItem('bgOceanLight', 'Light Accent')}
+                        ${this._renderColorItem('bgOceanMedium', 'Medium Accent')}
+                        ${this._renderColorItem('bgOceanDeep', 'Deep Accent')}
+                        ${this._renderColorItem('bgOceanDark', 'Dark Accent')}
+                    </div>
+                </div>
+                
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Border & Glass</div>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('borderStrong', 'Strong Border')}
+                        ${this._renderColorItem('bgGlass', 'Glass Background')}
+                        ${this._renderColorItem('bgGlassHeavy', 'Heavy Glass')}
+                    </div>
+                </div>
             </div>
             
             <!-- Syntax Colors Panel -->
@@ -2010,12 +2103,32 @@ const ThemeCustomizer = {
         const reader = new FileReader();
         reader.onload = (ev) => {
             if (!this.workingTheme.colors) this.workingTheme.colors = {};
+
+            // Remove old background element to prevent overlap issues
+            if (key === 'appBackground') {
+                const oldBg = this.popup?.querySelector('.tc6-ide-bg');
+                if (oldBg) oldBg.remove();
+            } else if (key === 'editorBackground') {
+                const oldEditorBg = this.popup?.querySelector('.tc6-editor-bg');
+                if (oldEditorBg) oldEditorBg.remove();
+            }
+
+            // Set new background
             this.workingTheme.colors[key] = ev.target.result;
             this._updateBgHints();
+
+            // Force immediate re-render to show new background
             this._renderPreview();
+
+            // Re-setup drag handlers since DOM was replaced
+            this._setupBgDrag();
+
+            // Reset file input to allow re-uploading the same file
+            e.target.value = '';
         };
         reader.readAsDataURL(file);
     },
+
 
     /**
      * Setup background drag
@@ -2743,10 +2856,14 @@ const ThemeCustomizer = {
 
     /**
      * Update preview without full re-render (preserves editor background)
+     * Rewrote to avoid fallback which causes visual conflicts
      */
     _updatePreviewWithoutRerender(key) {
         // Map base keys to all their variants
         const keyVariants = this._getKeyVariants(key);
+
+        const c = this.workingTheme?.colors || {};
+        const color = this._getColor(key);
 
         // Find all elements matching this key or its variants
         let elements = [];
@@ -2757,18 +2874,29 @@ const ThemeCustomizer = {
             }
         });
 
-        if (elements.length === 0) {
-            // Fallback to full render if element not found
-            this._renderPreview();
-            return;
-        }
-
-        const c = this.workingTheme?.colors || {};
-        const color = this._getColor(key);
-
+        // Update all found elements
         elements.forEach(el => {
-            // Update background color
-            if (el.style.background || el.style.backgroundColor) {
+            // Check what type of color property this element uses
+            const computedStyle = el.style;
+
+            // Update colors appropriately based on element type
+            if (key.startsWith('text') || key.startsWith('syntax')) {
+                // Text color keys - update color property
+                el.style.color = color;
+            } else if (key === 'accent' || key === 'success' || key === 'error' || key === 'warning') {
+                // Status/accent colors - update background for indicators, color for text
+                if (el.classList.contains('tc6-clickable') && el.textContent) {
+                    // Text element with accent color
+                    if (el.style.background || el.style.backgroundColor) {
+                        el.style.backgroundColor = color;
+                    } else {
+                        el.style.color = color;
+                    }
+                } else {
+                    el.style.backgroundColor = color;
+                }
+            } else {
+                // Background colors - apply with opacity if needed
                 const opacity = this._getOpacity(key);
                 if (opacity !== undefined && opacity < 100) {
                     const rgb = this._hexToRgb(color);
@@ -2778,18 +2906,18 @@ const ThemeCustomizer = {
                 } else {
                     el.style.backgroundColor = color;
                 }
-            }
 
-            // Update border if supported
-            if (this._supportsBorder(key) && c.border) {
-                el.style.borderColor = c.border;
-                if (c.borderWidth) {
-                    el.style.borderWidth = c.borderWidth + 'px';
+                // Update border if supported
+                if (this._supportsBorder(key) && c.border) {
+                    el.style.borderColor = c.border;
+                    if (c.borderWidth) {
+                        el.style.borderWidth = c.borderWidth + 'px';
+                    }
                 }
             }
         });
 
-        // Update background styles separately to preserve editor background
+        // Always update background styles to keep them in sync
         this._updateBgStyles();
     },
 
@@ -3221,6 +3349,11 @@ const ThemeCustomizer = {
             return;
         }
 
+        // Exit drag mode if active
+        if (this.bgDragMode) {
+            this._exitDragMode();
+        }
+
         const name = this.popup?.querySelector('#tc6-name')?.value?.trim() || this.workingTheme.name;
         this.workingTheme.name = name;
 
@@ -3264,6 +3397,13 @@ const ThemeCustomizer = {
             // Show success notification
             this._showSaveNotification(`Theme "${name}" đã được cập nhật thành công!`);
 
+            // CRITICAL: Clear saved values so close() won't restore old values
+            // The new theme was just applied by ThemeManager.setTheme() above
+            this._savedAppBgOpacity = null;
+            this._savedEditorBgOpacity = null;
+            this._savedAppBgImage = null;
+            this._savedEditorBgImage = null;
+
             // Close customizer after save (Save & Close behavior)
             this.close();
         } else {
@@ -3286,60 +3426,61 @@ const ThemeCustomizer = {
     },
 
     /**
-     * Refresh header buttons (after save as new to show Save/Delete)
+     * Refresh footer buttons (after save as new to show Save & Close/Delete)
      */
     _refreshHeaderButtons() {
-        const actionsContainer = this.popup?.querySelector('.tc6-actions');
-        if (!actionsContainer) return;
+        const footerRight = this.popup?.querySelector('.tc6-footer-right');
+        const footerLeft = this.popup?.querySelector('.tc6-footer-left');
+        if (!footerRight) return;
 
         const isCustomTheme = this.sourceThemeId &&
             !ThemeManager.builtinThemeIds.includes(this.sourceThemeId);
 
-        // Rebuild actions HTML
-        actionsContainer.innerHTML = `
-            <button class="tc6-btn" id="tc6-reset" title="Reset changes">
+        // Rebuild footer-left HTML (Reset + Delete + Auto-save indicator)
+        if (footerLeft) {
+            footerLeft.innerHTML = `
+                <button class="tc6-btn-reset" id="tc6-reset">Reset</button>
+                ${isCustomTheme ? `
+                <button class="tc6-btn-delete" id="tc6-delete">Delete Theme</button>
+                ` : ''}
+                <!-- Auto-save indicator -->
+                <span class="tc6-autosave-indicator" id="tc6-autosave" style="display: none;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Saved
+                </span>
+            `;
+
+            // Rebind footer-left button events
+            footerLeft.querySelector('#tc6-reset')?.addEventListener('click', () => this._reset());
+            footerLeft.querySelector('#tc6-delete')?.addEventListener('click', () => this._deleteTheme());
+        }
+
+        // Rebuild footer-right HTML (Create New + Save & Close)
+        footerRight.innerHTML = `
+            <!-- Save as New - Secondary -->
+            <button class="tc6-btn-secondary" id="tc6-save-new">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                    <path d="M3 3v5h5"/>
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
-                Reset
+                Create New Theme
             </button>
             ${isCustomTheme ? `
-            <button class="tc6-btn tc6-btn-danger" id="tc6-delete" title="Delete this theme">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                Delete
-            </button>
-            <button class="tc6-btn tc6-btn-accent" id="tc6-save" title="Save changes">
+            <!-- Save & Close - Primary -->
+            <button class="tc6-btn-save" id="tc6-save">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                     <polyline points="17 21 17 13 7 13 7 21"/>
                 </svg>
-                Save
+                Save & Close
             </button>
             ` : ''}
-            <button class="tc6-btn tc6-btn-primary" id="tc6-save-new" title="Save as new theme">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Save as New
-            </button>
-            <button class="tc6-btn tc6-btn-close" id="tc6-close">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
         `;
 
-        // Rebind button events
-        actionsContainer.querySelector('#tc6-close')?.addEventListener('click', () => this.close());
-        actionsContainer.querySelector('#tc6-reset')?.addEventListener('click', () => this._reset());
-        actionsContainer.querySelector('#tc6-save')?.addEventListener('click', () => this._saveOverwrite());
-        actionsContainer.querySelector('#tc6-save-new')?.addEventListener('click', () => this._saveAsNew());
-        actionsContainer.querySelector('#tc6-delete')?.addEventListener('click', () => this._deleteTheme());
+        // Rebind footer-right button events
+        footerRight.querySelector('#tc6-save')?.addEventListener('click', () => this._saveOverwrite());
+        footerRight.querySelector('#tc6-save-new')?.addEventListener('click', () => this._saveAsNew());
     },
 
     /**
