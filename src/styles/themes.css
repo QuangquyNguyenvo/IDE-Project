@@ -54,6 +54,13 @@
     --editor-bg: #1a2530;
     --terminal-bg: #1e2933;
 
+    /* Button Variables - Dark Theme */
+    --btn-bg: rgba(255, 255, 255, 0.1);
+    --btn-bg-hover: rgba(255, 255, 255, 0.15);
+    --btn-border: var(--border);
+    --btn-text: var(--text-primary);
+    --btn-text-hover: var(--accent);
+
     /* Settings label text */
     --settings-label-color: #e0f0ff;
     --settings-section-color: #88c9ea;
@@ -163,6 +170,13 @@
     --editor-bg: #282a36;
     --terminal-bg: #21222c;
 
+    /* Button Variables - Dark Theme */
+    --btn-bg: rgba(255, 255, 255, 0.1);
+    --btn-bg-hover: rgba(255, 255, 255, 0.15);
+    --btn-border: var(--border);
+    --btn-text: var(--text-primary);
+    --btn-text-hover: var(--accent);
+
     /* Settings label text */
     --settings-label-color: #f8f8f2;
     --settings-section-color: #bd93f9;
@@ -206,6 +220,13 @@
     --editor-bg: #272822;
     --terminal-bg: #1e1f1c;
 
+    /* Button Variables - Dark Theme */
+    --btn-bg: rgba(255, 255, 255, 0.08);
+    --btn-bg-hover: rgba(255, 255, 255, 0.12);
+    --btn-border: var(--border);
+    --btn-text: var(--text-primary);
+    --btn-text-hover: var(--accent);
+
     /* Settings label text */
     --settings-label-color: #f8f8f2;
     --settings-section-color: #a6e22e;
@@ -248,6 +269,13 @@
 
     --editor-bg: #2e3440;
     --terminal-bg: #242931;
+
+    /* Button Variables - Dark Theme */
+    --btn-bg: rgba(255, 255, 255, 0.08);
+    --btn-bg-hover: rgba(255, 255, 255, 0.12);
+    --btn-border: var(--border);
+    --btn-text: var(--text-primary);
+    --btn-text-hover: var(--accent);
 
     /* Settings label text */
     --settings-label-color: #eceff4;
@@ -537,6 +565,7 @@
 [data-theme="nord"] .terminal-body {
     background: var(--terminal-bg);
     color: var(--text-primary);
+    opacity: var(--terminal-opacity, 1);
 }
 
 [data-theme="kawaii-dark"] .terminal-input,
@@ -905,30 +934,10 @@
     color: var(--text-secondary);
 }
 
-[data-theme="kawaii-dark"] .welcome-btn,
-[data-theme="dracula"] .welcome-btn,
-[data-theme="monokai"] .welcome-btn,
-[data-theme="nord"] .welcome-btn {
-    background: var(--bg-button);
-    border-color: var(--border);
-    color: var(--text-primary);
-}
+/* Welcome screen buttons now use CSS variables from base theme.css */
+/* Removed theme-specific overrides - base styles work for all themes including custom ones */
 
-[data-theme="kawaii-dark"] .welcome-btn:hover,
-[data-theme="dracula"] .welcome-btn:hover,
-[data-theme="monokai"] .welcome-btn:hover,
-[data-theme="nord"] .welcome-btn:hover {
-    background: var(--bg-button-hover);
-    border-color: var(--bg-ocean-deep);
-}
-
-[data-theme="kawaii-dark"] .welcome-btn svg,
-[data-theme="dracula"] .welcome-btn svg,
-[data-theme="monokai"] .welcome-btn svg,
-[data-theme="nord"] .welcome-btn svg {
-    stroke: var(--bg-ocean-deep);
-}
-
+/* Split View */
 /* Clear and panel close buttons */
 [data-theme="kawaii-dark"] .clear-btn,
 [data-theme="dracula"] .clear-btn,
@@ -4617,12 +4626,16 @@ body[data-theme="sakura"] .tc-footer .tc-btn.primary {
     font-size: 9px;
     color: var(--text-muted);
 }
+
 /* ============================================================================ */
 /* THEME CUSTOMIZER V4 (Redesigned) */
 /* ============================================================================ */
 #theme-customizer-v4 {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -4786,7 +4799,7 @@ body[data-theme="sakura"] .tc-footer .tc-btn.primary {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
@@ -4812,7 +4825,8 @@ body[data-theme="sakura"] .tc-footer .tc-btn.primary {
 
 .tc-preview-pane {
     flex: 1;
-    background: #1e1e1e; /* Consistent dark bg for preview container */
+    background: #1e1e1e;
+    /* Consistent dark bg for preview container */
     padding: 20px;
     display: flex;
     align-items: center;
@@ -4827,7 +4841,7 @@ body[data-theme="sakura"] .tc-footer .tc-btn.primary {
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.6);
     color: white;
     padding: 6px 16px;
     border-radius: 20px;
@@ -4847,7 +4861,7 @@ body[data-theme="sakura"] .tc-footer .tc-btn.primary {
     background: var(--bg-panel, #fff);
     border: 1px solid var(--border, #eee);
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     padding: 16px;
     z-index: 10001;
     display: none;
@@ -4860,7 +4874,13 @@ body[data-theme="sakura"] .tc-footer .tc-btn.primary {
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
 
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

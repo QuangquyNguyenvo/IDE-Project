@@ -161,7 +161,7 @@ body::after {
     display: flex;
     gap: 4px;
     -webkit-app-region: no-drag;
-    background: white;
+    background: var(--bg-button, white);
     padding: 4px;
     border-radius: 12px;
 }
@@ -171,7 +171,7 @@ body::after {
     background: transparent;
     border: none;
     border-radius: 8px;
-    color: var(--text-secondary);
+    color: var(--btn-text, var(--text-secondary));
     cursor: pointer;
     font-family: 'Nunito', sans-serif;
     font-size: 14px;
@@ -180,14 +180,14 @@ body::after {
 }
 
 .menu-btn:hover {
-    background: var(--bg-ocean-light);
-    color: var(--bg-ocean-dark);
+    background: var(--btn-bg-hover, var(--bg-ocean-light));
+    color: var(--btn-text-hover, var(--bg-ocean-dark));
     transform: translateY(-1px);
 }
 
 .menu-btn.active {
-    background: var(--bg-ocean-deep);
-    color: white;
+    background: var(--btn-primary-bg, var(--bg-ocean-deep));
+    color: var(--btn-primary-text, white);
     transform: scale(0.95);
 }
 
@@ -310,22 +310,22 @@ body::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
+    background: var(--bg-button, white);
     border: 2px solid transparent;
     border-radius: 12px;
-    color: var(--bg-ocean-deep);
+    color: var(--accent, var(--bg-ocean-deep));
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .toggle-btn:hover {
-    background: var(--bg-ocean-light);
+    background: var(--btn-bg-hover, var(--bg-ocean-light));
     transform: scale(1.05);
 }
 
 .toggle-btn.active {
-    background: var(--bg-ocean-medium);
-    color: var(--text-primary);
+    background: var(--btn-primary-bg, var(--bg-ocean-medium));
+    color: var(--btn-primary-text, var(--text-primary));
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -334,10 +334,10 @@ body::after {
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background: white;
-    border: 2px solid var(--bg-ocean-medium);
+    background: var(--bg-button, white);
+    border: 2px solid var(--border, var(--bg-ocean-medium));
     border-radius: 20px;
-    color: var(--bg-ocean-dark);
+    color: var(--btn-text, var(--bg-ocean-dark));
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
@@ -484,7 +484,7 @@ body::after {
 
 /* Dialogs / Dropdowns */
 .dropdown {
-    background: white;
+    background: var(--bg-panel, white);
     border: 2px solid var(--border);
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(136, 201, 234, 0.25);
@@ -511,8 +511,8 @@ body::after {
 }
 
 .dropdown-item:hover {
-    background: var(--bg-ocean-light);
-    color: var(--bg-ocean-dark);
+    background: var(--btn-bg-hover, var(--bg-ocean-light));
+    color: var(--btn-text-hover, var(--bg-ocean-dark));
 }
 
 @keyframes popIn {
@@ -539,11 +539,11 @@ body::after {
 
 .welcome-box {
     text-align: center;
-    background: white;
+    background: var(--bg-panel, white);
     padding: 40px 60px;
     border-radius: 30px;
     box-shadow: 0 20px 60px rgba(136, 201, 234, 0.3);
-    border: 4px solid var(--bg-ocean-light);
+    border: 4px solid var(--border, var(--bg-ocean-light));
     max-width: 500px;
 }
 

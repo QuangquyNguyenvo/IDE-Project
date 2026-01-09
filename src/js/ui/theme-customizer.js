@@ -58,6 +58,7 @@ const ThemeCustomizer = {
         this._createUI();
         this._bindEvents();
         this._renderPreview();
+        this._updateBgStyles(); // Force backgrounds to load immediately on open
         this._updateHistoryButtons(); // Initialize undo/redo button states
 
         // Show with animation
@@ -1657,6 +1658,11 @@ const ThemeCustomizer = {
                         <label class="tc6-field-label">Image</label>
                         <div class="tc6-upload-row">
                             <input type="text" class="tc6-input" id="tc6-app-bg-url" value="" placeholder="Image URL or upload..." readonly>
+                            <button class="tc6-bg-drag-btn" id="tc6-app-bg-drag" data-bg-type="app" title="Drag to reposition background">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3"/>
+                                </svg>
+                            </button>
                             <button class="tc6-upload-btn" id="tc6-app-bg-btn">Upload</button>
                             <button class="tc6-clear-btn" id="tc6-app-bg-clear">✕</button>
                             <input type="file" id="tc6-app-bg-file" accept="image/*" style="display:none">
@@ -1684,6 +1690,11 @@ const ThemeCustomizer = {
                         <label class="tc6-field-label">Image</label>
                         <div class="tc6-upload-row">
                             <input type="text" class="tc6-input" id="tc6-editor-bg-url" value="" placeholder="Image URL or upload..." readonly>
+                            <button class="tc6-bg-drag-btn" id="tc6-editor-bg-drag" data-bg-type="editor" title="Drag to reposition background">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3"/>
+                                </svg>
+                            </button>
                             <button class="tc6-upload-btn" id="tc6-editor-bg-btn">Upload</button>
                             <button class="tc6-clear-btn" id="tc6-editor-bg-clear">✕</button>
                             <input type="file" id="tc6-editor-bg-file" accept="image/*" style="display:none">
@@ -1909,6 +1920,27 @@ const ThemeCustomizer = {
             this._renderPreview();
         });
 
+        // App background drag button
+        const appBgDrag = container.querySelector('#tc6-app-bg-drag');
+        appBgDrag?.addEventListener('click', () => {
+            if (!this.workingTheme?.colors?.appBackground) {
+                alert('Please upload an app background first!');
+                return;
+            }
+            // Enter drag mode for app background
+            this.bgDragMode = true;
+            this._isDraggingEditor = false;
+            this._updateDragModeHint();
+
+            // Update UI
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (wrapper) wrapper.style.cursor = 'grab';
+            const ide = this.popup?.querySelector('.tc6-ide');
+            const content = this.popup?.querySelector('.tc6-ide-content');
+            if (ide) ide.classList.add('tc6-drag-mode');
+            if (content) content.classList.add('tc6-dimmed');
+        });
+
         // Editor background upload
         const editorBgBtn = container.querySelector('#tc6-editor-bg-btn');
         const editorBgFile = container.querySelector('#tc6-editor-bg-file');
@@ -1922,6 +1954,27 @@ const ThemeCustomizer = {
             delete this.workingTheme.colors.editorBackground;
             this._updateBgHints();
             this._renderPreview();
+        });
+
+        // Editor background drag button
+        const editorBgDrag = container.querySelector('#tc6-editor-bg-drag');
+        editorBgDrag?.addEventListener('click', () => {
+            if (!this.workingTheme?.colors?.editorBackground) {
+                alert('Please upload an editor background first!');
+                return;
+            }
+            // Enter drag mode for editor background
+            this.bgDragMode = true;
+            this._isDraggingEditor = true;
+            this._updateDragModeHint();
+
+            // Update UI
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (wrapper) wrapper.style.cursor = 'grab';
+            const ide = this.popup?.querySelector('.tc6-ide');
+            const content = this.popup?.querySelector('.tc6-ide-content');
+            if (ide) ide.classList.add('tc6-drag-mode');
+            if (content) content.classList.add('tc6-dimmed');
         });
 
         // Sliders

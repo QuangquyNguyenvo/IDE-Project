@@ -136,7 +136,16 @@ const ThemeManager = {
                     terminalBg: '#152535',
                     settingsLabelColor: '#a0c0d0',
                     settingsSectionColor: '#88c9ea',
-                    buttonTextOnAccent: '#ffffff'
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties for custom themes
+                    btnBg: 'rgba(255, 255, 255, 0.1)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.15)',
+                    btnBorder: '#3a6075',
+                    btnText: '#e0f0ff',
+                    btnTextHover: '#88c9ea',
+                    btnPrimaryBg: '#88c9ea',
+                    btnPrimaryBgHover: '#5eb7e0',
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -184,7 +193,16 @@ const ThemeManager = {
                     terminalBg: '#152535',
                     settingsLabelColor: '#4a6a7a',
                     settingsSectionColor: '#4a9bc9',
-                    buttonTextOnAccent: '#ffffff'
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties
+                    btnBg: '#ffffff',
+                    btnBgHover: '#e8f4fc',
+                    btnBorder: '#a0c8e0',
+                    btnText: '#2a4a5a',
+                    btnTextHover: '#4a9bc9',
+                    btnPrimaryBg: '#4a9bc9',
+                    btnPrimaryBgHover: '#3a8ab8',
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -232,7 +250,16 @@ const ThemeManager = {
                     terminalBg: '#251a26',
                     settingsLabelColor: '#8b5f65',
                     settingsSectionColor: '#ff9aaf',
-                    buttonTextOnAccent: '#ffffff'
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties
+                    btnBg: '#fff0f5',
+                    btnBgHover: '#ffe4e1',
+                    btnBorder: '#ffcad4',
+                    btnText: '#5d4a4d',
+                    btnTextHover: '#ff9aaf',
+                    btnPrimaryBg: '#ff9aaf',
+                    btnPrimaryBgHover: '#ff758f',
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -286,7 +313,16 @@ const ThemeManager = {
                     terminalBg: '#21222c',
                     settingsLabelColor: '#f8f8f2',
                     settingsSectionColor: '#bd93f9',
-                    buttonTextOnAccent: '#ffffff'
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties
+                    btnBg: 'rgba(255, 255, 255, 0.1)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.15)',
+                    btnBorder: '#6272a4',
+                    btnText: '#f8f8f2',
+                    btnTextHover: '#ff79c6',
+                    btnPrimaryBg: '#ff79c6',
+                    btnPrimaryBgHover: '#ff92d0',
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -333,7 +369,16 @@ const ThemeManager = {
                     terminalBg: '#1e1f1c',
                     settingsLabelColor: '#f8f8f2',
                     settingsSectionColor: '#a6e22e',
-                    buttonTextOnAccent: '#272822'
+                    buttonTextOnAccent: '#272822',
+                    // Button properties
+                    btnBg: 'rgba(255, 255, 255, 0.08)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.12)',
+                    btnBorder: '#49483e',
+                    btnText: '#f8f8f2',
+                    btnTextHover: '#a6e22e',
+                    btnPrimaryBg: '#a6e22e',
+                    btnPrimaryBgHover: '#b8f32e',
+                    btnPrimaryText: '#272822'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -380,7 +425,16 @@ const ThemeManager = {
                     terminalBg: '#242933',
                     settingsLabelColor: '#d8dee9',
                     settingsSectionColor: '#88c0d0',
-                    buttonTextOnAccent: '#2e3440'
+                    buttonTextOnAccent: '#2e3440',
+                    // Button properties
+                    btnBg: 'rgba(255, 255, 255, 0.08)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.12)',
+                    btnBorder: '#4c566a',
+                    btnText: '#eceff4',
+                    btnTextHover: '#88c0d0',
+                    btnPrimaryBg: '#88c0d0',
+                    btnPrimaryBgHover: '#8fbcbb',
+                    btnPrimaryText: '#2e3440'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -612,7 +666,25 @@ const ThemeManager = {
             'terminalBg': '--terminal-bg',
             'settingsLabelColor': '--settings-label-color',
             'settingsSectionColor': '--settings-section-color',
-            'buttonTextOnAccent': '--button-text-on-accent'
+            'buttonTextOnAccent': '--button-text-on-accent',
+
+            // Button CSS Variables
+            'btnBg': '--btn-bg',
+            'btnBgHover': '--btn-bg-hover',
+            'btnBorder': '--btn-border',
+            'btnText': '--btn-text',
+            'btnTextHover': '--btn-text-hover',
+            'btnPrimaryBg': '--btn-primary-bg',
+            'btnPrimaryBgHover': '--btn-primary-bg-hover',
+            'btnPrimaryText': '--btn-primary-text',
+            'btnSuccessBg': '--btn-success-bg',
+            'btnSuccessText': '--btn-success-text',
+            'btnErrorBg': '--btn-error-bg',
+            'btnErrorText': '--btn-error-text',
+
+            // Opacity variables
+            'terminalOpacity': '--terminal-opacity',
+            'panelOpacity': '--panel-opacity'
         };
 
         // 1. First clear all existing theme variables from root style

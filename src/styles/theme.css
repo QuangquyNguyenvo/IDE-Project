@@ -56,10 +56,29 @@
     --settings-label-color: #5a8a95;
     --settings-section-color: #5a9fc8;
 
-
     --editor-bg: #ffffff;
     --terminal-bg: #1e2933;
     /* Terminal usually keeps dark for better contrast */
+
+    /* Button Variables - Theme-Aware */
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #f0f8fe;
+    --btn-border: var(--border, #e0f0ff);
+    --btn-text: var(--text-primary, #2a5a75);
+    --btn-text-hover: var(--accent, #88c9ea);
+
+    --btn-primary-bg: var(--accent, #88c9ea);
+    --btn-primary-bg-hover: var(--accent-hover, #5eb7e0);
+    --btn-primary-text: #ffffff;
+
+    --btn-success-bg: var(--success, #a3d9a5);
+    --btn-success-text: #ffffff;
+    --btn-error-bg: var(--error, #ff8fab);
+    --btn-error-text: #ffffff;
+
+    /* Opacity Variables for Components */
+    --terminal-opacity: 1;
+    --panel-opacity: 1;
 
     /* Effect Variables (Quality Mode) */
     --shadow-soft: 0 8px 16px rgba(136, 201, 234, 0.2);
@@ -756,14 +775,20 @@ body::before {
 }
 
 .welcome-btn {
-    background: var(--bg-ocean-light);
-    border: 2px solid var(--bg-ocean-medium);
+    background: var(--btn-primary-bg, var(--bg-ocean-deep));
+    border: 2px solid var(--btn-primary-bg, var(--bg-ocean-medium));
     border-radius: 20px;
-    color: var(--bg-ocean-dark);
+    color: var(--btn-primary-text, white);
     font-weight: 700;
-    padding: 20px 30px;
+    padding: 16px 28px;
     width: 140px;
     transition: all 0.2s;
+}
+
+.welcome-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
 }
 
 .welcome-btn:hover {

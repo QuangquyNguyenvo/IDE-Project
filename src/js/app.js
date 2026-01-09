@@ -811,24 +811,14 @@ function initSettings() {
         document.getElementById('val-fontSize').textContent = fontSizeSlider.value + 'px';
     };
 
-    // Live Background Opacity
+    // Live Background Opacity (optional - may not exist if Background section removed)
     const bgOpacitySlider = document.getElementById('set-bgOpacity');
-    bgOpacitySlider.oninput = () => {
-        const val = bgOpacitySlider.value;
-        document.getElementById('val-bgOpacity').textContent = val + '%';
-        // Live apply opacity
-        const appContainer = document.querySelector('.app-container');
-        if (appContainer) {
-            // Calculate opacity value (inverse of transparency)
-            // If slider is 100% -> Solid background, no transparency
-            // But usually this controls background dimmer overlay or glass effect
-            // Let's assume it controls the alpha channel of --bg-glass variables roughly
-            // Or easier: update the variable directly if supported, or just let user save.
-            // Actually, let's keep it simple: just update UI number here, apply logic in applySettings.
-            // BUT user wants "change everything", so let's try to apply settings partially if possible.
-            // For now, let's stick to THEME live update as requested primarily.
-        }
-    };
+    if (bgOpacitySlider) {
+        bgOpacitySlider.oninput = () => {
+            const val = bgOpacitySlider.value;
+            document.getElementById('val-bgOpacity').textContent = val + '%';
+        };
+    }
 
     // Live Theme Update
     document.getElementById('set-theme').onchange = () => {
@@ -836,55 +826,45 @@ function initSettings() {
         // Apply to whole app immediately
         if (typeof ThemeManager !== 'undefined') {
             ThemeManager.setTheme(newTheme);
-            // Update background input for this theme
+            // Update background input for this theme (if exists)
             const perTheme = App.settings.appearance.perTheme || {};
             const themeSettings = perTheme[newTheme] || {};
             const themeBgUrl = themeSettings.bgUrl || '';
-            document.getElementById('set-bgUrl').value = themeBgUrl;
+            const bgUrlInput = document.getElementById('set-bgUrl');
+            if (bgUrlInput) bgUrlInput.value = themeBgUrl;
 
             // Force apply background settings immediately to preview
-            // Note: This temporarily applies to the app (Live Preview behavior)
-            // We need to temporarily mock the setting for applyBackgroundSettings to work on the new theme
             const oldTheme = App.settings.appearance.theme;
             App.settings.appearance.theme = newTheme;
-            applyBackgroundSettings(); // Apply new theme's background
-            App.settings.appearance.theme = oldTheme; // Revert until Saved (optional, but keeps state clean)
-            // Actually, for "Live Preview" usually we want it to stay until Cancel.
-            // But App.settings.appearance.theme is the source of truth for "Active Theme".
-            // The dropdown change implies "I want to see this theme".
+            applyBackgroundSettings();
+            App.settings.appearance.theme = oldTheme;
 
             // Also update color preview
             updateThemePreview();
         }
     };
 
-    // Background file upload - OPTIMIZED: Use path instead of base64
-    document.getElementById('set-bgFile').onchange = e => {
-        const file = e.target.files[0];
-        if (file) {
-            // Electron specific: use direct file path to avoid massive Base64 strings causing lag
-            if (file.path) {
-                // Fix path separators for CSS url()
-                const cleanPath = file.path.replace(/\\/g, '/');
-                document.getElementById('set-bgUrl').value = cleanPath;
-                // Live preview if Settings is open
-                if (typeof ThemeManager !== 'undefined') {
-                    // Update the preview variable or temp apply
-                    // Actually applyBackgroundSettings reads from settings, so we might want to 
-                    // temporarily override or just let user see it in the input.
-                    // For better UX, let's try to preview it on the body immediately?
-                    // No, that might be confusing if they Cancel.
+    // Background file upload (optional - may not exist if Background section removed)
+    const bgFileInput = document.getElementById('set-bgFile');
+    if (bgFileInput) {
+        bgFileInput.onchange = e => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.path) {
+                    const cleanPath = file.path.replace(/\\/g, '/');
+                    const bgUrlInput = document.getElementById('set-bgUrl');
+                    if (bgUrlInput) bgUrlInput.value = cleanPath;
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        const bgUrlInput = document.getElementById('set-bgUrl');
+                        if (bgUrlInput) bgUrlInput.value = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
                 }
-            } else {
-                // Fallback for web mode
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    document.getElementById('set-bgUrl').value = ev.target.result;
-                };
-                reader.readAsDataURL(file);
             }
-        }
-    };
+        };
+    }
 
     // AutoSave Checkbox Toggle
     const autoSaveSwitch = document.getElementById('set-autoSave');
@@ -896,10 +876,14 @@ function initSettings() {
         };
     }
 
-    // Reset background button
-    document.getElementById('btn-reset-bg').onclick = () => {
-        document.getElementById('set-bgUrl').value = '';
-    };
+    // Reset background button (optional - may not exist if Background section removed)
+    const resetBgBtn = document.getElementById('btn-reset-bg');
+    if (resetBgBtn) {
+        resetBgBtn.onclick = () => {
+            const bgUrlInput = document.getElementById('set-bgUrl');
+            if (bgUrlInput) bgUrlInput.value = '';
+        };
+    }
 
     document.getElementById('btn-save-settings').onclick = saveSettingsAndClose;
     document.getElementById('btn-reset-settings').onclick = resetSettings;
@@ -1471,16 +1455,19 @@ function openSettings() {
     selectThemeFromCarousel(App.settings.appearance.theme, true);
     document.getElementById('set-editorColorScheme').value = App.settings.editor.colorScheme || 'auto';
     document.getElementById('set-performanceMode').checked = App.settings.appearance.performanceMode || false;
-    document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
-    document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
-    document.getElementById('set-bgOpacity').value = App.settings.appearance.bgOpacity || 50;
-    document.getElementById('val-bgOpacity').textContent = (App.settings.appearance.bgOpacity || 50) + '%';
+
+    // Background settings (optional - may not exist if Background section removed)
+    const bgOpacitySlider = document.getElementById('set-bgOpacity');
+    const bgOpacityVal = document.getElementById('val-bgOpacity');
+    if (bgOpacitySlider) bgOpacitySlider.value = App.settings.appearance.bgOpacity || 50;
+    if (bgOpacityVal) bgOpacityVal.textContent = (App.settings.appearance.bgOpacity || 50) + '%';
 
     // Load per-theme setting
     const currentTheme = App.settings.appearance.theme;
     const perThemeStore = App.settings.appearance.perTheme || {};
     const themeSpecific = perThemeStore[currentTheme] || {};
-    document.getElementById('set-bgUrl').value = themeSpecific.bgUrl || '';
+    const bgUrlInput = document.getElementById('set-bgUrl');
+    if (bgUrlInput) bgUrlInput.value = themeSpecific.bgUrl || '';
 
     // Template - sync to hidden textarea and update Monaco editor
     const templateCode = App.settings.template?.code || DEFAULT_SETTINGS.template.code;
@@ -1549,11 +1536,17 @@ function saveSettingsAndClose() {
 
     App.settings.appearance.theme = document.getElementById('set-theme').value;
     App.settings.appearance.performanceMode = document.getElementById('set-performanceMode').checked;
-    App.settings.appearance.bgOpacity = parseInt(document.getElementById('set-bgOpacity').value);
 
-    // Save per-theme background setting
+    // Background settings (optional - may not exist if Background section removed)
+    const bgOpacityEl = document.getElementById('set-bgOpacity');
+    if (bgOpacityEl) {
+        App.settings.appearance.bgOpacity = parseInt(bgOpacityEl.value);
+    }
+
+    // Save per-theme background setting (optional)
     const targetTheme = document.getElementById('set-theme').value;
-    const targetBgUrl = document.getElementById('set-bgUrl').value;
+    const bgUrlEl = document.getElementById('set-bgUrl');
+    const targetBgUrl = bgUrlEl ? bgUrlEl.value : '';
 
     if (!App.settings.appearance.perTheme) App.settings.appearance.perTheme = {};
     if (!App.settings.appearance.perTheme[targetTheme]) App.settings.appearance.perTheme[targetTheme] = {};
