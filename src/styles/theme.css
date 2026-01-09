@@ -2461,7 +2461,7 @@ body.split-active .editor-pane {
 }
 
 /* Keep the editor content above the background */
-.editor-area > * {
+.editor-area>* {
     position: relative;
     z-index: 1;
 }

@@ -20,8 +20,14 @@ const ThemeCustomizer = {
     currentColorPicker: null,
     _activeColorKey: null, // Track which color is being edited
 
+    // History for undo/redo
+    historyStack: [],
+    historyIndex: -1,
+    maxHistorySize: 50,
+
     // Performance
     _renderTimeout: null,
+    _autoSaveTimeout: null,
 
     /**
      * Open customizer
@@ -45,9 +51,14 @@ const ThemeCustomizer = {
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
         if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
 
+        // Initialize history stack with initial state
+        this.historyStack = [this._deepClone(this.workingTheme)];
+        this.historyIndex = 0;
+
         this._createUI();
         this._bindEvents();
         this._renderPreview();
+        this._updateHistoryButtons(); // Initialize undo/redo button states
 
         // Show with animation
         requestAnimationFrame(() => {
@@ -105,73 +116,136 @@ const ThemeCustomizer = {
         this.popup.innerHTML = `
             <div class="tc6-container">
                 <div class="tc6-header">
-                    <div class="tc6-title">
+                    <h2>
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
                         </svg>
                         <span>Theme Customizer</span>
-                    </div>
-                    <div class="tc6-actions">
-                        <button class="tc6-btn" id="tc6-reset" title="Reset changes">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                                <path d="M3 3v5h5"/>
+                    </h2>
+                    <button class="tc6-close" id="tc6-close">×</button>
+                </div>
+                
+                <div class="tc6-body">
+                    <!-- Toolbar -->
+                    <div class="tc6-toolbar">
+                        <button class="tc6-toolbar-btn active" data-category="ui">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M3 9h18M9 21V9"/>
                             </svg>
-                            Reset
+                            UI Colors
+                        </button>
+                        <button class="tc6-toolbar-btn" data-category="syntax">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 18 22 12 16 6"/>
+                                <polyline points="8 6 2 12 8 18"/>
+                            </svg>
+                            Syntax
+                        </button>
+                        <button class="tc6-toolbar-btn" data-category="backgrounds">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <path d="M21 15l-5-5L5 21"/>
+                            </svg>
+                            Backgrounds
+                        </button>
+                        <button class="tc6-toolbar-btn" data-category="advanced">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                            </svg>
+                            Advanced
+                        </button>
+                    </div>
+                    
+                    <div class="tc6-main">
+                        <!-- Controls Panel with Collapse -->
+                        <div class="tc6-controls" id="tc6-controls">
+                            <button class="tc6-controls-toggle" id="tc6-controls-toggle">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <polyline points="15 18 9 12 15 6"/>
+                                </svg>
+                            </button>
+                            <div class="tc6-controls-content" id="tc6-controls-content"></div>
+                        </div>
+                        
+                        <!-- Live Preview -->
+                        <div class="tc6-preview">
+                            <div class="tc6-edit-bar" id="tc6-edit-bar">
+                                <!-- Undo/Redo - Always visible -->
+                                <div class="tc6-edit-actions">
+                                    <button class="tc6-edit-action" id="tc6-undo" disabled title="Undo (Ctrl+Z)">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
+                                        </svg>
+                                    </button>
+                                    <button class="tc6-edit-action" id="tc6-redo" disabled title="Redo (Ctrl+Y)">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <!-- Divider -->
+                                <div class="tc6-edit-divider"></div>
+                                
+                                <!-- Idle hint (shown when no element selected) -->
+                                <span class="tc6-edit-hint" id="tc6-edit-hint">Click any element to edit</span>
+                                
+                                <!-- Active element info (hidden initially, replaces hint) -->
+                                <div class="tc6-edit-element" id="tc6-edit-element" style="display: none;">
+                                    <div class="tc6-edit-element-info">
+                                        <span class="tc6-edit-element-name" id="tc6-edit-name">Element Name</span>
+                                        <div class="tc6-edit-color-preview" id="tc6-edit-color"></div>
+                                    </div>
+                                    
+                                    <div class="tc6-edit-properties" id="tc6-edit-properties"></div>
+                                    
+                                    <button class="tc6-edit-close" id="tc6-edit-close" title="Deselect">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tc6-preview-wrapper" id="tc6-preview-wrapper"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tc6-footer">
+                    <div class="tc6-footer-left">
+                        <button class="tc6-btn-reset" id="tc6-reset">Reset</button>
+                        ${isCustomTheme ? `
+                        <button class="tc6-btn-delete" id="tc6-delete">Delete Theme</button>
+                        ` : ''}
+                        <!-- Auto-save indicator -->
+                        <span class="tc6-autosave-indicator" id="tc6-autosave" style="display: none;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Saved
+                        </span>
+                    </div>
+                    <div class="tc6-footer-right">
+                        <!-- Save as New - Secondary -->
+                        <button class="tc6-btn-secondary" id="tc6-save-new">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Create New Theme
                         </button>
                         ${isCustomTheme ? `
-                        <button class="tc6-btn tc6-btn-danger" id="tc6-delete" title="Delete this theme">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            </svg>
-                            Delete
-                        </button>
-                        <button class="tc6-btn tc6-btn-accent" id="tc6-save" title="Save changes">
+                        <!-- Save & Close - Primary -->
+                        <button class="tc6-btn-save" id="tc6-save">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                                 <polyline points="17 21 17 13 7 13 7 21"/>
                             </svg>
-                            Save
+                            Save & Close
                         </button>
                         ` : ''}
-                        <button class="tc6-btn tc6-btn-primary" id="tc6-save-new" title="Save as new theme">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            Save as New
-                        </button>
-                        <button class="tc6-btn tc6-btn-close" id="tc6-close">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                <line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="tc6-body">
-                    <!-- Settings Panel (collapsible) -->
-                    <div class="tc6-settings" id="tc6-settings">
-                        <div class="tc6-settings-toggle" id="tc6-settings-toggle">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="3"/>
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                            </svg>
-                            Settings
-                        </div>
-                        <div class="tc6-settings-content" id="tc6-settings-content"></div>
-                    </div>
-                    
-                    <!-- Live Preview -->
-                    <div class="tc6-preview" id="tc6-preview">
-                        <div class="tc6-preview-hint">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-                            </svg>
-                            Click any element to change its color • Double-click background to drag
-                        </div>
-                        <div class="tc6-preview-wrapper" id="tc6-preview-wrapper"></div>
                     </div>
                 </div>
             </div>
@@ -181,8 +255,8 @@ const ThemeCustomizer = {
         this._injectStyles();
         document.body.appendChild(this.popup);
 
-        // Render settings content
-        this._renderSettings();
+        // Render controls content
+        this._renderControls();
     },
 
     /**
@@ -194,6 +268,7 @@ const ThemeCustomizer = {
         const style = document.createElement('style');
         style.id = 'tc6-styles';
         style.textContent = `
+            /* ===== OVERLAY ===== */
             .tc6-overlay {
                 position: fixed;
                 inset: 0;
@@ -201,299 +276,604 @@ const ThemeCustomizer = {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background: rgba(0, 0, 0, 0.6);
-                backdrop-filter: blur(8px);
+                background: rgba(200, 230, 250, 0.6);
+                backdrop-filter: blur(6px);
                 opacity: 0;
                 transition: opacity 0.3s ease;
             }
             .tc6-overlay.visible { opacity: 1; }
             
+            /* ===== CONTAINER - KAWAII STYLE ===== */
             .tc6-container {
-                width: min(95vw, 1100px);
-                height: min(90vh, 700px);
-                background: var(--bg-panel, #1a1e2e);
-                border: 1px solid var(--border, #333);
-                border-radius: 16px;
-                box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6);
+                width: min(98vw, 1200px);
+                height: min(95vh, 800px);
+                background: var(--bg-panel, #e8f4fc);
+                border: 3px solid var(--border-strong, #b3e2fa);
+                border-radius: 24px 28px 26px 30px;
+                box-shadow: 0 20px 60px rgba(136, 201, 234, 0.3);
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
                 transform: scale(0.95) translateY(20px);
-                transition: transform 0.3s ease;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .tc6-overlay.visible .tc6-container {
                 transform: scale(1) translateY(0);
             }
             
+            /* ===== HEADER - KAWAII STYLE ===== */
             .tc6-header {
-                height: 54px;
-                background: #151929;
-                border-bottom: 1px solid #333;
+                padding: 16px 24px;
+                background: var(--bg-header, rgba(245, 250, 255, 0.95));
+                border-bottom: 2px solid var(--border, #e0f0ff);
                 display: flex;
+                justify-content: space-between;
                 align-items: center;
-                padding: 0 16px;
-                gap: 12px;
                 flex-shrink: 0;
             }
-            
-            .tc6-title {
+            .tc6-header h2 {
+                font-family: 'Fredoka', sans-serif;
+                font-size: 20px;
+                color: var(--text-secondary, #7eb8c5);
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                font-size: 15px;
-                font-weight: 700;
-                color: var(--text-primary, #fff);
+                margin: 0;
             }
-            .tc6-title svg { color: var(--accent, #88c9ea); }
-            
-            .tc6-actions {
-                margin-left: auto;
-                display: flex;
-                gap: 8px;
-            }
-            
-            .tc6-btn {
-                padding: 8px 14px;
-                border-radius: 8px;
-                border: 1px solid var(--border, #444);
-                background: var(--bg-button, #2a2e3e);
-                color: var(--text-primary, #fff);
-                font-size: 12px;
-                font-weight: 600;
+            .tc6-header h2 svg { color: var(--accent, #88c9ea); }
+            .tc6-close {
+                width: 34px;
+                height: 34px;
+                background: var(--bg-input, #ffffff);
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 50%;
+                font-size: 18px;
                 cursor: pointer;
+                color: var(--text-muted, #8abac5);
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: Arial, sans-serif;
+                line-height: 1;
+            }
+            .tc6-close:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--error, #ff8fab);
+                color: var(--error, #ff8fab);
+                transform: rotate(90deg);
+            }
+            
+            /* ===== BODY ===== */
+            .tc6-body {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                background: var(--bg-panel, #e8f4fc);
+            }
+            
+            /* ===== TOOLBAR ===== */
+            .tc6-toolbar {
+                display: flex;
+                gap: 6px;
+                padding: 10px 16px;
+                background: var(--bg-input, #ffffff);
+                border-bottom: 2px solid var(--border, #e0f0ff);
+                overflow-x: auto;
+                flex-shrink: 0;
+            }
+            .tc6-toolbar::-webkit-scrollbar { height: 0; }
+            
+            .tc6-toolbar-btn {
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                transition: all 0.2s;
-            }
-            .tc6-btn:hover { background: var(--bg-button-hover, #3a3e4e); transform: translateY(-1px); }
-            
-            .tc6-btn-accent {
-                background: var(--bg-button-hover, #3a3e4e);
-                border-color: var(--accent, #88c9ea);
-            }
-            
-            .tc6-btn-primary {
-                background: var(--accent, #88c9ea);
-                border-color: transparent;
-                color: var(--button-text-on-accent, #fff);
-            }
-            .tc6-btn-primary:hover { filter: brightness(1.15); }
-            
-            .tc6-btn-danger {
+                padding: 8px 14px;
                 background: transparent;
-                border-color: var(--error, #ff6b6b);
-                color: var(--error, #ff6b6b);
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 12px 14px 13px 15px;
+                color: var(--text-secondary, #7eb8c5);
+                font-size: 12px;
+                font-weight: 700;
+                font-family: 'Fredoka', sans-serif;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                white-space: nowrap;
+                flex-shrink: 0;
             }
-            .tc6-btn-danger:hover { 
-                background: var(--error, #ff6b6b); 
-                color: #fff;
+            .tc6-toolbar-btn svg {
+                width: 16px;
+                height: 16px;
+                stroke-width: 2.5;
+            }
+            .tc6-toolbar-btn:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--border-strong, #b3e2fa);
+                transform: translateY(-1px);
+            }
+            .tc6-toolbar-btn.active {
+                background: var(--bg-ocean-medium, #bce2f5);
+                border-color: var(--bg-ocean-deep, #88c9ea);
+                color: var(--text-primary, #2a5a75);
+                box-shadow: 0 2px 6px rgba(136, 201, 234, 0.2);
+            }
+            .tc6-toolbar-btn.active svg {
+                color: var(--bg-ocean-dark, #3a7ca5);
             }
             
-            .tc6-btn-close {
-                background: transparent;
-                border: none;
-                padding: 8px;
-                color: var(--text-muted, #666);
-            }
-            .tc6-btn-close:hover { color: var(--error, #ff6b6b); }
-            
-            .tc6-body {
-                display: flex;
+            /* ===== MAIN CONTENT ===== */
+            .tc6-main {
                 flex: 1;
+                display: flex;
+                gap: 16px;
+                padding: 16px 20px;
                 overflow: hidden;
             }
             
-            /* Settings Panel */
-            .tc6-settings {
-                width: 280px;
-                background: var(--bg-panel, #1a1e2e);
-                border-right: 1px solid var(--border, #333);
-                display: flex;
-                flex-direction: column;
+            /* ===== CONTROLS PANEL ===== */
+            .tc6-controls {
+                width: 320px;
                 flex-shrink: 0;
-                transition: width 0.3s ease, margin 0.3s ease;
+                background: var(--bg-input, #ffffff);
+                border-right: 2px solid var(--border, #e0f0ff);
+                display: flex;
+                overflow: hidden;
+                position: relative;
+                transition: width 0.3s ease;
             }
-            .tc6-settings.collapsed {
+            .tc6-controls.collapsed {
                 width: 44px;
             }
-            .tc6-settings.collapsed .tc6-settings-content { display: none; }
-            .tc6-settings.collapsed .tc6-settings-toggle span { display: none; }
+            .tc6-controls.collapsed .tc6-controls-content {
+                opacity: 0;
+                pointer-events: none;
+            }
             
-            .tc6-settings-toggle {
-                height: 44px;
+            .tc6-controls-toggle {
+                position: absolute;
+                top: 12px;
+                right: 8px;
+                z-index: 10;
+                width: 28px;
+                height: 28px;
+                background: var(--bg-panel, #e8f4fc);
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 50%;
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                padding: 0 14px;
-                background: #151929;
-                border-bottom: 1px solid #333;
-                color: #aaa;
-                font-size: 12px;
-                font-weight: 600;
+                justify-content: center;
                 cursor: pointer;
-                transition: background 0.2s;
+                transition: all 0.2s ease;
+                color: var(--text-secondary, #7eb8c5);
             }
-            .tc6-settings-toggle:hover { background: #2a2e3e; }
+            .tc6-controls-toggle:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--accent, #88c9ea);
+                transform: scale(1.1);
+            }
+            .tc6-controls.collapsed .tc6-controls-toggle {
+                left: 8px;
+                right: auto;
+            }
+            .tc6-controls.collapsed .tc6-controls-toggle svg {
+                transform: rotate(180deg);
+            }
             
-            .tc6-settings-content {
+            .tc6-controls-content {
                 flex: 1;
                 overflow-y: auto;
-                padding: 12px;
+                padding: 48px 16px 16px 16px;
+                transition: opacity 0.3s ease;
+            }
+            .tc6-controls-content::-webkit-scrollbar { width: 6px; }
+            .tc6-controls-content::-webkit-scrollbar-track { background: transparent; }
+            .tc6-controls-content::-webkit-scrollbar-thumb {
+                background: var(--border, #e0f0ff);
+                border-radius: 10px;
+            }
+            .tc6-controls-content::-webkit-scrollbar-thumb:hover {
+                background: var(--border-strong, #b3e2fa);
+            }
+            
+            .tc6-category-panel {
+                display: none;
+            }
+            .tc6-category-panel.active {
+                display: block;
             }
             
             .tc6-section {
-                margin-bottom: 16px;
+                margin-bottom: 20px;
             }
+            .tc6-section:last-child { margin-bottom: 0; }
             
             .tc6-section-title {
-                font-size: 10px;
+                font-size: 11px;
                 font-weight: 700;
-                color: var(--accent, #88c9ea);
+                color: var(--settings-section-color, #5a9fc8);
                 text-transform: uppercase;
-                letter-spacing: 1px;
+                letter-spacing: 0.8px;
                 margin-bottom: 10px;
                 padding-bottom: 6px;
-                border-bottom: 1px dashed var(--border, #333);
+                border-bottom: 2px solid var(--border, #e0f0ff);
+            }
+            
+            .tc6-color-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .tc6-color-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 12px;
+                background: var(--bg-panel, #e8f4fc);
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 10px 12px 11px 13px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .tc6-color-item:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--border-strong, #b3e2fa);
+                transform: translateX(3px);
+            }
+            .tc6-color-item label {
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--settings-label-color, #5a8a95);
+                cursor: pointer;
+            }
+            .tc6-color-item .tc6-color-swatch {
+                width: 26px;
+                height: 26px;
+                border-radius: 6px;
+                border: 2px solid var(--border, #e0f0ff);
+                flex-shrink: 0;
+                box-shadow: 0 2px 4px rgba(136, 201, 234, 0.1);
             }
             
             .tc6-field {
-                margin-bottom: 12px;
+                margin-bottom: 14px;
             }
+            .tc6-field:last-child { margin-bottom: 0; }
             
             .tc6-field-label {
                 font-size: 11px;
                 font-weight: 600;
-                color: var(--text-secondary, #aaa);
-                margin-bottom: 5px;
+                color: var(--settings-label-color, #5a8a95);
+                margin-bottom: 6px;
+                display: block;
             }
             
             .tc6-input {
                 width: 100%;
-                padding: 8px 10px;
-                border-radius: 6px;
-                border: 1px solid var(--border, #444);
-                background: var(--bg-input, #222);
-                color: var(--text-primary, #fff);
-                font-size: 12px;
+                padding: 10px 14px;
+                border-radius: 15px;
+                border: 2px solid var(--border, #e0f0ff);
+                background: var(--bg-panel, #e8f4fc);
+                color: var(--text-primary, #2a5a75);
+                font-size: 13px;
+                font-family: inherit;
+                transition: all 0.2s ease;
             }
-            .tc6-input:focus { border-color: var(--accent, #88c9ea); outline: none; }
-            
-            .tc6-select {
-                width: 100%;
-                padding: 8px 10px;
-                border-radius: 6px;
-                border: 1px solid var(--border, #444);
-                background: var(--bg-input, #222);
-                color: var(--text-primary, #fff);
-                font-size: 12px;
+            .tc6-input:focus {
+                border-color: var(--accent, #88c9ea);
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(136, 201, 234, 0.15);
             }
             
             .tc6-upload-row {
                 display: flex;
-                gap: 6px;
+                gap: 8px;
                 align-items: center;
             }
-            .tc6-upload-row .tc6-input { 
-                flex: 1; 
-                font-size: 10px; 
+            .tc6-upload-row .tc6-input {
+                flex: 1;
+                font-size: 11px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
             
             .tc6-upload-btn {
-                padding: 8px 12px;
-                border-radius: 6px;
-                background: var(--accent, #88c9ea);
-                color: var(--button-text-on-accent, #fff);
-                border: none;
-                cursor: pointer;
+                padding: 10px 14px;
+                border-radius: 12px;
+                background: var(--bg-ocean-light, #eff8fe);
+                border: 2px solid var(--bg-ocean-medium, #bce2f5);
+                color: var(--text-secondary, #7eb8c5);
                 font-size: 11px;
                 font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
                 white-space: nowrap;
             }
-            .tc6-upload-btn:hover { filter: brightness(1.1); }
+            .tc6-upload-btn:hover {
+                background: var(--bg-ocean-medium, #bce2f5);
+            }
             
             .tc6-clear-btn {
-                padding: 8px;
-                border-radius: 6px;
-                background: var(--bg-button, #2a2e3e);
-                color: var(--text-muted, #888);
-                border: 1px solid var(--border, #444);
+                padding: 10px;
+                border-radius: 12px;
+                background: transparent;
+                color: var(--text-muted, #8abac5);
+                border: 2px solid var(--border, #e0f0ff);
                 cursor: pointer;
-                font-size: 10px;
+                font-size: 12px;
+                transition: all 0.2s ease;
             }
-            .tc6-clear-btn:hover { color: var(--error, #ff6b6b); border-color: var(--error, #ff6b6b); }
+            .tc6-clear-btn:hover {
+                color: var(--error, #ff8fab);
+                border-color: var(--error, #ff8fab);
+            }
             
             .tc6-slider-row {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 12px;
             }
-            .tc6-slider-row input[type="range"] { flex: 1; cursor: pointer; }
+            .tc6-slider-row input[type="range"] {
+                flex: 1;
+                -webkit-appearance: none;
+                appearance: none;
+                background: var(--bg-panel, #e8f4fc);
+                height: 10px;
+                border-radius: 5px;
+                border: 2px solid var(--border, #e0f0ff);
+                cursor: pointer;
+            }
+            .tc6-slider-row input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 22px;
+                height: 22px;
+                background: var(--accent, #88c9ea);
+                border-radius: 50%;
+                border: 3px solid var(--bg-input, #ffffff);
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.15);
+                cursor: pointer;
+                transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .tc6-slider-row input[type="range"]:hover::-webkit-slider-thumb {
+                transform: scale(1.1);
+            }
             .tc6-slider-val {
-                min-width: 40px;
+                min-width: 50px;
                 text-align: right;
+                font-size: 12px;
+                color: var(--text-secondary, #7eb8c5);
+                font-weight: 700;
+                font-family: 'Fredoka', sans-serif;
+            }
+            
+            /* ===== EDIT BAR - CANVA STYLE ===== */
+            .tc6-edit-bar {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 16px;
+                background: var(--bg-input, #ffffff);
+                border-bottom: 2px solid var(--border, #e0f0ff);
+                min-height: 50px;
+                transition: min-height 0.3s ease;
+                flex-shrink: 0;
+            }
+            
+            .tc6-edit-actions {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex-shrink: 0;
+            }
+            
+            .tc6-edit-action {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 2px solid var(--border, #e0f0ff);
+                background: transparent;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--text-secondary, #7eb8c5);
+            }
+            .tc6-edit-action:hover:not(:disabled) {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--border-strong, #b3e2fa);
+            }
+            .tc6-edit-action:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+            }
+            
+            .tc6-edit-divider {
+                width: 2px;
+                height: 24px;
+                background: var(--border, #e0f0ff);
+                border-radius: 1px;
+                margin: 0 6px;
+                flex-shrink: 0;
+            }
+            
+            .tc6-edit-hint {
                 font-size: 11px;
-                color: var(--text-muted, #888);
+                color: var(--text-muted, #8abac5);
                 font-weight: 600;
             }
             
-            /* Preview Area */
+            /* Active state - Element selected (inline) */
+            .tc6-edit-element {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex: 1;
+                animation: tc6-edit-expand 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            
+            @keyframes tc6-edit-expand {
+                from {
+                    opacity: 0;
+                    transform: translateX(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+            
+            .tc6-edit-element-info {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 6px 12px;
+                background: var(--bg-ocean-light, #eff8fe);
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 12px 14px 13px 15px;
+            }
+            
+            .tc6-edit-color-preview {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                border: 3px solid var(--border-strong, #b3e2fa);
+                cursor: pointer;
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.15);
+                transition: transform 0.2s ease;
+            }
+            .tc6-edit-color-preview:hover {
+                transform: scale(1.1);
+            }
+            
+            .tc6-edit-element-name {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text-primary, #2a5a75);
+                font-family: 'Fredoka', sans-serif;
+            }
+            
+            .tc6-edit-properties {
+                display: flex;
+                gap: 6px;
+            }
+            
+            .tc6-edit-prop-btn {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 2px solid var(--border, #e0f0ff);
+                background: transparent;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                color: var(--text-secondary, #7eb8c5);
+                font-size: 14px;
+                font-weight: 700;
+            }
+            .tc6-edit-prop-btn:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--border-strong, #b3e2fa);
+            }
+            .tc6-edit-prop-btn.active {
+                background: var(--bg-ocean-medium, #bce2f5);
+                border-color: var(--bg-ocean-deep, #88c9ea);
+            }
+            
+            /* Expanded slider (inline) */
+            .tc6-edit-slider-expanded {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 0 12px;
+                animation: tc6-slider-expand 0.3s ease;
+            }
+            
+            @keyframes tc6-slider-expand {
+                from {
+                    opacity: 0;
+                    max-width: 0;
+                }
+                to {
+                    opacity: 1;
+                    max-width: 400px;
+                }
+            }
+            
+            .tc6-edit-slider-expanded input[type="range"] {
+                flex: 1;
+                -webkit-appearance: none;
+                appearance: none;
+                background: var(--bg-panel, #e8f4fc);
+                height: 10px;
+                border-radius: 5px;
+                border: 2px solid var(--border, #e0f0ff);
+            }
+            .tc6-edit-slider-expanded input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 20px;
+                height: 20px;
+                background: var(--accent, #88c9ea);
+                border-radius: 50%;
+                border: 3px solid var(--bg-input, #ffffff);
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.15);
+                cursor: pointer;
+            }
+            
+            .tc6-edit-slider-value {
+                min-width: 50px;
+                text-align: right;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-secondary, #7eb8c5);
+                font-family: 'Fredoka', sans-serif;
+            }
+            
+            .tc6-edit-close {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                border: 2px solid var(--border, #e0f0ff);
+                background: transparent;
+                cursor: pointer;
+                margin-left: auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--text-muted, #8abac5);
+            }
+            .tc6-edit-close:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--error, #ff8fab);
+                color: var(--error, #ff8fab);
+            }
+            
+            /* ===== PREVIEW AREA ===== */
             .tc6-preview {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
+                background: var(--bg-ocean-dark, #3a7ca5);
+                border: 3px solid var(--border, #e0f0ff);
+                border-radius: 30px 35px 32px 38px;
                 position: relative;
-                background: var(--bg-ocean-dark, #0d1520);
-            }
-            
-            .tc6-preview-hint {
-                position: absolute;
-                top: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 0, 0, 0.75);
-                color: #fff;
-                padding: 6px 14px;
-                border-radius: 20px;
-                font-size: 11px;
-                z-index: 10;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                pointer-events: none;
-            }
-            .tc6-preview-hint.drag-mode {
-                pointer-events: auto;
-            }
-            .tc6-drag-confirm-btn {
-                margin-left: 8px;
-                padding: 4px 12px;
-                background: #4caf50;
-                color: #fff;
-                border: none;
-                border-radius: 12px;
-                font-size: 10px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-                pointer-events: auto;
-            }
-            .tc6-drag-confirm-btn:hover {
-                background: #45a049;
-                transform: scale(1.05);
             }
             
             .tc6-preview-wrapper {
                 flex: 1;
-                margin: 16px;
-                border-radius: 12px;
+                margin: 12px;
+                border-radius: 16px;
                 overflow: hidden;
-                box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
                 position: relative;
+                transform-origin: center;
+                transition: transform 0.3s ease;
             }
             
             /* Live IDE Preview */
@@ -503,8 +883,7 @@ const ThemeCustomizer = {
                 display: flex;
                 flex-direction: column;
                 position: relative;
-                border-radius: 12px;
-                overflow: hidden;
+                background: var(--editor-bg, #1e1e1e);
             }
             
             .tc6-ide-bg {
@@ -514,7 +893,6 @@ const ThemeCustomizer = {
                 background-position: center;
                 pointer-events: none;
                 z-index: 0;
-                will-change: opacity, filter;
             }
             
             .tc6-ide-content {
@@ -523,6 +901,13 @@ const ThemeCustomizer = {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
+                transition: opacity 0.2s ease;
+            }
+            
+            /* Drag mode - Show UI at 80% opacity so user can see how bg looks */
+            .tc6-ide-content.tc6-dimmed {
+                opacity: 0.8;
+                pointer-events: none;
             }
             
             /* Clickable elements */
@@ -539,214 +924,558 @@ const ThemeCustomizer = {
             .tc6-clickable:hover::after {
                 content: attr(data-label);
                 position: absolute;
-                top: -24px;
+                top: -26px;
                 left: 50%;
                 transform: translateX(-50%);
                 background: var(--accent, #88c9ea);
                 color: #fff;
-                padding: 3px 8px;
-                border-radius: 4px;
-                font-size: 9px;
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-size: 10px;
                 font-weight: 600;
                 white-space: nowrap;
                 z-index: 1000;
                 pointer-events: none;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             }
             
-            /* Color Picker Popup - Advanced Customization */
-            .tc6-color-picker {
-                position: fixed;
-                z-index: 100001;
-                background: var(--bg-panel, #1a1e2e);
-                border: 1px solid var(--border, #444);
-                border-radius: 12px;
-                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-                padding: 0;
-                min-width: 280px;
-                max-width: 320px;
-                display: none;
-                overflow: hidden;
-            }
-            .tc6-color-picker.visible { display: block; }
-            
-            .tc6-picker-tabs {
-                display: flex;
-                border-bottom: 1px solid var(--border, #444);
-                background: var(--bg-header, #151929);
-            }
-            .tc6-picker-tab {
-                flex: 1;
-                padding: 8px 12px;
-                background: transparent;
-                border: none;
-                color: var(--text-secondary, #aaa);
-                font-size: 10px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .tc6-picker-tab:hover {
-                background: var(--bg-button, #2a2e3e);
-                color: var(--text-primary, #fff);
-            }
-            .tc6-picker-tab.active {
-                background: var(--bg-panel, #1a1e2e);
-                color: var(--accent, #88c9ea);
-                border-bottom: 2px solid var(--accent, #88c9ea);
-            }
-            
-            .tc6-picker-content {
-                padding: 12px;
-            }
-            
-            .tc6-picker-section {
-                margin-bottom: 12px;
-            }
-            .tc6-picker-section:last-child {
-                margin-bottom: 0;
-            }
-            
-            .tc6-picker-section-title {
-                font-size: 9px;
-                font-weight: 700;
-                color: var(--accent, #88c9ea);
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 8px;
-            }
-            
-            .tc6-picker-row {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 8px;
-            }
-            .tc6-picker-row:last-child {
-                margin-bottom: 0;
-            }
-            
-            .tc6-picker-label {
-                font-size: 10px;
-                color: var(--text-secondary, #aaa);
-                min-width: 60px;
-                font-weight: 600;
-            }
-            
-            .tc6-picker-control {
-                flex: 1;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-            
-            .tc6-picker-value {
-                min-width: 45px;
-                font-size: 10px;
-                color: var(--text-muted, #888);
-                text-align: right;
-                font-weight: 600;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            
-            .tc6-color-picker-inline .tc6-color-picker-header {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 11px;
-                font-weight: 600;
-                color: var(--text-primary, #fff);
-            }
-            
-            .tc6-color-swatch {
-                width: 20px;
-                height: 20px;
-                border-radius: 4px;
-                border: 2px solid var(--border, #555);
-                flex-shrink: 0;
-            }
-            
-            .tc6-color-label {
-                flex: 1;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            
-            .tc6-color-picker-close {
-                background: none;
-                border: none;
-                color: var(--text-muted, #888);
-                cursor: pointer;
-                padding: 2px 4px;
-                font-size: 12px;
-                line-height: 1;
-            }
-            .tc6-color-picker-close:hover { color: var(--error, #ff6b6b); }
-            
-            .tc6-color-input-native {
-                width: 100%;
-                height: 32px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                margin-top: 6px;
-                background: transparent;
-            }
-            .tc6-color-input-native::-webkit-color-swatch-wrapper {
-                padding: 0;
-            }
-            .tc6-color-input-native::-webkit-color-swatch {
-                border: 1px solid var(--border, #444);
-                border-radius: 4px;
-            }
-            
-            /* Active color target highlight */
             .tc6-color-active {
                 outline: 2px solid #ffcc00 !important;
                 outline-offset: 2px !important;
                 box-shadow: 0 0 12px rgba(255, 204, 0, 0.5) !important;
             }
             
-            /* Drag mode - dim UI elements */
-            .tc6-ide.tc6-drag-mode {
-                cursor: grab;
-            }
-            .tc6-ide.tc6-drag-mode .tc6-ide-content.tc6-dimmed {
-                opacity: 0.3;
-                pointer-events: none;
-                transition: opacity 0.3s ease;
-            }
-            .tc6-ide.tc6-drag-mode .tc6-ide-bg {
-                z-index: 5;
-            }
-            
-            /* UI element styling for better visibility in drag mode */
-            .tc6-ui-element {
-                transition: opacity 0.2s ease, transform 0.2s ease;
-            }
-            
-            /* Editor wrapper for background image support */
+            /* Editor wrapper */
             .tc6-editor-wrapper {
                 position: relative;
             }
             .tc6-editor-bg {
-                will-change: opacity, filter;
+                position: absolute;
+                inset: 0;
+                background-size: cover;
+                background-position: center;
+                pointer-events: none;
             }
             
-            /* Responsive */
-            @media (max-width: 800px) {
-                .tc6-settings { width: 220px; }
-                .tc6-settings.collapsed { width: 40px; }
+            /* ===== FOOTER - KAWAII STYLE ===== */
+            .tc6-footer {
+                padding: 16px 24px;
+                background: var(--bg-panel, #e8f4fc);
+                border-top: 3px dashed var(--border, #e0f0ff);
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 12px;
+                flex-shrink: 0;
             }
             
-            /* Save Notification */
+            .tc6-btn-reset {
+                background: var(--bg-input, #ffffff);
+                color: var(--text-muted, #8abac5);
+                border: 3px solid var(--border, #e0f0ff);
+                padding: 12px 24px;
+                border-radius: 18px 22px 20px 24px;
+                cursor: pointer;
+                font-weight: 700;
+                font-size: 14px;
+                font-family: 'Fredoka', sans-serif;
+                transition: all 0.2s ease;
+            }
+            .tc6-btn-reset:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                color: var(--error, #ff8fab);
+                border-color: var(--error, #ff8fab);
+            }
+            
+            .tc6-btn-delete {
+                background: transparent;
+                color: var(--error, #ff8fab);
+                border: 3px solid var(--error, #ff8fab);
+                padding: 12px 24px;
+                border-radius: 18px 22px 20px 24px;
+                cursor: pointer;
+                font-weight: 700;
+                font-size: 14px;
+                font-family: 'Fredoka', sans-serif;
+                transition: all 0.2s ease;
+            }
+            .tc6-btn-delete:hover {
+                background: var(--error, #ff8fab);
+                color: #fff;
+            }
+            
+            .tc6-btn-save {
+                background: var(--bg-ocean-medium, #bce2f5);
+                border: 3px solid var(--bg-ocean-deep, #88c9ea);
+                color: var(--text-primary, #2a5a75);
+                padding: 12px 32px;
+                border-radius: 22px 18px 20px 16px;
+                font-weight: 700;
+                font-size: 14px;
+                font-family: 'Fredoka', sans-serif;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 4px 4px 0 rgba(136, 201, 234, 0.15);
+            }
+            .tc6-btn-save:hover {
+                transform: translate(-2px, -2px);
+                box-shadow: 6px 6px 0 rgba(136, 201, 234, 0.25);
+            }
+            
+            .tc6-btn-save-new {
+                background: var(--accent, #88c9ea);
+                border: 3px solid var(--accent, #88c9ea);
+                color: var(--button-text-on-accent, #ffffff);
+                padding: 12px 32px;
+                border-radius: 25px 20px 22px 18px;
+                font-weight: 700;
+                font-size: 14px;
+                font-family: 'Fredoka', sans-serif;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 4px 4px 0 rgba(136, 201, 234, 0.15);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            }
+            .tc6-btn-save-new:hover {
+                transform: translate(-2px, -2px);
+                box-shadow: 6px 6px 0 rgba(136, 201, 234, 0.25);
+                filter: brightness(1.1);
+            }
+            
+            /* ===== COLOR PICKER ===== */
+            .tc6-color-picker {
+                position: fixed;
+                z-index: 100001;
+                background: var(--bg-input, #ffffff);
+                border: 4px solid var(--border-strong, #b3e2fa);
+                border-radius: 20px 25px 22px 28px;
+                box-shadow: 8px 8px 0 rgba(136, 201, 234, 0.15), 0 15px 40px rgba(136, 201, 234, 0.25);
+                padding: 0;
+                min-width: 320px;
+                max-width: 360px;
+                display: none;
+                overflow: hidden;
+            }
+            .tc6-color-picker.visible { display: block; }
+            
+            .tc6-picker-header {
+                padding: 12px 16px;
+                background: var(--bg-panel, #e8f4fc);
+                border-bottom: 3px dashed var(--border, #e0f0ff);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .tc6-picker-title {
+                font-family: 'Fredoka', sans-serif;
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text-secondary, #7eb8c5);
+            }
+            .tc6-picker-close {
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: var(--text-muted, #8abac5);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                line-height: 1;
+                font-family: Arial, sans-serif;
+            }
+            .tc6-picker-close:hover {
+                color: var(--error, #ff8fab);
+                transform: rotate(90deg);
+            }
+            
+            .tc6-picker-tabs {
+                display: flex;
+                background: var(--bg-panel, #e8f4fc);
+                border-bottom: 3px dashed var(--border, #e0f0ff);
+            }
+            .tc6-picker-tab {
+                flex: 1;
+                padding: 10px 12px;
+                background: transparent;
+                border: none;
+                color: var(--text-secondary, #7eb8c5);
+                font-size: 11px;
+                font-weight: 700;
+                font-family: 'Fredoka', sans-serif;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .tc6-picker-tab:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+            }
+            .tc6-picker-tab.active {
+                background: var(--bg-input, #ffffff);
+                color: var(--accent, #88c9ea);
+            }
+            
+            .tc6-picker-panel {
+                display: none;
+                padding: 16px;
+            }
+            .tc6-picker-panel.active {
+                display: block;
+            }
+            
+            .tc6-picker-section {
+                margin-bottom: 14px;
+            }
+            .tc6-picker-section:last-child { margin-bottom: 0; }
+            
+            .tc6-picker-section-title {
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--settings-section-color, #5a9fc8);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 10px;
+            }
+            
+            .tc6-color-input-native {
+                width: 100%;
+                height: 50px;
+                border: 3px solid var(--border, #e0f0ff);
+                border-radius: 12px;
+                cursor: pointer;
+                margin-bottom: 12px;
+            }
+            .tc6-color-input-native::-webkit-color-swatch-wrapper {
+                padding: 4px;
+            }
+            .tc6-color-input-native::-webkit-color-swatch {
+                border: none;
+                border-radius: 8px;
+            }
+            
+            .tc6-hex-input {
+                width: 100%;
+                padding: 10px 14px;
+                border-radius: 12px;
+                border: 2px solid var(--border, #e0f0ff);
+                background: var(--bg-panel, #e8f4fc);
+                color: var(--text-primary, #2a5a75);
+                font-size: 14px;
+                font-family: 'JetBrains Mono', monospace;
+                font-weight: 600;
+                text-align: center;
+                text-transform: uppercase;
+                transition: all 0.2s ease;
+            }
+            .tc6-hex-input:focus {
+                border-color: var(--accent, #88c9ea);
+                outline: none;
+                box-shadow: 0 0 0 2px rgba(136, 201, 234, 0.15);
+            }
+            
+            .tc6-palette-grid {
+                display: grid;
+                gap: 14px;
+            }
+            .tc6-palette {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .tc6-palette-name {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary, #7eb8c5);
+                font-family: 'Fredoka', sans-serif;
+            }
+            .tc6-palette-swatches {
+                display: grid;
+                grid-template-columns: repeat(8, 1fr);
+                gap: 6px;
+            }
+            .tc6-swatch {
+                aspect-ratio: 1;
+                border-radius: 8px;
+                border: 3px solid var(--border, #e0f0ff);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.1);
+            }
+            .tc6-swatch:hover {
+                transform: scale(1.15) translateY(-2px);
+                box-shadow: 4px 4px 0 rgba(136, 201, 234, 0.2);
+                border-color: var(--border-strong, #b3e2fa);
+            }
+            
+            .tc6-preset-grid {
+                display: grid;
+                grid-template-columns: repeat(8, 1fr);
+                gap: 6px;
+            }
+            .tc6-preset-swatch {
+                aspect-ratio: 1;
+                border-radius: 8px;
+                border: 3px solid var(--border, #e0f0ff);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.1);
+            }
+            .tc6-preset-swatch:hover {
+                transform: scale(1.15) translateY(-2px);
+                box-shadow: 4px 4px 0 rgba(136, 201, 234, 0.2);
+                border-color: var(--border-strong, #b3e2fa);
+            }
+            
+            .tc6-recent-colors {
+                display: grid;
+                grid-template-columns: repeat(10, 1fr);
+                gap: 6px;
+            }
+            
+            .tc6-opacity-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 12px;
+            }
+            .tc6-opacity-row label {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary, #7eb8c5);
+                min-width: 60px;
+            }
+            .tc6-opacity-row input[type="range"] {
+                flex: 1;
+                -webkit-appearance: none;
+                appearance: none;
+                background: var(--bg-panel, #e8f4fc);
+                height: 10px;
+                border-radius: 5px;
+                border: 2px solid var(--border, #e0f0ff);
+                cursor: pointer;
+            }
+            .tc6-opacity-row input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 20px;
+                height: 20px;
+                background: var(--accent, #88c9ea);
+                border-radius: 50%;
+                border: 3px solid var(--bg-input, #ffffff);
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.15);
+                cursor: pointer;
+            }
+            .tc6-opacity-val {
+                min-width: 45px;
+                text-align: right;
+                font-size: 12px;
+                color: var(--text-secondary, #7eb8c5);
+                font-weight: 700;
+                font-family: 'Fredoka', sans-serif;
+            }
+            
+            /* ===== DRAG MODE NOTIFICATION ===== */
+            .tc6-drag-confirm-btn {
+                padding: 6px 14px;
+                background: var(--bg-input, #ffffff);
+                border: 2px solid var(--border-strong, #b3e2fa);
+                border-radius: 10px 12px 11px 13px;
+                color: var(--text-primary, #2a5a75);
+                font-size: 12px;
+                font-weight: 700;
+                font-family: 'Fredoka', sans-serif;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin-left: 12px;
+                transition: all 0.2s ease;
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.15);
+            }
+            .tc6-drag-confirm-btn:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                transform: translateY(-1px);
+                box-shadow: 3px 3px 0 rgba(136, 201, 234, 0.25);
+            }
+            .tc6-drag-confirm-btn svg {
+                color: var(--success, #a3d9a5);
+                width: 14px;
+                height: 14px;
+            }
+            
+            /* ===== COLOR DROPDOWN (FIGMA-STYLE) ===== */
+            .tc6-color-dropdown {
+                position: fixed;
+                z-index: 100001;
+                background: var(--bg-input, #ffffff);
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 12px 14px 13px 15px;
+                padding: 12px;
+                min-width: 240px;
+                box-shadow: 0 8px 24px rgba(136, 201, 234, 0.3);
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
+                transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .tc6-color-dropdown.visible {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            
+            .tc6-dropdown-section {
+                margin-bottom: 12px;
+            }
+            .tc6-dropdown-section:last-child {
+                margin-bottom: 0;
+            }
+            
+            .tc6-dropdown-color-native {
+                width: 100%;
+                height: 50px;
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 10px;
+                cursor: pointer;
+                margin-bottom: 10px;
+            }
+            .tc6-dropdown-color-native::-webkit-color-swatch-wrapper {
+                padding: 4px;
+            }
+            .tc6-dropdown-color-native::-webkit-color-swatch {
+                border: none;
+                border-radius: 6px;
+            }
+            
+            .tc6-dropdown-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .tc6-dropdown-label {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary, #7eb8c5);
+                min-width: 35px;
+            }
+            
+            .tc6-dropdown-hex {
+                flex: 1;
+                padding: 8px 10px;
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 8px;
+                background: var(--bg-panel, #e8f4fc);
+                color: var(--text-primary, #2a5a75);
+                font-size: 12px;
+                font-family: 'JetBrains Mono', monospace;
+                font-weight: 600;
+                transition: border-color 0.2s;
+            }
+            .tc6-dropdown-hex:focus {
+                border-color: var(--accent, #88c9ea);
+                outline: none;
+            }
+            
+            .tc6-dropdown-section-title {
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--settings-section-color, #5a9fc8);
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                margin-bottom: 8px;
+            }
+            
+            .tc6-dropdown-preset-grid {
+                display: grid;
+                grid-template-columns: repeat(8, 1fr);
+                gap: 6px;
+            }
+            
+            .tc6-dropdown-preset {
+                width: 100%;
+                aspect-ratio: 1;
+                border-radius: 6px;
+                border: 2px solid var(--border, #e0f0ff);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 1px 1px 0 rgba(136, 201, 234, 0.1);
+            }
+            .tc6-dropdown-preset:hover {
+                transform: scale(1.15);
+                border-color: var(--accent, #88c9ea);
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.2);
+            }
+            
+            /* ===== PROPERTY POPOVER (MINI SLIDER) ===== */
+            .tc6-property-popover {
+                position: fixed;
+                z-index: 100001;
+                background: var(--bg-input, #ffffff);
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 10px 12px 11px 13px;
+                padding: 12px 14px;
+                min-width: 200px;
+                box-shadow: 0 6px 18px rgba(136, 201, 234, 0.25);
+                opacity: 0;
+                transform: translateY(-8px) scale(0.9);
+                transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .tc6-property-popover.visible {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            
+            .tc6-popover-label {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary, #7eb8c5);
+                margin-bottom: 10px;
+                font-family: 'Fredoka', sans-serif;
+            }
+            
+            .tc6-popover-slider-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .tc6-popover-slider {
+                flex: 1;
+                -webkit-appearance: none;
+                appearance: none;
+                background: var(--bg-panel, #e8f4fc);
+                height: 8px;
+                border-radius: 4px;
+                border: 2px solid var(--border, #e0f0ff);
+                cursor: pointer;
+            }
+            .tc6-popover-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 18px;
+                height: 18px;
+                background: var(--accent, #88c9ea);
+                border-radius: 50%;
+                border: 3px solid var(--bg-input, #ffffff);
+                box-shadow: 1px 1px 0 rgba(136, 201, 234, 0.15);
+                cursor: pointer;
+                transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .tc6-popover-slider::-webkit-slider-thumb:hover {
+                transform: scale(1.15);
+            }
+            
+            .tc6-popover-value {
+                min-width: 45px;
+                text-align: right;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-primary, #2a5a75);
+                font-family: 'Fredoka', sans-serif;
+            }
+            
+            /* ===== SAVE NOTIFICATION ===== */
             .tc6-save-notification {
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                z-index: 100001;
+                z-index: 100002;
                 opacity: 0;
                 transform: translateY(-20px) scale(0.9);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -756,25 +1485,22 @@ const ThemeCustomizer = {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
-            
             .tc6-save-notification-content {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                background: var(--bg-panel, #1a1e2e);
-                border: 1px solid var(--accent, #88c9ea);
-                border-radius: 12px;
-                padding: 14px 18px;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(136, 201, 234, 0.2);
-                min-width: 280px;
+                background: var(--bg-input, #ffffff);
+                border: 4px solid var(--accent, #88c9ea);
+                border-radius: 20px 25px 22px 28px;
+                padding: 16px 20px;
+                box-shadow: 8px 8px 0 rgba(136, 201, 234, 0.15), 0 15px 40px rgba(136, 201, 234, 0.25);
+                min-width: 300px;
             }
-            
             .tc6-save-tick {
-                color: var(--success, #7dcea0);
+                color: var(--success, #a3d9a5);
                 flex-shrink: 0;
                 animation: tc6-tick-draw 0.4s ease-out;
             }
-            
             @keyframes tc6-tick-draw {
                 0% {
                     stroke-dasharray: 0, 20;
@@ -785,104 +1511,239 @@ const ThemeCustomizer = {
                     stroke-dashoffset: 0;
                 }
             }
-            
             .tc6-save-message {
-                color: var(--text-primary, #fff);
-                font-size: 13px;
-                font-weight: 600;
+                color: var(--text-primary, #2a5a75);
+                font-size: 14px;
+                font-weight: 700;
+                font-family: 'Fredoka', sans-serif;
                 flex: 1;
+            }
+            
+            /* ===== FOOTER LAYOUT ===== */
+            .tc6-footer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 24px;
+                background: var(--bg-input, #ffffff);
+                border-top: 2px solid var(--border, #e0f0ff);
+                flex-shrink: 0;
+            }
+            
+            .tc6-footer-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .tc6-footer-right {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .tc6-btn-secondary {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 10px 16px;
+                background: transparent;
+                border: 2px solid var(--border, #e0f0ff);
+                border-radius: 12px 14px 13px 15px;
+                color: var(--text-secondary, #7eb8c5);
+                font-size: 12px;
+                font-weight: 700;
+                font-family: 'Fredoka', sans-serif;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .tc6-btn-secondary:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--border-strong, #b3e2fa);
+            }
+            .tc6-btn-secondary svg {
+                width: 14px;
+                height: 14px;
+            }
+            
+            .tc6-autosave-indicator {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--success, #a3d9a5);
+                font-family: 'Fredoka', sans-serif;
+                animation: tc6-fade-in 0.3s ease;
+            }
+            .tc6-autosave-indicator svg {
+                color: var(--success, #a3d9a5);
+            }
+            
+            @keyframes tc6-fade-in {
+                from { opacity: 0; transform: translateX(-10px); }
+                to { opacity: 1; transform: translateX(0); }
             }
         `;
         document.head.appendChild(style);
     },
 
     /**
-     * Render settings panel content
+     * Render controls panel content with category panels
      */
-    _renderSettings() {
-        const container = this.popup?.querySelector('#tc6-settings-content');
+    _renderControls() {
+        const container = this.popup?.querySelector('#tc6-controls-content');
         if (!container) return;
 
         const themes = ThemeManager.getThemeList();
         const c = this.workingTheme?.colors || {};
+        const syn = this._getSyntaxColors();
 
         container.innerHTML = `
-            <!-- Theme Info -->
-            <div class="tc6-section">
-                <div class="tc6-section-title">Theme</div>
-                <div class="tc6-field">
-                    <div class="tc6-field-label">Base Theme</div>
-                    <select class="tc6-select" id="tc6-base-theme">
-                        ${themes.map(t => `<option value="${t.id}" ${t.id === this.sourceThemeId ? 'selected' : ''}>${t.name}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="tc6-field">
-                    <div class="tc6-field-label">Name</div>
-                    <input type="text" class="tc6-input" id="tc6-name" value="${this._escape(this.workingTheme?.name || '')}" placeholder="My Theme">
-                </div>
-            </div>
-            
-            <!-- App Background -->
-            <div class="tc6-section">
-                <div class="tc6-section-title">App Background</div>
-                <div class="tc6-field">
-                    <div class="tc6-upload-row">
-                        <input type="text" class="tc6-input" id="tc6-app-bg-url" value="" placeholder="Image URL or upload..." readonly>
-                        <button class="tc6-upload-btn" id="tc6-app-bg-btn">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                        </button>
-                        <button class="tc6-clear-btn" id="tc6-app-bg-clear">✕</button>
-                        <input type="file" id="tc6-app-bg-file" accept="image/*" style="display:none">
+            <!-- UI Colors Panel -->
+            <div class="tc6-category-panel active" data-panel="ui">
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Theme Info</div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Name</label>
+                        <input type="text" class="tc6-input" id="tc6-name" value="${this._escape(this.workingTheme?.name || '')}" placeholder="My Theme">
                     </div>
                 </div>
-                <div class="tc6-field">
-                    <div class="tc6-field-label">Opacity</div>
-                    <div class="tc6-slider-row">
-                        <input type="range" min="0" max="100" value="${c.bgOpacity ?? 50}" id="tc6-app-opacity">
-                        <span class="tc6-slider-val" id="tc6-app-opacity-val">${c.bgOpacity ?? 50}%</span>
-                    </div>
-                </div>
-                <div class="tc6-field">
-                    <div class="tc6-field-label">Blur</div>
-                    <div class="tc6-slider-row">
-                        <input type="range" min="0" max="20" value="${c.bgBlur ?? 0}" id="tc6-app-blur">
-                        <span class="tc6-slider-val" id="tc6-app-blur-val">${c.bgBlur ?? 0}px</span>
+                
+                <div class="tc6-section">
+                    <div class="tc6-section-title">UI Colors</div>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('bgHeader', 'Header Background')}
+                        ${this._renderColorItem('bgPanel', 'Panel Background')}
+                        ${this._renderColorItem('bgInput', 'Input Background')}
+                        ${this._renderColorItem('accent', 'Accent Color')}
+                        ${this._renderColorItem('textPrimary', 'Primary Text')}
+                        ${this._renderColorItem('textSecondary', 'Secondary Text')}
+                        ${this._renderColorItem('textMuted', 'Muted Text')}
+                        ${this._renderColorItem('success', 'Success Color')}
+                        ${this._renderColorItem('error', 'Error Color')}
+                        ${this._renderColorItem('border', 'Border Color')}
                     </div>
                 </div>
             </div>
             
-            <!-- Editor Background -->
-            <div class="tc6-section">
-                <div class="tc6-section-title">Editor Background</div>
-                <div class="tc6-field">
-                    <div class="tc6-upload-row">
-                        <input type="text" class="tc6-input" id="tc6-editor-bg-url" value="" placeholder="Image URL or upload..." readonly>
-                        <button class="tc6-upload-btn" id="tc6-editor-bg-btn">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                        </button>
-                        <button class="tc6-clear-btn" id="tc6-editor-bg-clear">✕</button>
-                        <input type="file" id="tc6-editor-bg-file" accept="image/*" style="display:none">
+            <!-- Syntax Colors Panel -->
+            <div class="tc6-category-panel" data-panel="syntax">
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Syntax Highlighting</div>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('syntaxKeyword', 'Keywords')}
+                        ${this._renderColorItem('syntaxString', 'Strings')}
+                        ${this._renderColorItem('syntaxFunction', 'Functions')}
+                        ${this._renderColorItem('syntaxType', 'Types')}
+                        ${this._renderColorItem('syntaxNumber', 'Numbers')}
+                        ${this._renderColorItem('syntaxComment', 'Comments')}
                     </div>
                 </div>
-                <div class="tc6-field">
-                    <div class="tc6-field-label">Opacity</div>
-                    <div class="tc6-slider-row">
-                        <input type="range" min="0" max="100" value="${c.editorBgOpacity ?? 15}" id="tc6-editor-opacity">
-                        <span class="tc6-slider-val" id="tc6-editor-opacity-val">${c.editorBgOpacity ?? 15}%</span>
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Editor</div>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('editorBg', 'Editor Background')}
+                        ${this._renderColorItem('terminalBg', 'Terminal Background')}
                     </div>
                 </div>
-                <div class="tc6-field">
-                    <div class="tc6-field-label">Blur</div>
-                    <div class="tc6-slider-row">
-                        <input type="range" min="0" max="30" value="${c.editorBgBlur ?? 0}" id="tc6-editor-blur">
-                        <span class="tc6-slider-val" id="tc6-editor-blur-val">${c.editorBgBlur ?? 0}px</span>
+            </div>
+            
+            <!-- Backgrounds Panel -->
+            <div class="tc6-category-panel" data-panel="backgrounds">
+                <div class="tc6-section">
+                    <div class="tc6-section-title">App Background</div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Image</label>
+                        <div class="tc6-upload-row">
+                            <input type="text" class="tc6-input" id="tc6-app-bg-url" value="" placeholder="Image URL or upload..." readonly>
+                            <button class="tc6-upload-btn" id="tc6-app-bg-btn">Upload</button>
+                            <button class="tc6-clear-btn" id="tc6-app-bg-clear">✕</button>
+                            <input type="file" id="tc6-app-bg-file" accept="image/*" style="display:none">
+                        </div>
+                    </div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Opacity</label>
+                        <div class="tc6-slider-row">
+                            <input type="range" min="0" max="100" value="${c.bgOpacity ?? 50}" id="tc6-app-opacity">
+                            <span class="tc6-slider-val" id="tc6-app-opacity-val">${c.bgOpacity ?? 50}%</span>
+                        </div>
+                    </div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Blur</label>
+                        <div class="tc6-slider-row">
+                            <input type="range" min="0" max="20" value="${c.bgBlur ?? 0}" id="tc6-app-blur">
+                            <span class="tc6-slider-val" id="tc6-app-blur-val">${c.bgBlur ?? 0}px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Editor Background</div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Image</label>
+                        <div class="tc6-upload-row">
+                            <input type="text" class="tc6-input" id="tc6-editor-bg-url" value="" placeholder="Image URL or upload..." readonly>
+                            <button class="tc6-upload-btn" id="tc6-editor-bg-btn">Upload</button>
+                            <button class="tc6-clear-btn" id="tc6-editor-bg-clear">✕</button>
+                            <input type="file" id="tc6-editor-bg-file" accept="image/*" style="display:none">
+                        </div>
+                    </div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Opacity</label>
+                        <div class="tc6-slider-row">
+                            <input type="range" min="0" max="100" value="${c.editorBgOpacity ?? 15}" id="tc6-editor-opacity">
+                            <span class="tc6-slider-val" id="tc6-editor-opacity-val">${c.editorBgOpacity ?? 15}%</span>
+                        </div>
+                    </div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Blur</label>
+                        <div class="tc6-slider-row">
+                            <input type="range" min="0" max="30" value="${c.editorBgBlur ?? 0}" id="tc6-editor-blur">
+                            <span class="tc6-slider-val" id="tc6-editor-blur-val">${c.editorBgBlur ?? 0}px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Advanced Panel -->
+            <div class="tc6-category-panel" data-panel="advanced">
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Base Theme</div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Copy from</label>
+                        <select class="tc6-input" id="tc6-base-theme" style="padding: 10px 14px;">
+                            ${themes.map(t => `<option value="${t.id}" ${t.id === this.sourceThemeId ? 'selected' : ''}>${t.name}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Import / Export</div>
+                    <button class="tc6-upload-btn" id="tc6-export-json" style="width: 100%; padding: 12px;">Export as JSON</button>
+                    <div class="tc6-field" style="margin-top: 10px;">
+                        <button class="tc6-upload-btn" id="tc6-import-json" style="width: 100%; padding: 12px;">Import from JSON</button>
+                        <input type="file" id="tc6-import-json-file" accept=".json" style="display:none">
                     </div>
                 </div>
             </div>
         `;
 
-        this._bindSettingsEvents();
+        this._bindControlsEvents();
         this._updateBgHints();
+    },
+
+    /**
+     * Render a single color item
+     */
+    _renderColorItem(key, label) {
+        const color = this._getColor(key);
+        return `
+            <div class="tc6-color-item" data-key="${key}">
+                <label>${label}</label>
+                <div class="tc6-color-swatch" style="background: ${color}"></div>
+            </div>
+        `;
     },
 
     /**
@@ -916,12 +1777,17 @@ const ThemeCustomizer = {
         this.popup.querySelector('#tc6-save-new')?.addEventListener('click', () => this._saveAsNew());
         this.popup.querySelector('#tc6-delete')?.addEventListener('click', () => this._deleteTheme());
 
-        // Backdrop click
-        this.popup.addEventListener('click', (e) => {
-            if (e.target === this.popup) this.close();
-        });
+        // Undo/Redo buttons
+        this.popup.querySelector('#tc6-undo')?.addEventListener('click', () => this._undo());
+        this.popup.querySelector('#tc6-redo')?.addEventListener('click', () => this._redo());
 
-        // ESC key
+        // NOTE: Backdrop click to close removed per user request
+        // User found it frustrating when dragging backgrounds
+        // this.popup.addEventListener('click', (e) => {
+        //     if (e.target === this.popup) this.close();
+        // });
+
+        // ESC key + Undo/Redo shortcuts
         this._escHandler = (e) => {
             if (e.key === 'Escape') {
                 if (this.currentColorPicker) {
@@ -930,25 +1796,72 @@ const ThemeCustomizer = {
                     this.close();
                 }
             }
+            // Undo/Redo keyboard shortcuts
+            if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                this._undo();
+            }
+            if (e.ctrlKey && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                this._redo();
+            }
         };
         document.addEventListener('keydown', this._escHandler);
 
-        // Settings toggle
-        this.popup.querySelector('#tc6-settings-toggle')?.addEventListener('click', () => {
-            const settings = this.popup.querySelector('#tc6-settings');
-            settings?.classList.toggle('collapsed');
+        // Toolbar switching
+        this.popup.querySelectorAll('.tc6-toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.dataset.category;
+                this._switchToCategory(category);
+            });
         });
 
-        // Background drag mode
-        this._setupBgDrag();
+        // Sidebar collapse toggle
+        const toggleBtn = this.popup.querySelector('#tc6-controls-toggle');
+        const controlsPanel = this.popup.querySelector('#tc6-controls');
+        if (toggleBtn && controlsPanel) {
+            toggleBtn.addEventListener('click', () => {
+                controlsPanel.classList.toggle('collapsed');
+            });
+        }
     },
 
     /**
-     * Bind settings panel events
+     * Switch to a category
      */
-    _bindSettingsEvents() {
-        const container = this.popup?.querySelector('#tc6-settings-content');
+    _switchToCategory(category) {
+        // Switch active toolbar button
+        this.popup.querySelectorAll('.tc6-toolbar-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.category === category);
+        });
+
+        // Switch active panel
+        this.popup.querySelectorAll('.tc6-category-panel').forEach(panel => {
+            panel.classList.toggle('active', panel.dataset.panel === category);
+        });
+    },
+
+    /**
+     * Bind controls panel events
+     */
+    _bindControlsEvents() {
+        const container = this.popup?.querySelector('#tc6-controls-content');
         if (!container) return;
+
+        // Color item clicks
+        container.querySelectorAll('.tc6-color-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const key = item.dataset.key;
+                const label = item.querySelector('label')?.textContent || key;
+                // Activate edit bar instead of showing old modal picker
+                this._updateEditBar(key, label);
+            });
+        });
+
+        // Name input
+        container.querySelector('#tc6-name')?.addEventListener('input', (e) => {
+            this.workingTheme.name = e.target.value;
+        });
 
         // Base theme change
         container.querySelector('#tc6-base-theme')?.addEventListener('change', (e) => {
@@ -976,14 +1889,9 @@ const ThemeCustomizer = {
                     if (preservedEditorBgPosition) this.workingTheme.colors.editorBgPosition = preservedEditorBgPosition;
                 }
 
-                this._renderSettings();
+                this._renderControls();
                 this._renderPreview();
             }
-        });
-
-        // Name input
-        container.querySelector('#tc6-name')?.addEventListener('input', (e) => {
-            this.workingTheme.name = e.target.value;
         });
 
         // App background upload
@@ -1219,40 +2127,93 @@ const ThemeCustomizer = {
      * Update drag mode hint
      */
     _updateDragModeHint() {
-        const hint = this.popup?.querySelector('.tc6-preview-hint');
-        if (!hint) return;
+        const editBar = this.popup?.querySelector('#tc6-edit-bar');
+        if (!editBar) return;
 
         if (this.bgDragMode) {
             const editorBg = this.popup?.querySelector('.tc6-editor-bg');
             const isEditor = editorBg && this.workingTheme?.colors?.editorBackground;
-            hint.classList.add('drag-mode');
-            hint.innerHTML = `
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
-                </svg>
-                <span style="color: #ffcc00;">Drag Mode Active</span> - Drag to reposition ${isEditor ? 'editor' : 'app'} background
-                <button class="tc6-drag-confirm-btn" id="tc6-drag-confirm">✓ Done</button>
+
+            // Replace edit bar content with drag mode notification
+            editBar.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+                        </svg>
+                        <span style="font-weight: 700; color: #2a5a75; font-size: 13px; font-family: 'Fredoka', sans-serif;">Drag Mode Active</span>
+                        <span style="color: #5a8a95; font-size: 12px;">Drag to reposition ${isEditor ? 'editor' : 'app'} background</span>
+                    </div>
+                    <button class="tc6-drag-confirm-btn" id="tc6-drag-confirm">
+                        <svg viewBox="0 0 24 24" width="14" height="14">
+                            <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="3" fill="none"/>
+                        </svg>
+                        Done
+                    </button>
+                </div>
             `;
-            hint.style.background = 'rgba(255, 180, 0, 0.9)';
-            hint.style.color = '#000';
+
+            // Apply kawaii gradient styling
+            editBar.style.background = 'linear-gradient(135deg, #FFD93D 0%, #FFA96C 100%)';
+            editBar.style.border = '3px solid #FFB84D';
+            editBar.style.boxShadow = '4px 4px 0 rgba(255, 184, 77, 0.3)';
 
             // Bind confirm button
-            const confirmBtn = hint.querySelector('#tc6-drag-confirm');
+            const confirmBtn = editBar.querySelector('#tc6-drag-confirm');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', () => {
                     this._exitDragMode();
                 });
             }
         } else {
-            hint.classList.remove('drag-mode');
-            hint.innerHTML = `
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-                </svg>
-                Click any element to change its color • Double-click background to drag
+            // Restore original edit bar (new structure with always visible undo/redo)
+            editBar.innerHTML = `
+                <!-- Undo/Redo - Always visible -->
+                <div class="tc6-edit-actions">
+                    <button class="tc6-edit-action" id="tc6-undo" disabled title="Undo (Ctrl+Z)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
+                        </svg>
+                    </button>
+                    <button class="tc6-edit-action" id="tc6-redo" disabled title="Redo (Ctrl+Y)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Divider -->
+                <div class="tc6-edit-divider"></div>
+                
+                <!-- Idle hint -->
+                <span class="tc6-edit-hint" id="tc6-edit-hint">Click any element to edit • Double-click background to drag</span>
+                
+                <!-- Active element info (hidden initially) -->
+                <div class="tc6-edit-element" id="tc6-edit-element" style="display: none;">
+                    <div class="tc6-edit-element-info">
+                        <span class="tc6-edit-element-name" id="tc6-edit-name">Element Name</span>
+                        <div class="tc6-edit-color-preview" id="tc6-edit-color"></div>
+                    </div>
+                    
+                    <div class="tc6-edit-properties" id="tc6-edit-properties"></div>
+                    
+                    <button class="tc6-edit-close" id="tc6-edit-close" title="Deselect">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
             `;
-            hint.style.background = 'rgba(0, 0, 0, 0.75)';
-            hint.style.color = '#fff';
+
+            // Reset styles
+            editBar.style.background = '';
+            editBar.style.border = '';
+            editBar.style.boxShadow = '';
+
+            // Re-bind undo/redo handlers
+            this.popup.querySelector('#tc6-undo')?.addEventListener('click', () => this._undo());
+            this.popup.querySelector('#tc6-redo')?.addEventListener('click', () => this._redo());
+            this._updateHistoryButtons();
         }
     },
 
@@ -1337,7 +2298,7 @@ const ThemeCustomizer = {
                 
                 <div class="tc6-ide-content ${this.bgDragMode ? 'tc6-dimmed' : ''}">
                     <!-- Header -->
-                    <div class="tc6-clickable tc6-ui-element" data-key="bgHeader" data-label="Header Background" style="height: 32px; display: flex; align-items: center; padding: 0 10px; gap: 8px; background: ${c.bgHeader || '#1a1e2e'}; border-bottom: 1px solid ${c.border || '#333'};">
+                    <div class="tc6-clickable tc6-ui-element" data-key="bgHeader-main" data-label="Header Background" style="height: 32px; display: flex; align-items: center; padding: 0 10px; gap: 8px; background: ${c.bgHeader || '#1a1e2e'}; border-bottom: 1px solid ${c.border || '#333'};">
                         <div class="tc6-clickable" data-key="accent" data-label="Accent Color" style="font-weight: 700; font-size: 10px; padding: 3px 6px; border-radius: 3px; background: ${c.accent || '#88c9ea'}; color: #fff;">C++</div>
                         <div style="display: flex; gap: 8px; font-size: 9px; color: ${c.textPrimary || '#fff'};">
                             <span class="tc6-clickable" data-key="textPrimary" data-label="Primary Text">File</span>
@@ -1369,7 +2330,7 @@ const ThemeCustomizer = {
                             </div>
                             
                             <!-- Problem Panel -->
-                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel" data-label="Problem Panel" style="height: 60px; border-radius: 6px; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; overflow: hidden; display: flex; flex-direction: column;">
+                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel-problems" data-label="Problem Panel" style="height: 60px; border-radius: 6px; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; overflow: hidden; display: flex; flex-direction: column;">
                                 <div style="padding: 4px 8px; font-size: 9px; font-weight: 700; color: ${c.textPrimary || '#fff'}; border-bottom: 1px solid ${c.border || '#333'}; display: flex; align-items: center; gap: 8px; background: ${c.bgHeader || '#1a1e2e'};">
                                     <span>PROBLEMS</span>
                                     <span style="background: ${c.error || '#ff6b6b'}; color: #fff; padding: 1px 6px; border-radius: 8px; font-size: 8px;">0</span>
@@ -1384,13 +2345,13 @@ const ThemeCustomizer = {
                         <!-- Right Sidebar -->
                         <div style="width: 140px; display: flex; flex-direction: column; gap: 6px;">
                             <!-- INPUT Panel -->
-                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel" data-label="Input Panel" style="flex: 1; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel-input" data-label="Input Panel" style="flex: 1; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
                                 <div style="padding: 5px 8px; font-size: 9px; font-weight: 700; color: ${c.accent || '#88c9ea'}; border-bottom: 1px solid ${c.border || '#333'};">INPUT</div>
                                 <div class="tc6-clickable" data-key="bgInput" data-label="Input Background" style="flex: 1; padding: 8px; font-size: 10px; color: ${c.textMuted || '#888'}; background: ${c.bgInput || '#222'}; margin: 4px; border-radius: 4px;">Nhập dữ liệu test...</div>
                             </div>
                             
                             <!-- EXPECTED Panel -->
-                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel" data-label="Expected Panel" style="flex: 1; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel-expected" data-label="Expected Panel" style="flex: 1; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
                                 <div style="padding: 5px 8px; font-size: 9px; font-weight: 700; color: ${c.accent || '#88c9ea'}; border-bottom: 1px solid ${c.border || '#333'};">EXPECTED</div>
                                 <div style="flex: 1; padding: 8px; font-size: 10px; color: ${c.textMuted || '#888'};">Kết quả mong đợi...</div>
                             </div>
@@ -1412,7 +2373,7 @@ const ThemeCustomizer = {
                     </div>
                     
                     <!-- Status Bar -->
-                    <div class="tc6-clickable tc6-ui-element" data-key="bgHeader" data-label="Status Bar" style="height: 20px; display: flex; align-items: center; padding: 0 8px; gap: 6px; background: ${c.bgHeader || '#1a1e2e'}; border-top: 1px solid ${c.border || '#333'}; font-size: 9px;">
+                    <div class="tc6-clickable tc6-ui-element" data-key="bgHeader-statusbar" data-label="Status Bar" style="height: 20px; display: flex; align-items: center; padding: 0 8px; gap: 6px; background: ${c.bgHeader || '#1a1e2e'}; border-top: 1px solid ${c.border || '#333'}; font-size: 9px;">
                         <div style="width: 5px; height: 5px; border-radius: 50%; background: ${c.success || '#7dcea0'};"></div>
                         <span style="color: ${c.textPrimary || '#fff'};">Ready</span>
                         <span style="margin-left: auto; color: ${c.textMuted || '#888'};">Ln 1, Col 1</span>
@@ -1431,12 +2392,25 @@ const ThemeCustomizer = {
         wrapper.querySelectorAll('.tc6-clickable[data-key]').forEach(el => {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (this.bgDragMode) return; // Don't open color picker in drag mode
+                if (this.bgDragMode) return; // Don't activate edit bar in drag mode
                 const key = el.dataset.key;
                 const label = el.dataset.label || key;
-                this._showColorPicker(key, label, el);
+                // Activate edit bar (Canva-style floating toolbar)
+                this._updateEditBar(key, label);
             });
         });
+    },
+
+    /**
+     * Color presets for quick selection
+     */
+    _getColorPresets() {
+        return {
+            material: ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'],
+            tailwind: ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899'],
+            pastel: ['#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#D4BAFF', '#FFBAF3', '#FFC9BA', '#FFEEBA', '#C9FFD4', '#BAF3FF', '#E1BAFF', '#FFB3E6', '#FFD4BA', '#FFFABA', '#B3FFD9'],
+            kawaii: ['#FFB6D9', '#FFC9E5', '#FFD4F0', '#E5CCFF', '#D9B3FF', '#C9BAFF', '#B3E5FF', '#BAF3FF', '#B3FFF0', '#C9FFE5', '#FFFABA', '#FFEEBA', '#FFDFBA', '#FFC9D9', '#FFB3CC', '#FFE5F0']
+        };
     },
 
     /**
@@ -1457,6 +2431,9 @@ const ThemeCustomizer = {
         // Highlight the selected element
         targetEl.classList.add('tc6-color-active');
 
+        // Get presets
+        const presets = this._getColorPresets();
+
         const picker = document.createElement('div');
         picker.className = 'tc6-color-picker';
         picker.innerHTML = `
@@ -1470,6 +2447,7 @@ const ThemeCustomizer = {
             
             <div class="tc6-picker-tabs">
                 <button class="tc6-picker-tab active" data-tab="color">Color</button>
+                <button class="tc6-picker-tab" data-tab="presets">Presets</button>
                 <button class="tc6-picker-tab" data-tab="advanced">Advanced</button>
             </div>
             
@@ -1481,6 +2459,34 @@ const ThemeCustomizer = {
                         <div class="tc6-picker-row">
                             <span class="tc6-picker-label">Hex:</span>
                             <input type="text" class="tc6-input" id="tc6-hex-input" value="${hexColor.toUpperCase()}" style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 8px;">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Presets Tab -->
+                <div class="tc6-picker-tab-panel" data-panel="presets" style="display: none;">
+                    <div class="tc6-picker-section">
+                        <div class="tc6-picker-section-title">Material Design</div>
+                        <div class="tc6-preset-grid">
+                            ${presets.material.map(color => `<div class="tc6-preset-swatch" data-color="${color}" style="background: ${color};" title="${color}"></div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="tc6-picker-section">
+                        <div class="tc6-picker-section-title">Tailwind CSS</div>
+                        <div class="tc6-preset-grid">
+                            ${presets.tailwind.map(color => `<div class="tc6-preset-swatch" data-color="${color}" style="background: ${color};" title="${color}"></div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="tc6-picker-section">
+                        <div class="tc6-picker-section-title">Pastel</div>
+                        <div class="tc6-preset-grid">
+                            ${presets.pastel.map(color => `<div class="tc6-preset-swatch" data-color="${color}" style="background: ${color};" title="${color}"></div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="tc6-picker-section">
+                        <div class="tc6-picker-section-title">Kawaii</div>
+                        <div class="tc6-preset-grid">
+                            ${presets.kawaii.map(color => `<div class="tc6-preset-swatch" data-color="${color}" style="background: ${color};" title="${color}"></div>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -1625,6 +2631,15 @@ const ThemeCustomizer = {
             }
         }
 
+        // Preset swatch clicks
+        picker.querySelectorAll('.tc6-preset-swatch').forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                const color = swatch.dataset.color;
+                colorInput.value = color;
+                updateColor(color);
+            });
+        });
+
         picker.querySelector('.tc6-color-picker-close').addEventListener('click', () => this._hideColorPicker());
 
         // Close on outside click
@@ -1642,8 +2657,13 @@ const ThemeCustomizer = {
      * Check if element supports border customization
      */
     _supportsBorder(key) {
-        // Elements that can have borders
-        const borderableKeys = ['bgPanel', 'bgInput', 'editorBg', 'bgHeader'];
+        // Elements that can have borders (including variants)
+        const borderableKeys = [
+            'bgPanel', 'bgPanel-problems', 'bgPanel-input', 'bgPanel-expected',
+            'bgInput',
+            'editorBg',
+            'bgHeader', 'bgHeader-main', 'bgHeader-statusbar'
+        ];
         return borderableKeys.includes(key);
     },
 
@@ -1653,7 +2673,8 @@ const ThemeCustomizer = {
     _getOpacity(key) {
         // Some colors might have opacity stored separately
         const c = this.workingTheme?.colors || {};
-        const opacityKey = key + 'Opacity';
+        const baseKey = this._getBaseKey(key);
+        const opacityKey = baseKey + 'Opacity';
         return c[opacityKey];
     },
 
@@ -1662,7 +2683,8 @@ const ThemeCustomizer = {
      */
     _setOpacity(key, value) {
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
-        const opacityKey = key + 'Opacity';
+        const baseKey = this._getBaseKey(key);
+        const opacityKey = baseKey + 'Opacity';
         this.workingTheme.colors[opacityKey] = value;
     },
 
@@ -1670,9 +2692,19 @@ const ThemeCustomizer = {
      * Update preview without full re-render (preserves editor background)
      */
     _updatePreviewWithoutRerender(key) {
-        // Update only the specific element instead of full re-render
-        const elements = this.popup?.querySelectorAll(`[data-key="${key}"]`);
-        if (!elements || elements.length === 0) {
+        // Map base keys to all their variants
+        const keyVariants = this._getKeyVariants(key);
+
+        // Find all elements matching this key or its variants
+        let elements = [];
+        keyVariants.forEach(variantKey => {
+            const found = this.popup?.querySelectorAll(`[data-key="${variantKey}"]`);
+            if (found && found.length > 0) {
+                elements.push(...Array.from(found));
+            }
+        });
+
+        if (elements.length === 0) {
             // Fallback to full render if element not found
             this._renderPreview();
             return;
@@ -1709,6 +2741,25 @@ const ThemeCustomizer = {
     },
 
     /**
+     * Get all key variants for a given key
+     * Maps base keys like 'bgHeader' to all their variants like ['bgHeader-main', 'bgHeader-statusbar']
+     */
+    _getKeyVariants(key) {
+        const keyMap = {
+            'bgHeader': ['bgHeader-main', 'bgHeader-statusbar'],
+            'bgHeader-main': ['bgHeader-main'],
+            'bgHeader-statusbar': ['bgHeader-statusbar'],
+            'bgPanel': ['bgPanel-problems', 'bgPanel-input', 'bgPanel-expected'],
+            'bgPanel-problems': ['bgPanel-problems'],
+            'bgPanel-input': ['bgPanel-input'],
+            'bgPanel-expected': ['bgPanel-expected']
+        };
+
+        // Return mapped variants or just the key itself if no mapping exists
+        return keyMap[key] || [key];
+    },
+
+    /**
      * Convert hex to RGB
      */
     _hexToRgb(hex) {
@@ -1737,6 +2788,293 @@ const ThemeCustomizer = {
             this._pickerClickHandler = null;
         }
         this._activeColorKey = null;
+    },
+
+    /**
+     * Update edit bar - Switch between idle and active states
+     * @param {string|null} elementKey - Color key (null = idle state)
+     * @param {string} elementLabel - Display label for element
+     */
+    _updateEditBar(elementKey, elementLabel) {
+        const editBar = this.popup?.querySelector('#tc6-edit-bar');
+        if (!editBar) return;
+
+        const hintEl = editBar.querySelector('#tc6-edit-hint');
+        const elementEl = editBar.querySelector('#tc6-edit-element');
+
+        if (!elementKey) {
+            // Switch to idle state - show hint, hide element
+            if (hintEl) hintEl.style.display = 'inline';
+            if (elementEl) elementEl.style.display = 'none';
+            this._activeColorKey = null;
+            return;
+        }
+
+        // Switch to active state - hide hint, show element
+        this._activeColorKey = elementKey;
+
+        if (hintEl) hintEl.style.display = 'none';
+        if (elementEl) {
+            elementEl.style.display = 'flex';
+
+            // Update element name
+            const nameEl = elementEl.querySelector('#tc6-edit-name');
+            if (nameEl) nameEl.textContent = elementLabel;
+
+            // Update color preview
+            const colorPreview = elementEl.querySelector('#tc6-edit-color');
+            if (colorPreview) {
+                const color = this._getColor(elementKey);
+                colorPreview.style.background = color;
+
+                // Click handler for color dropdown
+                colorPreview.onclick = (e) => {
+                    e.stopPropagation();
+                    this._showColorDropdown(elementKey, elementLabel, colorPreview);
+                };
+            }
+
+            // Render property icons
+            const propertiesContainer = elementEl.querySelector('#tc6-edit-properties');
+            if (propertiesContainer) {
+                propertiesContainer.innerHTML = '';
+                const properties = this._renderPropertyIcons(elementKey);
+                properties.forEach(prop => {
+                    const btn = document.createElement('button');
+                    btn.className = 'tc6-edit-prop-btn';
+                    btn.title = prop.label;
+                    btn.innerHTML = prop.icon;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        this._showPropertyPopover(prop.property, prop.getValue(), btn);
+                    };
+                    propertiesContainer.appendChild(btn);
+                });
+            }
+
+            // Close button handler
+            const closeBtn = elementEl.querySelector('#tc6-edit-close');
+            if (closeBtn) {
+                closeBtn.onclick = () => this._updateEditBar(null);
+            }
+        }
+    },
+
+    /**
+     * Render property icons based on element type
+     * @param {string} elementKey - Color key
+     * @returns {Array} Array of property objects
+     */
+    _renderPropertyIcons(elementKey) {
+        const properties = [];
+
+        // Opacity control (for all elements)
+        properties.push({
+            icon: '<span style="font-size: 16px; font-weight: 700;">α</span>',
+            property: 'opacity',
+            label: 'Opacity',
+            getValue: () => this._getOpacity(elementKey) ?? 100
+        });
+
+        // Blur control (for backgrounds and terminal - acrylic effect)
+        if (elementKey === 'appBackground' || elementKey === 'editorBackground' || elementKey === 'terminalBg') {
+            properties.push({
+                icon: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity="0.3"/>
+                </svg>`,
+                property: 'blur',
+                label: 'Blur (Acrylic)',
+                getValue: () => {
+                    const c = this.workingTheme?.colors || {};
+                    if (elementKey === 'appBackground') return c.bgBlur ?? 0;
+                    if (elementKey === 'editorBackground') return c.editorBgBlur ?? 0;
+                    if (elementKey === 'terminalBg') return c.terminalBgBlur ?? 0;
+                    return 0;
+                }
+            });
+        }
+
+        // Border control (for supported elements)
+        if (this._supportsBorder(elementKey)) {
+            properties.push({
+                icon: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                </svg>`,
+                property: 'border',
+                label: 'Border Width',
+                getValue: () => this.workingTheme?.colors?.borderWidth ?? 1
+            });
+        }
+
+        return properties;
+    },
+
+    /**
+     * Show color dropdown (Figma-style)
+     * @param {string} key - Color key
+     * @param {string} label - Element label
+     * @param {HTMLElement} targetEl - Target element to position dropdown
+     */
+    _showColorDropdown(key, label, targetEl) {
+        // Remove existing dropdown
+        document.querySelectorAll('.tc6-color-dropdown').forEach(el => el.remove());
+
+        const currentColor = this._getColor(key);
+        const hexColor = this._toHex(currentColor);
+        const presets = this._getColorPresets();
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'tc6-color-dropdown';
+        dropdown.innerHTML = `
+            <div class="tc6-dropdown-section">
+                <input type="color" class="tc6-dropdown-color-native" value="${hexColor}">
+                <div class="tc6-dropdown-row">
+                    <span class="tc6-dropdown-label">Hex:</span>
+                    <input type="text" class="tc6-dropdown-hex" value="${hexColor.toUpperCase()}" maxlength="7">
+                </div>
+            </div>
+            <div class="tc6-dropdown-section">
+                <div class="tc6-dropdown-section-title">Presets</div>
+                <div class="tc6-dropdown-preset-grid">
+                    ${presets.kawaii.map(color => `
+                        <div class="tc6-dropdown-preset" style="background: ${color};" data-color="${color}" title="${color}"></div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dropdown);
+
+        // Position dropdown below color preview
+        const rect = targetEl.getBoundingClientRect();
+        dropdown.style.left = rect.left + 'px';
+        dropdown.style.top = (rect.bottom + 8) + 'px';
+
+        // Show with animation
+        requestAnimationFrame(() => dropdown.classList.add('visible'));
+
+        // Bind events
+        const colorInput = dropdown.querySelector('.tc6-dropdown-color-native');
+        const hexInput = dropdown.querySelector('.tc6-dropdown-hex');
+
+        const updateColor = (newColor) => {
+            this._saveHistorySnapshot();
+            this._setColor(key, newColor);
+            this._updatePreviewWithoutRerender(key);
+            targetEl.style.background = newColor;
+            hexInput.value = newColor.toUpperCase();
+            this._triggerAutoSave();
+        };
+
+        colorInput.addEventListener('input', (e) => updateColor(e.target.value));
+        hexInput.addEventListener('input', (e) => {
+            const val = e.target.value.replace(/[^#0-9A-Fa-f]/g, '');
+            if (val.length === 7 && val.startsWith('#')) {
+                colorInput.value = val;
+                updateColor(val);
+            }
+        });
+
+        dropdown.querySelectorAll('.tc6-dropdown-preset').forEach(preset => {
+            preset.addEventListener('click', () => {
+                const color = preset.dataset.color;
+                colorInput.value = color;
+                updateColor(color);
+            });
+        });
+
+        // Close on outside click
+        setTimeout(() => {
+            const closeHandler = (e) => {
+                if (!dropdown.contains(e.target) && !targetEl.contains(e.target)) {
+                    dropdown.remove();
+                    document.removeEventListener('click', closeHandler);
+                }
+            };
+            document.addEventListener('click', closeHandler);
+        }, 100);
+    },
+
+    /**
+     * Show property popover (mini slider)
+     * @param {string} property - Property name (opacity, blur, border)
+     * @param {number} value - Current value
+     * @param {HTMLElement} targetEl - Target button element
+     */
+    _showPropertyPopover(property, value, targetEl) {
+        // Remove existing popovers
+        document.querySelectorAll('.tc6-property-popover').forEach(el => el.remove());
+
+        const config = {
+            opacity: { min: 0, max: 100, suffix: '%', step: 1 },
+            blur: { min: 0, max: 20, suffix: 'px', step: 1 },
+            border: { min: 0, max: 5, suffix: 'px', step: 1 }
+        }[property];
+
+        if (!config) return;
+
+        const popover = document.createElement('div');
+        popover.className = 'tc6-property-popover';
+        popover.innerHTML = `
+            <div class="tc6-popover-label">${targetEl.title}</div>
+            <div class="tc6-popover-slider-row">
+                <input type="range" min="${config.min}" max="${config.max}" step="${config.step}" value="${value}" class="tc6-popover-slider">
+                <span class="tc6-popover-value">${value}${config.suffix}</span>
+            </div>
+        `;
+
+        document.body.appendChild(popover);
+
+        // Position below button
+        const rect = targetEl.getBoundingClientRect();
+        popover.style.left = (rect.left + rect.width / 2 - 100) + 'px';
+        popover.style.top = (rect.bottom + 8) + 'px';
+
+        // Show with animation
+        requestAnimationFrame(() => popover.classList.add('visible'));
+
+        // Bind slider
+        const slider = popover.querySelector('.tc6-popover-slider');
+        const valueDisplay = popover.querySelector('.tc6-popover-value');
+
+        slider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            valueDisplay.textContent = val + config.suffix;
+
+            this._saveHistorySnapshot();
+
+            // Update based on property type
+            const key = this._activeColorKey;
+            if (property === 'opacity') {
+                this._setOpacity(key, val);
+            } else if (property === 'blur') {
+                const c = this.workingTheme.colors;
+                if (key === 'appBackground') c.bgBlur = val;
+                else if (key === 'editorBackground') c.editorBgBlur = val;
+                else if (key === 'terminalBg') c.terminalBgBlur = val;
+            } else if (property === 'border') {
+                this.workingTheme.colors.borderWidth = val;
+            }
+
+            this._updatePreviewWithoutRerender(key);
+            this._updateHistoryButtons();
+            this._triggerAutoSave();
+        });
+
+        // Mark button as active
+        targetEl.classList.add('active');
+
+        // Close on outside click
+        setTimeout(() => {
+            const closeHandler = (e) => {
+                if (!popover.contains(e.target) && !targetEl.contains(e.target)) {
+                    popover.remove();
+                    targetEl.classList.remove('active');
+                    document.removeEventListener('click', closeHandler);
+                }
+            };
+            document.addEventListener('click', closeHandler);
+        }, 100);
     },
 
     /**
@@ -1807,6 +3145,9 @@ const ThemeCustomizer = {
 
             console.log(`[Customizer] Created: ${name} (${id})`);
 
+            // Dispatch custom event for IDE integration
+            this._dispatchThemeSaveEvent(themeData);
+
             // Show success notification
             this._showSaveNotification(`Theme "${name}" đã được lưu thành công!`);
 
@@ -1864,13 +3205,31 @@ const ThemeCustomizer = {
 
             console.log(`[Customizer] Updated: ${name}`);
 
+            // Dispatch custom event for IDE integration
+            this._dispatchThemeSaveEvent(themeData);
+
             // Show success notification
             this._showSaveNotification(`Theme "${name}" đã được cập nhật thành công!`);
 
-            // Don't close - keep customizer open for further edits
+            // Close customizer after save (Save & Close behavior)
+            this.close();
         } else {
             alert('Failed to save theme');
         }
+    },
+
+    /**
+     * Dispatch theme save event for IDE integration
+     */
+    _dispatchThemeSaveEvent(themeData) {
+        const event = new CustomEvent('themeCustomizerSave', {
+            detail: {
+                theme: themeData,
+                timestamp: Date.now()
+            }
+        });
+        window.dispatchEvent(event);
+        console.log('[Customizer] Dispatched themeCustomizerSave event', themeData.meta);
     },
 
     /**
@@ -1960,18 +3319,38 @@ const ThemeCustomizer = {
 
     // ========== HELPER METHODS ==========
 
+    /**
+     * Get base key from a unique key variant
+     * e.g., 'bgHeader-main' -> 'bgHeader', 'bgPanel-input' -> 'bgPanel'
+     */
+    _getBaseKey(key) {
+        // Map unique keys back to their base keys
+        const baseKeyMap = {
+            'bgHeader-main': 'bgHeader',
+            'bgHeader-statusbar': 'bgHeader',
+            'bgPanel-problems': 'bgPanel',
+            'bgPanel-input': 'bgPanel',
+            'bgPanel-expected': 'bgPanel'
+        };
+
+        return baseKeyMap[key] || key;
+    },
+
     _getColor(key) {
         const c = this.workingTheme?.colors || {};
 
-        if (c[key]) return c[key];
+        // Normalize unique keys to base keys
+        const baseKey = this._getBaseKey(key);
 
-        if (key.startsWith('syntax')) {
-            const syntaxKey = key.replace('syntax', '').toLowerCase();
+        if (c[baseKey]) return c[baseKey];
+
+        if (baseKey.startsWith('syntax')) {
+            const syntaxKey = baseKey.replace('syntax', '').toLowerCase();
             const color = this.workingTheme?.editor?.syntax?.[syntaxKey]?.color;
             return color ? (color.startsWith('#') ? color : '#' + color) : '#888888';
         }
 
-        if (key === 'editorBg') {
+        if (baseKey === 'editorBg') {
             return this.workingTheme?.editor?.background || c.editorBg || '#1e1e1e';
         }
 
@@ -1982,20 +3361,24 @@ const ThemeCustomizer = {
         if (!this.workingTheme) return;
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
 
-        if (key.startsWith('syntax')) {
-            const syntaxKey = key.replace('syntax', '').toLowerCase();
+        // Normalize unique keys back to base keys for storage
+        const baseKey = this._getBaseKey(key);
+
+        if (baseKey.startsWith('syntax')) {
+            const syntaxKey = baseKey.replace('syntax', '').toLowerCase();
             if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
             if (!this.workingTheme.editor.syntax) this.workingTheme.editor.syntax = {};
             if (!this.workingTheme.editor.syntax[syntaxKey]) this.workingTheme.editor.syntax[syntaxKey] = {};
             this.workingTheme.editor.syntax[syntaxKey].color = value.replace('#', '');
-        } else if (key === 'editorBg') {
+        } else if (baseKey === 'editorBg') {
             if (!this.workingTheme.editor) this.workingTheme.editor = {};
             this.workingTheme.editor.background = value;
             this.workingTheme.colors.editorBg = value;
         } else {
-            this.workingTheme.colors[key] = value;
+            this.workingTheme.colors[baseKey] = value;
         }
     },
+
 
     _getSyntaxColors() {
         const syn = this.workingTheme?.editor?.syntax || {};
@@ -2040,6 +3423,69 @@ const ThemeCustomizer = {
         }
     },
 
+    /**
+     * Save current state to history stack
+     */
+    _saveHistorySnapshot() {
+        // Remove any states after current index (when user made changes after undo)
+        this.historyStack = this.historyStack.slice(0, this.historyIndex + 1);
+
+        // Add new snapshot
+        this.historyStack.push(this._deepClone(this.workingTheme));
+        this.historyIndex++;
+
+        // Limit history size
+        if (this.historyStack.length > this.maxHistorySize) {
+            this.historyStack.shift();
+            this.historyIndex--;
+        }
+
+        this._updateHistoryButtons();
+    },
+
+    /**
+     * Undo to previous state
+     */
+    _undo() {
+        if (this.historyIndex > 0) {
+            this.historyIndex--;
+            this.workingTheme = this._deepClone(this.historyStack[this.historyIndex]);
+            this._renderControls();
+            this._renderPreview();
+            this._updateHistoryButtons();
+            console.log(`[Customizer] Undo to step ${this.historyIndex}`);
+        }
+    },
+
+    /**
+     * Redo to next state
+     */
+    _redo() {
+        if (this.historyIndex < this.historyStack.length - 1) {
+            this.historyIndex++;
+            this.workingTheme = this._deepClone(this.historyStack[this.historyIndex]);
+            this._renderControls();
+            this._renderPreview();
+            this._updateHistoryButtons();
+            console.log(`[Customizer] Redo to step ${this.historyIndex}`);
+        }
+    },
+
+    /**
+     * Update undo/redo button states
+     */
+    _updateHistoryButtons() {
+        const undoBtn = this.popup?.querySelector('#tc6-undo');
+        const redoBtn = this.popup?.querySelector('#tc6-redo');
+
+        if (undoBtn) {
+            undoBtn.disabled = this.historyIndex <= 0;
+        }
+        if (redoBtn) {
+            redoBtn.disabled = this.historyIndex >= this.historyStack.length - 1;
+        }
+    },
+
     _escape(str) {
         const div = document.createElement('div');
         div.textContent = str || '';
@@ -2077,6 +3523,80 @@ const ThemeCustomizer = {
             notification.classList.remove('visible');
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    },
+
+    /**
+     * Trigger auto-save (debounced)
+     */
+    _triggerAutoSave() {
+        // Only auto-save if it's a custom theme
+        if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
+            return;
+        }
+
+        // Clear previous timeout
+        if (this._autoSaveTimeout) {
+            clearTimeout(this._autoSaveTimeout);
+        }
+
+        // Debounce auto-save by 2 seconds
+        this._autoSaveTimeout = setTimeout(() => {
+            this._performAutoSave();
+        }, 2000);
+    },
+
+    /**
+     * Perform the actual auto-save
+     */
+    _performAutoSave() {
+        if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
+            return;
+        }
+
+        const name = this.popup?.querySelector('#tc6-name')?.value?.trim() || this.workingTheme.name;
+        this.workingTheme.name = name;
+
+        const colorsClone = this._deepClone(this.workingTheme.colors || {});
+        const editorClone = this._deepClone(this.workingTheme.editor || {});
+        const terminalClone = this._deepClone(this.workingTheme.terminal || {});
+
+        const themeData = {
+            meta: {
+                id: this.sourceThemeId,
+                name: name,
+                author: this.workingTheme.author || 'User',
+                version: '1.0.0',
+                type: this.workingTheme.type || 'dark',
+                tags: ['custom']
+            },
+            colors: colorsClone,
+            editor: editorClone,
+            terminal: terminalClone
+        };
+
+        if (ThemeManager.registerTheme(themeData)) {
+            ThemeManager._saveUserThemes();
+
+            // Show auto-save indicator
+            this._showAutoSaveIndicator();
+
+            console.log(`[Customizer] Auto-saved: ${name}`);
+        }
+    },
+
+    /**
+     * Show auto-save indicator
+     */
+    _showAutoSaveIndicator() {
+        const indicator = this.popup?.querySelector('#tc6-autosave');
+        if (!indicator) return;
+
+        indicator.style.display = 'flex';
+
+        // Hide after 2 seconds
+        setTimeout(() => {
+            if (indicator) indicator.style.display = 'none';
+        }, 2000);
     }
 };
 

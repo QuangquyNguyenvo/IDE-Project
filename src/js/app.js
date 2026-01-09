@@ -5358,3 +5358,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wait a bit for other modules to load
     setTimeout(initLocalHistorySettings, 100);
 });
+
+// Listen for theme customizer save events
+window.addEventListener('themeCustomizerSave', (e) => {
+    console.log('[App] Theme saved from customizer:', e.detail.theme.meta);
+    // IDE integrations can listen to this event to apply theme changes
+    // e.detail.theme contains the full theme data (meta, colors, editor, terminal)
+    // e.detail.timestamp contains the save timestamp
+});
