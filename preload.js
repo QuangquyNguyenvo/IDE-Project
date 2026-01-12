@@ -23,6 +23,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveFileDialog: (content) => ipcRenderer.invoke('save-file-dialog', content),
     getCurrentFile: () => ipcRenderer.invoke('get-current-file'),
 
+    // File Explorer operations
+    showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
+    readDirectory: (dirPath) => ipcRenderer.invoke('read-directory', dirPath),
+    readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
+    renameFile: (oldPath, newPath) => ipcRenderer.invoke('rename-file', { oldPath, newPath }),
+    deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
+    showItemInFolder: (filePath) => ipcRenderer.invoke('show-item-in-folder', filePath),
+
     // Settings operations
     saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
     loadSettings: () => ipcRenderer.sendSync('load-settings'),

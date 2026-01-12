@@ -4,36 +4,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+
+    <!-- SEO -->
+    <title>Sameko Dev C++ | Lightweight C++ IDE for Windows</title>
     <meta name="description"
-        content="A blazing fast, modern C++ IDE for Competitive Programming with GCC 16, LLD Linker, and Checkpoints system.">
-    <title>Sameko Dev C++ | The Modern CP IDE</title>
+        content="Download Sameko IDE - A free portable C++ IDE for Windows with built-in GCC 16 compiler. Perfect for competitive programming, students, and beginners.">
+    <meta name="keywords"
+        content="C++ IDE, portable C++ compiler, lightweight IDE, Dev-C++ alternative, competitive programming IDE, Windows IDE, GCC 16">
+    <meta name="author" content="QuangquyNguyenvo">
+    <meta name="theme-color" content="#64B5F6">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://quangquynguyenvo.github.io/Sameko-Dev-CPP/">
+    <meta property="og:title" content="Sameko Dev C++ | Lightweight C++ IDE for Windows">
+    <meta property="og:description"
+        content="Free portable C++ IDE with built-in GCC 16 compiler. Perfect for competitive programming and students.">
+    <meta property="og:image"
+        content="https://raw.githubusercontent.com/QuangquyNguyenvo/Sameko-Dev-CPP/main/src/assets/readme-header.svg">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="../src/assets/icon.png">
 </head>
 
 <body>
-    <!-- Gravity Grid Canvas (Only visible in Top/Hero area effectively) -->
+    <!-- Canvas Background -->
     <canvas id="grid-canvas"></canvas>
 
+    <!-- Navigation -->
     <nav class="container">
         <div class="logo">
             <img src="https://raw.githubusercontent.com/QuangquyNguyenvo/Sameko-Dev-CPP/main/src/assets/icon.png"
                 alt="Logo">
             Sameko Dev C++
         </div>
+        <div class="nav-spacer"></div>
         <div class="nav-links">
             <a href="#features">Features</a>
             <a href="#benchmark">Benchmarks</a>
-            <a href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases">Download</a>
+            <a target="_blank" href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases">Download</a>
         </div>
     </nav>
 
-    <!-- ZONE 1: HERO (White + Grid) -->
+    <!-- ZONE 1: HERO -->
     <div class="hero-wrapper">
         <header class="container hero">
-            <div class="hero-content reveal">
+            <div class="hero-content reveal fade-up">
                 <div class="hero-badge">
-                    New: Sameko GCC 16.0.0
+                    New: Sameko GCC 16.0
                 </div>
                 <h1>The Aesthetic <br><span>Competitive Programming</span> IDE</h1>
                 <p class="hero-desc">
@@ -41,9 +67,9 @@
                     zero setup required.
                 </p>
                 <div class="btn-group">
-                    <!-- ID ADDED HERE for JS to target -->
-                    <a id="download-btn" href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases"
-                        class="btn btn-primary">
+                    <a target="_blank" id="download-btn"
+                        href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases"
+                        class="btn btn-primary shimmer-effect">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -51,7 +77,8 @@
                         </svg>
                         Download Portable
                     </a>
-                    <a href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP" class="btn btn-secondary">
+                    <a target="_blank" href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP"
+                        class="btn btn-secondary">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path
                                 d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
@@ -65,28 +92,40 @@
                 </p>
             </div>
 
-            <div class="hero-visual reveal">
-                <div class="hero-card">
+            <div class="hero-visual reveal zoom-in delay-200">
+                <div class="hero-card float-animation">
+                    <!-- Kept original image source -->
                     <img src="a.png" alt="Sameko Character">
                 </div>
             </div>
         </header>
+
+        <!-- Wave Divider -->
+        <div class="wave-divider">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
+                preserveAspectRatio="none">
+                <path
+                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                    class="shape-fill"></path>
+            </svg>
+        </div>
     </div>
 
-    <!-- ZONE 2: CONTENT (Blue Background Starts Here) -->
+    <!-- ZONE 2: CONTENT -->
     <div class="content-wrapper">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
 
         <section id="benchmark" class="container">
-            <div class="section-title reveal">
+            <div class="section-title reveal fade-up">
                 <h2>Performance & Standards</h2>
                 <p>Built on Next-Gen Technology for Maximum Speed</p>
             </div>
 
             <div class="benchmark-layout">
-                <!-- Chart Box -->
-                <div class="box-card reveal">
+                <div class="box-card reveal zoom-in">
                     <h3 style="margin-bottom: 30px; font-size: 18px; color: #37474F;">Build Speed (bits/stdc++.h)</h3>
-
+                    <!-- Charts -->
                     <div class="chart-item">
                         <div class="chart-header">
                             <span>Sameko (GCC 16 + Cache)</span>
@@ -96,89 +135,70 @@
                             <div class="bar-value bar-sameko" style="--w: 20%"></div>
                         </div>
                     </div>
-
+                    <!-- Other charts omitted for brevity if identical structure; assuming keeping content -->
                     <div class="chart-item">
-                        <div class="chart-header">
-                            <span>Embarcadero Dev-C++ 6.3</span>
-                            <span>1200ms</span>
-                        </div>
+                        <div class="chart-header"><span>Embarcadero Dev-C++ 6.3</span><span>1200ms</span></div>
                         <div class="bar-track">
                             <div class="bar-value bar-devcpp6" style="--w: 48%"></div>
                         </div>
                     </div>
-
                     <div class="chart-item">
-                        <div class="chart-header">
-                            <span>Dev-C++ 5.11 (Classic)</span>
-                            <span>1500ms</span>
-                        </div>
+                        <div class="chart-header"><span>Dev-C++ 5.11 (Classic)</span><span>1500ms</span></div>
                         <div class="bar-track">
                             <div class="bar-value bar-devcpp5" style="--w: 60%"></div>
                         </div>
                     </div>
-
                     <div class="chart-item">
-                        <div class="chart-header">
-                            <span>Code::Blocks 20.03</span>
-                            <span>1800ms</span>
-                        </div>
+                        <div class="chart-header"><span>Code::Blocks 20.03</span><span>1800ms</span></div>
                         <div class="bar-track">
                             <div class="bar-value bar-codeblocks" style="--w: 72%"></div>
                         </div>
                     </div>
-
                     <div class="chart-item">
-                        <div class="chart-header">
-                            <span>VS Code (Default MinGW)</span>
-                            <span>2500ms+</span>
-                        </div>
+                        <div class="chart-header"><span>VS Code (Default MinGW)</span><span>2500ms+</span></div>
                         <div class="bar-track">
                             <div class="bar-value bar-vscode" style="--w: 100%"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Standards Box -->
-                <div class="box-card reveal">
+                <div class="box-card reveal zoom-in delay-200">
                     <h3 style="margin-bottom: 24px; font-size: 18px; color: #37474F;">C++ Support</h3>
-
-                    <div class="standard-item">
-                        <span>C++26 (Sameko GCC)</span>
-                        <span class="tag-supported">Full</span>
+                    <div class="standard-item"><span>C++26 (Sameko GCC)</span><span class="tag-supported">Full</span>
                     </div>
-                    <div class="standard-item">
-                        <span>C++23 (std::print)</span>
-                        <span class="tag-supported">Full</span>
+                    <div class="standard-item"><span>C++23 (std::print)</span><span class="tag-supported">Full</span>
                     </div>
-                    <div class="standard-item">
-                        <span>C++20 (Concepts)</span>
-                        <span class="tag-supported">Full</span>
+                    <div class="standard-item"><span>C++20 (Concepts)</span><span class="tag-supported">Full</span>
                     </div>
-                    <div class="standard-item">
-                        <span>C++17 (Default)</span>
-                        <span class="tag-supported">Full</span>
-                    </div>
-                    <div class="standard-item">
-                        <span>C++14/11/98</span>
-                        <span class="tag-supported">Full</span>
-                    </div>
-                    <div class="standard-item">
-                        <span style="opacity:0.7">Default VS Code C++</span>
-                        <span class="tag-limited">Limited</span>
-                    </div>
+                    <div class="standard-item"><span>C++17 (Default)</span><span class="tag-supported">Full</span></div>
+                    <div class="standard-item"><span>C++14/11/98</span><span class="tag-supported">Full</span></div>
+                    <div class="standard-item"><span style="opacity:0.7">Default VS Code C++</span><span
+                            class="tag-limited">Limited</span></div>
                 </div>
             </div>
         </section>
 
+        <div class="wave-divider-2 wave-divider-bottom">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
+                preserveAspectRatio="none">
+                <path
+                    d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z"
+                    class="shape-fill"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- ZONE 3: FEATURES -->
+    <div class="features-wrapper">
         <section id="features" class="container">
-            <div class="section-title reveal">
+            <div class="section-title reveal fade-up">
                 <h2>Features Designed for Competitive</h2>
                 <p>Everything you need to reach Grandmaster</p>
             </div>
 
             <div class="features-grid">
-                <!-- Feature 1 -->
-                <div class="feature-card reveal">
+                <!-- Features -->
+                <div class="feature-card reveal fade-up">
                     <div class="feature-icon-box">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -192,9 +212,8 @@
                     <p>Define fast shortcuts for templates, algorithms (BFS, DFS, Segment Tree). Type less, solve
                         faster.</p>
                 </div>
-
-                <!-- Feature 2 -->
-                <div class="feature-card reveal">
+                <!-- ... other features (simplified for brevity in this tool call, but strictly recreating content) ... -->
+                <div class="feature-card reveal fade-up">
                     <div class="feature-icon-box">
                         <svg class="icon" viewBox="0 0 24 24">
                             <polyline points="4 7 4 4 20 4 20 7"></polyline>
@@ -206,9 +225,7 @@
                     <p>Clean up messy code instantly with <b>Ctrl+Shift+A</b>. Supports Google, LLVM, and Mozilla
                         styles.</p>
                 </div>
-
-                <!-- Feature 3 -->
-                <div class="feature-card reveal">
+                <div class="feature-card reveal fade-up">
                     <div class="feature-icon-box">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -220,9 +237,7 @@
                     <p>Never lose progress. Auto-backups on every save. View history and restore any previous version.
                     </p>
                 </div>
-
-                <!-- Feature 4 -->
-                <div class="feature-card reveal">
+                <div class="feature-card reveal fade-up">
                     <div class="feature-icon-box">
                         <svg class="icon" viewBox="0 0 24 24">
                             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
@@ -232,9 +247,7 @@
                     <p>Real-time syntax diagnostics powered by Tree-sitter. Catch compilation errors before you build.
                     </p>
                 </div>
-
-                <!-- Feature 5 -->
-                <div class="feature-card reveal">
+                <div class="feature-card reveal fade-up">
                     <div class="feature-icon-box">
                         <svg class="icon" viewBox="0 0 24 24">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -245,9 +258,7 @@
                     <h3>Kawaii Themes</h3>
                     <p>Stunning themes: Sameko Blue, Sakura Pink, Dark Mode. Supports custom GIF backgrounds.</p>
                 </div>
-
-                <!-- Feature 6 -->
-                <div class="feature-card reveal">
+                <div class="feature-card reveal fade-up">
                     <div class="feature-icon-box">
                         <svg class="icon" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -269,111 +280,8 @@
         </footer>
     </div>
 
-    <script>
-        // === CANVAS GRID LOGIC ===
-        const canvas = document.getElementById('grid-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let points = [];
-        const spacing = 40;
-        const mouse = { x: -1000, y: -1000 };
-
-        function init() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            points = [];
-            for (let x = 0; x < width + spacing; x += spacing) {
-                for (let y = 0; y < height + spacing; y += spacing) {
-                    points.push({
-                        originX: x,
-                        originY: y,
-                        x: x,
-                        y: y
-                    });
-                }
-            }
-        }
-
-        window.addEventListener('resize', init);
-        window.addEventListener('mousemove', e => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-
-            // Draw Grid Lines - Stronger visibility
-            ctx.strokeStyle = 'rgba(137, 207, 240, 0.22)'; // Darker
-            ctx.lineWidth = 1;
-
-            points.forEach(p => {
-                // Physics: Point gets pushed away/pulled by mouse
-                const dx = mouse.x - p.x;
-                const dy = mouse.y - p.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const maxDist = 300;
-
-                if (dist < maxDist) {
-                    const force = (maxDist - dist) / maxDist;
-                    const angle = Math.atan2(dy, dx);
-                    const move = force * 60; // Stronger distortion
-                    p.x = p.originX - Math.cos(angle) * move;
-                    p.y = p.originY - Math.sin(angle) * move;
-                } else {
-                    // Return to origin
-                    p.x += (p.originX - p.x) * 0.1;
-                    p.y += (p.originY - p.y) * 0.1;
-                }
-
-                // Draw dot - More visible
-                ctx.fillStyle = 'rgba(100, 181, 246, 0.36)'; // Stronger Blue
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); // Bigger dot
-                ctx.fill();
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        init();
-        animate();
-
-        // === SCROLL REVEAL LOGIC ===
-        const observerOptions = {
-            threshold: 0.1, // Trigger when 10% of item is visible
-            rootMargin: "0px 0px -50px 0px" // Offset slightly so it triggers before bottom
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Run once only
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-        // === AUTO-DOWNLOAD LINK (Latest Pre-release Support) ===
-        // GitHub 'releases/latest' URL excludes pre-releases. 
-        // We use the API to find the TRUE newest one.
-        fetch('https://api.github.com/repos/QuangquyNguyenvo/Sameko-Dev-CPP/releases')
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.length > 0) {
-                    // data[0] is always the most recent release (stable or pre-release)
-                    const latest = data[0];
-                    const btn = document.getElementById('download-btn');
-                    btn.href = latest.html_url;
-
-                    // Optional: You could also dynamically update badge text
-                    // document.querySelector('.hero-badge').innerText = 'Latest: ' + latest.tag_name;
-                }
-            })
-            .catch(e => console.log('GitHub API warning: ', e));
-    </script>
+    <!-- Logic -->
+    <script src="script.js"></script>
 </body>
 
 </html>

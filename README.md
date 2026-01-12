@@ -57,8 +57,8 @@
 <table>
   <tr>
     <td width="70%">
-      <p><strong>Sameko IDE</strong> is a lightweight, beautiful C++ development environment designed specifically for <strong>competitive programmers</strong> and students. Built with Electron and Monaco Editor, it combines the simplicity of Dev-C++ with a modern, customizable interface.</p>
-      <blockquote>💡 <strong>Why Sameko?</strong> No complex setup. No bloated features. Just download, extract, and start coding.</blockquote>
+      <p><strong>Sameko IDE</strong> is a lightweight, beautiful <strong>C++ IDE for Windows</strong> designed specifically for <strong>competitive programmers</strong>, students, and beginners. Built with Electron and Monaco Editor, it combines the simplicity of <strong>Dev-C++</strong> with a modern, customizable interface. This <strong>portable C++ compiler</strong> requires no installation - just download and code!</p>
+      <blockquote>💡 <strong>Why Sameko?</strong> No complex setup. No Visual Studio bloat. No MinGW installation. Just download, extract, and start coding with a <strong>beginner-friendly C++ IDE</strong> that includes everything you need: GCC 16.0 compiler, syntax highlighting, auto-completion, and competitive programming tools.</blockquote>
     </td>
     <td width="30%" align="center">
       <img src="src/assets/fish.png" alt="Sameko Fish" width="180" />
@@ -176,3 +176,10 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 </div>
 
 <img src="src/assets/readme-footer.svg" width="100%" />
+
+---
+
+<div align="center">
+  <sub><strong>Keywords</strong>: C++ IDE • portable C++ compiler • Dev-C++ alternative • competitive programming IDE • beginner-friendly IDE • lightweight IDE • Windows C++ IDE • GCC compiler • Monaco Editor • Electron IDE • code editor • student IDE • educational software • free C++ IDE • C++11 • C++14 • C++17 • C++20 • C++23 • syntax highlighting • auto-completion • Codeforces • AtCoder • LeetCode • programming tools • MinGW • code runner • AStyle formatter</sub>
+</div>
+

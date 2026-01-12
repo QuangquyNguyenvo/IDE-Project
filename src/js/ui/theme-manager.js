@@ -20,15 +20,13 @@ const ThemeManager = {
     // Path to builtin themes (relative to app root)
     builtinThemesPath: 'src/themes/builtin',
 
-    // Builtin theme IDs (loaded at startup)
     builtinThemeIds: [
         'kawaii-dark',
         'kawaii-light',
         'sakura',
         'dracula',
         'monokai',
-        'nord',
-        'one-dark'
+        'nord'
     ],
 
     /**
@@ -101,13 +99,54 @@ const ThemeManager = {
     },
 
     /**
-     * Hardcoded theme definitions (fallback)
+     * Hardcoded theme definitions (fallback) - Complete CSS variable sets
      */
     _getHardcodedThemes() {
         return {
             'kawaii-dark': {
                 meta: { id: 'kawaii-dark', name: 'Kawaii Dark', type: 'dark' },
-                colors: { appBackground: 'assets/background.jpg' },
+                colors: {
+                    appBackground: 'assets/background.jpg',
+                    bgOceanLight: '#1a3a50',
+                    bgOceanMedium: '#152535',
+                    bgOceanDeep: '#88c9ea',
+                    bgOceanDark: '#0d1a25',
+                    bgGlass: 'rgba(26, 37, 48, 0.95)',
+                    bgGlassHeavy: 'rgba(21, 37, 53, 0.97)',
+                    bgGlassBorder: 'rgba(58, 96, 117, 0.8)',
+                    accent: '#88c9ea',
+                    accentHover: '#5eb7e0',
+                    textPrimary: '#e0f0ff',
+                    textSecondary: '#a0c0d0',
+                    textMuted: '#7990a0',
+                    success: '#7dcea0',
+                    error: '#ff6b6b',
+                    warning: '#fcd5ce',
+                    border: '#3a6075',
+                    borderStrong: '#88c9ea',
+                    shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                    shadowCard: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                    glow: '0 0 15px rgba(136, 201, 234, 0.4)',
+                    bgHeader: 'rgba(21, 37, 53, 0.97)',
+                    bgPanel: 'rgba(26, 37, 48, 0.95)',
+                    bgInput: '#1a2a3a',
+                    bgButton: '#243040',
+                    bgButtonHover: '#3a5060',
+                    editorBg: '#1a2530',
+                    terminalBg: '#152535',
+                    settingsLabelColor: '#a0c0d0',
+                    settingsSectionColor: '#88c9ea',
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties for custom themes
+                    btnBg: 'rgba(255, 255, 255, 0.1)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.15)',
+                    btnBorder: '#3a6075',
+                    btnText: '#e0f0ff',
+                    btnTextHover: '#88c9ea',
+                    btnPrimaryBg: '#88c9ea',
+                    btnPrimaryBgHover: '#5eb7e0',
+                    btnPrimaryText: '#ffffff'
+                },
                 editor: {
                     base: 'vs-dark', inherit: true,
                     background: '#1a2530', foreground: '#e0f0ff',
@@ -123,7 +162,48 @@ const ThemeManager = {
             },
             'kawaii-light': {
                 meta: { id: 'kawaii-light', name: 'Kawaii Light', type: 'light' },
-                colors: { appBackground: 'assets/background.jpg' },
+                colors: {
+                    appBackground: 'assets/background.jpg',
+                    bgOceanLight: '#e8f4fc',
+                    bgOceanMedium: '#d0e8f5',
+                    bgOceanDeep: '#4a9bc9',
+                    bgOceanDark: '#2a7ab0',
+                    bgGlass: 'rgba(232, 244, 252, 0.95)',
+                    bgGlassHeavy: 'rgba(208, 232, 245, 0.97)',
+                    bgGlassBorder: 'rgba(74, 155, 201, 0.5)',
+                    accent: '#4a9bc9',
+                    accentHover: '#3a8ab8',
+                    textPrimary: '#2a4a5a',
+                    textSecondary: '#4a6a7a',
+                    textMuted: '#7a9aaa',
+                    success: '#5dbe8a',
+                    error: '#e55a5a',
+                    warning: '#e5a05a',
+                    border: '#a0c8e0',
+                    borderStrong: '#4a9bc9',
+                    shadowSoft: '0 8px 32px rgba(74, 155, 201, 0.2)',
+                    shadowCard: '0 4px 12px rgba(74, 155, 201, 0.15)',
+                    glow: '0 0 15px rgba(74, 155, 201, 0.3)',
+                    bgHeader: 'rgba(208, 232, 245, 0.97)',
+                    bgPanel: 'rgba(232, 244, 252, 0.95)',
+                    bgInput: '#ffffff',
+                    bgButton: '#e8f4fc',
+                    bgButtonHover: '#d0e8f5',
+                    editorBg: '#1a2530',
+                    terminalBg: '#152535',
+                    settingsLabelColor: '#4a6a7a',
+                    settingsSectionColor: '#4a9bc9',
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties
+                    btnBg: '#ffffff',
+                    btnBgHover: '#e8f4fc',
+                    btnBorder: '#a0c8e0',
+                    btnText: '#2a4a5a',
+                    btnTextHover: '#4a9bc9',
+                    btnPrimaryBg: '#4a9bc9',
+                    btnPrimaryBgHover: '#3a8ab8',
+                    btnPrimaryText: '#ffffff'
+                },
                 editor: {
                     base: 'vs-dark', inherit: true,
                     background: '#1a2530', foreground: '#e0f0ff',
@@ -141,35 +221,45 @@ const ThemeManager = {
                 meta: { id: 'sakura', name: 'Sakura', type: 'light' },
                 colors: {
                     appBackground: 'assets/pink.gif',
-                    bgOceanLight: '#fff0f5',
+                    bgOceanLight: '#fff5f8',
                     bgOceanMedium: '#ffe4e1',
                     bgOceanDeep: '#ffb7c5',
-                    bgOceanDark: '#db7093',
-                    bgGlass: 'rgba(255, 240, 245, 0.9)',
-                    bgGlassHeavy: 'rgba(255, 228, 225, 0.95)',
+                    bgOceanDark: '#e097a8',
+                    bgGlass: 'rgba(255, 245, 250, 0.92)',
+                    bgGlassHeavy: 'rgba(255, 228, 225, 0.97)',
                     bgGlassBorder: 'rgba(255, 182, 193, 0.6)',
-                    accent: '#ff69b4',
-                    accentHover: '#ff1493',
-                    textPrimary: '#4a4a4a',
+                    accent: '#ff9aaf',
+                    accentHover: '#ff758f',
+                    textPrimary: '#5d4a4d',
                     textSecondary: '#8b5f65',
                     textMuted: '#bc8f8f',
-                    success: '#77dd77',
-                    error: '#ff6961',
-                    warning: '#fdfd96',
-                    border: '#ffc0cb',
-                    borderStrong: '#ff69b4',
-                    shadowSoft: '0 8px 32px rgba(255, 182, 193, 0.3)',
-                    shadowCard: '0 4px 12px rgba(255, 105, 180, 0.2)',
-                    glow: '0 0 15px rgba(255, 182, 193, 0.6)',
-                    bgHeader: 'rgba(255, 240, 245, 0.95)',
-                    bgPanel: 'rgba(255, 255, 255, 0.9)',
+                    success: '#b8e2b8',
+                    error: '#ffb3b3',
+                    warning: '#fff9c4',
+                    border: '#ffcad4',
+                    borderStrong: '#ffb7c5',
+                    shadowSoft: '0 8px 32px rgba(255, 182, 193, 0.25)',
+                    shadowCard: '0 4px 12px rgba(255, 105, 180, 0.15)',
+                    glow: '0 0 15px rgba(255, 182, 193, 0.4)',
+                    bgHeader: 'rgba(255, 228, 225, 0.97)',
+                    bgPanel: 'rgba(255, 245, 248, 0.95)',
                     bgInput: '#fffafa',
                     bgButton: '#fff0f5',
                     bgButtonHover: '#ffe4e1',
                     editorBg: '#2d1f2f',
                     terminalBg: '#251a26',
                     settingsLabelColor: '#8b5f65',
-                    settingsSectionColor: '#ff69b4'
+                    settingsSectionColor: '#ff9aaf',
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties
+                    btnBg: '#fff0f5',
+                    btnBgHover: '#ffe4e1',
+                    btnBorder: '#ffcad4',
+                    btnText: '#5d4a4d',
+                    btnTextHover: '#ff9aaf',
+                    btnPrimaryBg: '#ff9aaf',
+                    btnPrimaryBgHover: '#ff758f',
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -193,7 +283,47 @@ const ThemeManager = {
             },
             'dracula': {
                 meta: { id: 'dracula', name: 'Dracula', type: 'dark' },
-                colors: {},
+                colors: {
+                    bgOceanLight: '#44475a',
+                    bgOceanMedium: '#383a59',
+                    bgOceanDeep: '#bd93f9',
+                    bgOceanDark: '#21222c',
+                    bgGlass: 'rgba(40, 42, 54, 0.95)',
+                    bgGlassHeavy: 'rgba(33, 34, 44, 0.97)',
+                    bgGlassBorder: 'rgba(68, 71, 90, 0.9)',
+                    accent: '#ff79c6',
+                    accentHover: '#ff92d0',
+                    textPrimary: '#f8f8f2',
+                    textSecondary: '#bd93f9',
+                    textMuted: '#6272a4',
+                    success: '#50fa7b',
+                    error: '#ff5555',
+                    warning: '#ffb86c',
+                    border: '#6272a4',
+                    borderStrong: '#bd93f9',
+                    shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.5)',
+                    shadowCard: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                    glow: '0 0 15px rgba(189, 147, 249, 0.4)',
+                    bgHeader: 'rgba(33, 34, 44, 0.97)',
+                    bgPanel: 'rgba(40, 42, 54, 0.95)',
+                    bgInput: '#282a36',
+                    bgButton: '#44475a',
+                    bgButtonHover: '#6272a4',
+                    editorBg: '#282a36',
+                    terminalBg: '#21222c',
+                    settingsLabelColor: '#f8f8f2',
+                    settingsSectionColor: '#bd93f9',
+                    buttonTextOnAccent: '#ffffff',
+                    // Button properties
+                    btnBg: 'rgba(255, 255, 255, 0.1)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.15)',
+                    btnBorder: '#6272a4',
+                    btnText: '#f8f8f2',
+                    btnTextHover: '#ff79c6',
+                    btnPrimaryBg: '#ff79c6',
+                    btnPrimaryBgHover: '#ff92d0',
+                    btnPrimaryText: '#ffffff'
+                },
                 editor: {
                     base: 'vs-dark', inherit: true,
                     background: '#282a36', foreground: '#f8f8f2',
@@ -209,7 +339,47 @@ const ThemeManager = {
             },
             'monokai': {
                 meta: { id: 'monokai', name: 'Monokai', type: 'dark' },
-                colors: {},
+                colors: {
+                    bgOceanLight: '#3e3d32',
+                    bgOceanMedium: '#272822',
+                    bgOceanDeep: '#a6e22e',
+                    bgOceanDark: '#1e1f1c',
+                    bgGlass: 'rgba(39, 40, 34, 0.95)',
+                    bgGlassHeavy: 'rgba(30, 31, 28, 0.97)',
+                    bgGlassBorder: 'rgba(62, 61, 50, 0.9)',
+                    accent: '#a6e22e',
+                    accentHover: '#b8f32e',
+                    textPrimary: '#f8f8f2',
+                    textSecondary: '#a6e22e',
+                    textMuted: '#75715e',
+                    success: '#a6e22e',
+                    error: '#f92672',
+                    warning: '#e6db74',
+                    border: '#49483e',
+                    borderStrong: '#a6e22e',
+                    shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.5)',
+                    shadowCard: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                    glow: '0 0 15px rgba(166, 226, 46, 0.4)',
+                    bgHeader: 'rgba(30, 31, 28, 0.97)',
+                    bgPanel: 'rgba(39, 40, 34, 0.95)',
+                    bgInput: '#272822',
+                    bgButton: '#3e3d32',
+                    bgButtonHover: '#49483e',
+                    editorBg: '#272822',
+                    terminalBg: '#1e1f1c',
+                    settingsLabelColor: '#f8f8f2',
+                    settingsSectionColor: '#a6e22e',
+                    buttonTextOnAccent: '#272822',
+                    // Button properties
+                    btnBg: 'rgba(255, 255, 255, 0.08)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.12)',
+                    btnBorder: '#49483e',
+                    btnText: '#f8f8f2',
+                    btnTextHover: '#a6e22e',
+                    btnPrimaryBg: '#a6e22e',
+                    btnPrimaryBgHover: '#b8f32e',
+                    btnPrimaryText: '#272822'
+                },
                 editor: {
                     base: 'vs-dark', inherit: true,
                     background: '#272822', foreground: '#f8f8f2',
@@ -225,7 +395,47 @@ const ThemeManager = {
             },
             'nord': {
                 meta: { id: 'nord', name: 'Nord', type: 'dark' },
-                colors: {},
+                colors: {
+                    bgOceanLight: '#3b4252',
+                    bgOceanMedium: '#2e3440',
+                    bgOceanDeep: '#88c0d0',
+                    bgOceanDark: '#242933',
+                    bgGlass: 'rgba(46, 52, 64, 0.95)',
+                    bgGlassHeavy: 'rgba(36, 41, 51, 0.97)',
+                    bgGlassBorder: 'rgba(59, 66, 82, 0.9)',
+                    accent: '#88c0d0',
+                    accentHover: '#8fbcbb',
+                    textPrimary: '#eceff4',
+                    textSecondary: '#d8dee9',
+                    textMuted: '#616e88',
+                    success: '#a3be8c',
+                    error: '#bf616a',
+                    warning: '#ebcb8b',
+                    border: '#4c566a',
+                    borderStrong: '#88c0d0',
+                    shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                    shadowCard: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                    glow: '0 0 15px rgba(136, 192, 208, 0.3)',
+                    bgHeader: 'rgba(36, 41, 51, 0.97)',
+                    bgPanel: 'rgba(46, 52, 64, 0.95)',
+                    bgInput: '#2e3440',
+                    bgButton: '#3b4252',
+                    bgButtonHover: '#4c566a',
+                    editorBg: '#2e3440',
+                    terminalBg: '#242933',
+                    settingsLabelColor: '#d8dee9',
+                    settingsSectionColor: '#88c0d0',
+                    buttonTextOnAccent: '#2e3440',
+                    // Button properties
+                    btnBg: 'rgba(255, 255, 255, 0.08)',
+                    btnBgHover: 'rgba(255, 255, 255, 0.12)',
+                    btnBorder: '#4c566a',
+                    btnText: '#eceff4',
+                    btnTextHover: '#88c0d0',
+                    btnPrimaryBg: '#88c0d0',
+                    btnPrimaryBgHover: '#8fbcbb',
+                    btnPrimaryText: '#2e3440'
+                },
                 editor: {
                     base: 'vs-dark', inherit: true,
                     background: '#2e3440', foreground: '#eceff4',
@@ -239,22 +449,6 @@ const ThemeManager = {
                     }
                 }
             },
-            'one-dark': {
-                meta: { id: 'one-dark', name: 'One Dark Pro', type: 'dark' },
-                colors: {},
-                editor: {
-                    base: 'vs-dark', inherit: true,
-                    background: '#282c34', foreground: '#abb2bf',
-                    syntax: {
-                        comment: { color: '5c6370', fontStyle: 'italic' },
-                        keyword: { color: 'c678dd' },
-                        string: { color: '98c379' },
-                        number: { color: 'd19a66' },
-                        type: { color: 'e5c07b' },
-                        function: { color: '61afef' }
-                    }
-                }
-            }
         };
     },
 
@@ -407,8 +601,22 @@ const ThemeManager = {
         if (typeof monaco !== 'undefined') {
             try {
                 monaco.editor.setTheme(themeId);
+
+                // Update all existing editor instances
+                if (typeof App !== 'undefined' && App.editors) {
+                    Object.values(App.editors).forEach(editor => {
+                        if (editor && editor.updateOptions) {
+                            editor.updateOptions({ theme: themeId });
+                        }
+                    });
+                }
+
+                // Update template editor if exists
+                if (typeof templateEditor !== 'undefined' && templateEditor) {
+                    templateEditor.updateOptions({ theme: themeId });
+                }
             } catch (e) {
-                console.warn('[ThemeManager] Monaco theme not ready');
+                console.warn('[ThemeManager] Monaco theme not ready:', e);
             }
         }
     },
@@ -447,9 +655,36 @@ const ThemeManager = {
             'bgButton': '--bg-button',
             'bgButtonHover': '--bg-button-hover',
             'editorBg': '--editor-bg',
+            'editorBackground': '--editor-bg-image',
+            'appBackground': '--app-bg-image',
+            'bgPosition': '--app-bg-position',
+            'editorBgPosition': '--editor-bg-position',
+            'bgOpacity': '--app-bg-opacity',
+            'bgBlur': '--app-bg-blur',
+            'editorBgOpacity': '--editor-bg-opacity',
+            'editorBgBlur': '--editor-bg-blur',
             'terminalBg': '--terminal-bg',
             'settingsLabelColor': '--settings-label-color',
-            'settingsSectionColor': '--settings-section-color'
+            'settingsSectionColor': '--settings-section-color',
+            'buttonTextOnAccent': '--button-text-on-accent',
+
+            // Button CSS Variables
+            'btnBg': '--btn-bg',
+            'btnBgHover': '--btn-bg-hover',
+            'btnBorder': '--btn-border',
+            'btnText': '--btn-text',
+            'btnTextHover': '--btn-text-hover',
+            'btnPrimaryBg': '--btn-primary-bg',
+            'btnPrimaryBgHover': '--btn-primary-bg-hover',
+            'btnPrimaryText': '--btn-primary-text',
+            'btnSuccessBg': '--btn-success-bg',
+            'btnSuccessText': '--btn-success-text',
+            'btnErrorBg': '--btn-error-bg',
+            'btnErrorText': '--btn-error-text',
+
+            // Opacity variables
+            'terminalOpacity': '--terminal-opacity',
+            'panelOpacity': '--panel-opacity'
         };
 
         // 1. First clear all existing theme variables from root style
@@ -461,8 +696,36 @@ const ThemeManager = {
         const colors = theme.colors || {};
         Object.entries(colors).forEach(([key, value]) => {
             const cssVar = varMappings[key];
-            if (cssVar && value) {
-                root.style.setProperty(cssVar, value);
+            if (cssVar && value !== undefined && value !== null) {
+                // Wrap image values in url() for background-image properties
+                if (key === 'editorBackground' || key === 'appBackground') {
+                    // Check if it's already wrapped in url() or is none/empty
+                    if (value && value !== 'none' && !value.startsWith('url(')) {
+                        // For data URLs, use double quotes to avoid escaping issues
+                        // For file paths, escape single quotes
+                        if (value.startsWith('data:')) {
+                            // Data URLs can contain special characters, use double quotes
+                            root.style.setProperty(cssVar, `url("${value}")`);
+                        } else {
+                            // File paths - escape single quotes
+                            const escapedValue = value.replace(/'/g, "\\'");
+                            root.style.setProperty(cssVar, `url('${escapedValue}')`);
+                        }
+                    } else {
+                        root.style.setProperty(cssVar, value || 'none');
+                    }
+                } else if (key === 'bgOpacity' || key === 'editorBgOpacity') {
+                    // Convert percentage to decimal for opacity
+                    root.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
+                } else if (key === 'bgBlur' || key === 'editorBgBlur') {
+                    // Add px unit for blur values
+                    root.style.setProperty(cssVar, `${parseInt(value)}px`);
+                } else if (key === 'bgPosition' || key === 'editorBgPosition') {
+                    // Set background position directly
+                    root.style.setProperty(cssVar, value || 'center center');
+                } else {
+                    root.style.setProperty(cssVar, value);
+                }
             }
         });
     },

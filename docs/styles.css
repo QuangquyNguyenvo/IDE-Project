@@ -1,5 +1,5 @@
 /* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+/* Google Fonts are now loaded in HTML */
 
 :root {
     --primary: #89CFF0;
@@ -10,6 +10,8 @@
     --card-bg: #FFFFFF;
     --radius-l: 32px;
     --radius-m: 20px;
+    --max-width: 1200px;
+    /* Optimized for modern screens */
 }
 
 * {
@@ -25,7 +27,8 @@ body {
     overflow-x: hidden;
     min-height: 100vh;
     background: #FDFBF7;
-    /* Hero Background */
+    display: flex;
+    flex-direction: column;
 }
 
 /* === GRAVITY GRID EFFECT === */
@@ -40,7 +43,7 @@ body {
 }
 
 .container {
-    max-width: 1080px;
+    max-width: var(--max-width);
     margin: 0 auto;
     padding: 0 30px;
     position: relative;
@@ -58,20 +61,31 @@ svg.icon {
 }
 
 /* === SCROLL ANIMATIONS === */
-/* Initial state: Hidden & displaced */
 .reveal {
     opacity: 0;
     transform: translateY(30px);
     transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+    will-change: opacity, transform;
 }
 
-/* Active state: Visible & reset psoition */
 .reveal.active {
     opacity: 1;
     transform: translateY(0);
 }
 
-/* Stagger delays for grid items */
+.reveal.fade-up {
+    transform: translateY(40px);
+}
+
+.reveal.zoom-in {
+    transform: scale(0.9);
+}
+
+.reveal.active {
+    transform: translateY(0) scale(1);
+}
+
+/* Stagger delays */
 .features-grid .feature-card:nth-child(2) {
     transition-delay: 0.1s;
 }
@@ -92,10 +106,18 @@ svg.icon {
     transition-delay: 0.3s;
 }
 
+.delay-200 {
+    transition-delay: 0.2s;
+}
+
+.delay-400 {
+    transition-delay: 0.4s;
+}
+
 /* === Navbar === */
 nav {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     padding: 20px 0;
     margin-bottom: 20px;
@@ -106,7 +128,7 @@ nav {
 .logo {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 6px;
     font-size: 20px;
     font-weight: 700;
     color: var(--text-main);
@@ -118,10 +140,20 @@ nav {
     border-radius: 12px;
 }
 
+.nav-spacer {
+    margin-left: 300px;
+    margin-right: 280px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 30px;
+
+}
+
 .nav-links a {
     text-decoration: none;
     color: var(--text-light);
-    margin-left: 40px;
     font-weight: 700;
     font-size: 15px;
     transition: 0.2s;
@@ -138,13 +170,9 @@ nav {
     z-index: 1;
 }
 
-/* CONTENT ZONE (Glassy Gradient) */
 .content-wrapper {
     position: relative;
-    background: linear-gradient(180deg,
-            rgba(253, 251, 247, 0.0) 0%,
-            rgba(227, 242, 253, 0.6) 15%,
-            rgba(187, 222, 251, 0.75) 100%);
+    background: linear-gradient(180deg, #E1F5FE 0%, #E3F2FD 20%, rgba(187, 222, 251, 0.75) 100%);
     padding-bottom: 60px;
     padding-top: 50px;
     z-index: 5;
@@ -157,7 +185,8 @@ nav {
     grid-template-columns: 1fr 1fr;
     align-items: center;
     padding: 40px 0 20px;
-    gap: 50px;
+    gap: 80px;
+    /* Increased gap for better spacing */
 }
 
 .hero-badge {
@@ -248,13 +277,20 @@ h1 span {
 .section-title {
     text-align: center;
     margin-bottom: 60px;
-    padding-top: 60px;
+    padding-top: 0;
 }
 
 .section-title h2 {
-    font-size: 36px;
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #37474F 0%, #78909C 100%);
+    -webkit-background-clip: text;
+    /* Safari/Chrome */
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin-bottom: 16px;
     color: #37474F;
+    /* Fallback */
 }
 
 .section-title p {
@@ -264,13 +300,13 @@ h1 span {
 /* === Cards === */
 .box-card,
 .feature-card {
-    background: rgba(255, 255, 255, 0.85);
-    border: none;
-    box-shadow: 0 10px 40px rgba(33, 150, 243, 0.1);
+    background: #FFFFFF;
+    border: 1px solid rgba(240, 244, 248, 0.6);
+    box-shadow: 0 12px 32px -8px rgba(137, 207, 240, 0.25);
     padding: 40px;
     border-radius: var(--radius-l);
-    transition: transform 0.3s;
-    backdrop-filter: blur(10px);
+    transition: transform 0.3s, box-shadow 0.3s;
+    height: 100%;
 }
 
 /* === Benchmark === */
@@ -288,14 +324,15 @@ h1 span {
 .chart-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     font-weight: 700;
     color: var(--text-main);
+    font-size: 15px;
 }
 
 .bar-track {
-    height: 18px;
-    background: #F5F7FA;
+    height: 16px;
+    background: #F0F4F8;
     border-radius: 100px;
     overflow: hidden;
 }
@@ -366,10 +403,6 @@ h1 span {
     margin-bottom: 40px;
 }
 
-.feature-card:hover {
-    transform: translateY(-8px);
-}
-
 .feature-icon-box {
     width: 70px;
     height: 70px;
@@ -385,7 +418,7 @@ h1 span {
     overflow: visible;
 }
 
-/* Fun Animations Logic */
+/* Animations */
 @keyframes pop {
     50% {
         transform: scale(1.4);
@@ -497,13 +530,139 @@ h1 span {
     color: var(--text-light);
 }
 
+/* === VISUAL DIVIDERS === */
+.wave-divider,
+.wave-divider-2 {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+}
+
+.wave-divider {
+    transform: rotate(180deg);
+}
+
+.wave-divider-2 {
+    bottom: -1px;
+    z-index: 10;
+}
+
+.wave-divider svg,
+.wave-divider-2 svg {
+    position: relative;
+    display: block;
+    width: calc(100% + 1.3px);
+    height: 60px;
+}
+
+.wave-divider .shape-fill {
+    fill: #E1F5FE;
+}
+
+.wave-divider-2 .shape-fill {
+    fill: #FDFBF7;
+}
+
+/* === ANIMATIONS & EFFECTS === */
+.float-animation {
+    animation: float-hero 6s ease-in-out infinite;
+    will-change: transform;
+}
+
+@keyframes float-hero {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+/* Shimmer Button Effect */
+.shimmer-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.shimmer-effect::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+    transform: skewX(-20deg);
+    animation: shimmer 3s infinite;
+    will-change: left;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -150%;
+    }
+
+    20% {
+        left: 150%;
+    }
+
+    100% {
+        left: 150%;
+    }
+}
+
+/* === Blobs === */
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    opacity: 0.6;
+    animation: blob-move 20s infinite alternate;
+    will-change: transform;
+}
+
+.blob-1 {
+    top: -10%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: #FFEBEE;
+}
+
+.blob-2 {
+    bottom: 10%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: #E0F7FA;
+    animation-delay: -5s;
+}
+
+@keyframes blob-move {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(30px, -30px) scale(1.1);
+    }
+}
+
 /* Footer */
 footer {
     text-align: center;
-    padding: 60px 0;
+    padding: 100px 0 60px;
     color: #546E7A;
     background: transparent;
-    border-top: none;
+    position: relative;
+    z-index: 10;
 }
 
 @keyframes bar-load {
@@ -513,6 +672,9 @@ footer {
 }
 
 @media (max-width: 900px) {
+    .container {
+        padding: 0 20px;
+    }
 
     .hero,
     .benchmark-layout,
@@ -522,9 +684,32 @@ footer {
 
     .hero {
         text-align: center;
+        gap: 40px;
     }
 
     .btn-group {
         justify-content: center;
+    }
+
+    .wave-divider svg,
+    .wave-divider-2 svg {
+        height: 30px;
+    }
+
+    /* Mobile Nav Fixes */
+    nav {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .nav-links a {
+        margin-left: 0;
     }
 }

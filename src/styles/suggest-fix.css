@@ -36,73 +36,279 @@
 
 /* Text color */
 .suggest-widget .monaco-list .monaco-list-row .label-name {
-    color: #d4d4d4 !important;
+    color: var(--text-primary, #d4d4d4) !important;
     opacity: 1 !important;
 }
 
 .suggest-widget .monaco-list .monaco-list-row.focused .label-name {
-    color: #ffffff !important;
+    color: var(--bg-input, #ffffff) !important;
 }
 
 /* Type Label (right side text) */
 .suggest-widget .monaco-list .monaco-list-row .type-label {
     opacity: 0.6 !important;
-    color: #aaaaaa !important;
+    color: var(--text-muted, #aaaaaa) !important;
 }
 
 /* Background for focused item */
 .suggest-widget .monaco-list .monaco-list-row.focused {
-    background-color: #007acc !important;
+    background-color: var(--accent, #007acc) !important;
 }
 
 /* Matching highlight color */
 .suggest-widget .monaco-list .monaco-list-row .monaco-highlighted-label .highlight {
-    color: #569cd6 !important;
+    color: var(--accent, #569cd6) !important;
     font-weight: bold !important;
 }
 
 .suggest-widget .monaco-list .monaco-list-row.focused .monaco-highlighted-label .highlight {
-    color: #9cdcfe !important;
+    color: var(--bg-input, #9cdcfe) !important;
 }
 
 
 /* --- LIGHT THEME OVERRIDES --- */
 body[data-theme="kawaii-light"] .suggest-widget {
-    background-color: #f3f3f3 !important;
-    border-color: #c0c0c0 !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    background-color: var(--bg-input, #f3f3f3) !important;
+    border-color: var(--border, #c0c0c0) !important;
+    box-shadow: var(--shadow-card, 0 4px 12px rgba(0, 0, 0, 0.15)) !important;
 }
 
 body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row .label-name {
-    color: #333333 !important;
+    color: var(--text-primary, #333333) !important;
 }
 
 body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row.focused {
-    background-color: #0060c0 !important;
+    background-color: var(--accent, #0060c0) !important;
 }
 
 body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row.focused .label-name {
-    color: #ffffff !important;
+    color: var(--bg-input, #ffffff) !important;
 }
 
 body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row .monaco-highlighted-label .highlight {
-    color: #005cc5 !important;
+    color: var(--accent, #005cc5) !important;
 }
 
 body[data-theme="kawaii-light"] .suggest-widget .monaco-list .monaco-list-row.focused .monaco-highlighted-label .highlight {
-    color: #ffffff !important;
+    color: var(--bg-input, #ffffff) !important;
     text-decoration: underline;
 }
 
 /* Details Widget (Documentation) */
 .suggest-details,
 .monaco-editor .suggest-details {
-    background-color: #1e1e1e !important;
-    border: 1px solid #454545 !important;
+    background-color: var(--bg-panel, #1e1e1e) !important;
+    border: 1px solid var(--border, #454545) !important;
 }
 
 body[data-theme="kawaii-light"] .suggest-details {
-    background-color: #f3f3f3 !important;
-    border-color: #c0c0c0 !important;
-    color: #333 !important;
+    background-color: var(--bg-input, #f3f3f3) !important;
+    border-color: var(--border, #c0c0c0) !important;
+    color: var(--text-primary, #333) !important;
+}
+
+/* =========================================
+   UI FIXES: Appearance Settings
+   ========================================= */
+
+/* Fix the dashed line issue under Color Theme header */
+.theme-section-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 20px !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding-bottom: 12px !important;
+}
+
+.theme-section-header h3 {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--text-secondary) !important;
+    margin: 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    border: none !important;
+}
+
+/* Container for the buttons */
+.theme-actions-inline {
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
+}
+
+/* Marketplace & Customize Buttons - "Bold Bold Cute" Style */
+.btn-theme-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 18px !important;
+    min-height: 40px !important;
+
+    /* Cute Style Base matching .settings-tab */
+    border-radius: 20px !important;
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    /* Bold */
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    /* Bouncy transition */
+    text-decoration: none !important;
+
+    /* Colors matches settings tabs */
+    background-color: var(--bg-input, #fff) !important;
+    border: 2px solid var(--border, #c8e6f8) !important;
+    color: var(--text-secondary) !important;
+    box-shadow: 0 4px 0 var(--border, #e0f0ff) !important;
+    /* Chunky bottom shadow */
+    transform: translateY(0);
+}
+
+.btn-theme-action svg {
+    width: 18px !important;
+    height: 18px !important;
+    stroke-width: 2.5 !important;
+    /* Bolder icons */
+    transition: transform 0.2s ease !important;
+}
+
+.btn-theme-action:hover {
+    transform: translateY(-2px) !important;
+    background-color: var(--bg-button-hover) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 6px 0 var(--accent) !important;
+}
+
+.btn-theme-action:active {
+    transform: translateY(4px) !important;
+    box-shadow: none !important;
+}
+
+/* Primary "Customize" Button - Matches .settings-tab.active */
+.btn-theme-action.primary {
+    background-color: var(--bg-ocean-medium) !important;
+    border-color: var(--bg-ocean-deep) !important;
+    color: var(--text-primary) !important;
+    font-weight: 800 !important;
+    /* Bold Bold */
+
+    /* Asymmetric radius like active tab */
+    border-radius: 24px 18px 24px 18px !important;
+    box-shadow: 0 4px 0 var(--shadow-card) !important;
+}
+
+.btn-theme-action.primary:hover {
+    transform: translateY(-2px) rotate(-1deg) !important;
+    background-color: var(--accent) !important;
+    /* Pop color */
+    color: #fff !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-theme-action.primary:hover svg {
+    transform: rotate(15deg) scale(1.1) !important;
+}
+
+/* Remove any potential double borders or dashed lines */
+.theme-section::after {
+    display: none !important;
+}
+
+/* =========================================
+   MARKETPLACE POPUP BUTTONS 
+   ========================================= */
+
+/* Action Container */
+.fullscreen-popup-actions {
+    display: flex !important;
+    gap: 12px !important;
+}
+
+/* Secondary Buttons (Import/Export) - Cute Style */
+.fullscreen-popup-actions .btn-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 16px !important;
+    height: 38px !important;
+
+    border-radius: 12px !important;
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+
+    /* Variables */
+    background-color: var(--bg-input, #ffffff) !important;
+    border: 2px solid var(--border, #e0f0ff) !important;
+    color: var(--text-secondary, #7eb8c5) !important;
+    box-shadow: 0 4px 0 var(--border, #e0f0ff) !important;
+
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    transform: translateY(0);
+}
+
+.fullscreen-popup-actions .btn-secondary:hover {
+    transform: translateY(-2px) !important;
+    background-color: var(--bg-button-hover, #eff8fe) !important;
+    color: var(--text-primary, #3a7ca5) !important;
+    border-color: var(--accent, #88c9ea) !important;
+    box-shadow: 0 6px 0 var(--accent, #88c9ea) !important;
+}
+
+.fullscreen-popup-actions .btn-secondary:active {
+    transform: translateY(2px) !important;
+    box-shadow: 0 2px 0 var(--accent, #88c9ea) !important;
+}
+
+.fullscreen-popup-actions .btn-secondary svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke-width: 2.5 !important;
+}
+
+/* Primary Button (Create New) - Highlighted Cute Style */
+.fullscreen-popup-actions .btn-primary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 20px !important;
+    height: 38px !important;
+
+    border-radius: 12px !important;
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+
+    /* Variables */
+    background-color: var(--bg-ocean-medium, #bce2f5) !important;
+    border: 2px solid var(--bg-ocean-deep, #88c9ea) !important;
+    color: var(--text-primary, #2a5a75) !important;
+    box-shadow: 0 4px 0 var(--bg-ocean-deep, #88c9ea) !important;
+
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.fullscreen-popup-actions .btn-primary:hover {
+    transform: translateY(-2px) !important;
+    background-color: var(--accent, #88c9ea) !important;
+    border-color: var(--accent, #88c9ea) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15) !important;
+}
+
+.fullscreen-popup-actions .btn-primary:active {
+    transform: translateY(2px) !important;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15) !important;
+}
+
+.fullscreen-popup-actions .btn-primary svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke-width: 3 !important;
 }

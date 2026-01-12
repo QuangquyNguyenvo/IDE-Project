@@ -460,6 +460,75 @@ ipcMain.on('load-settings', (event) => {
 
 
 
+// ============================================================================
+// FILE EXPLORER IPC HANDLERS
+// ============================================================================
+ipcMain.handle('show-open-dialog', async (event, options) => {
+    try {
+        const result = await dialog.showOpenDialog(mainWindow, options || {
+            properties: ['openDirectory']
+        });
+        return result;
+    } catch (error) {
+        return { canceled: true, error: error.message };
+    }
+});
+
+ipcMain.handle('read-directory', async (event, dirPath) => {
+    try {
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+        const items = entries.map(entry => ({
+            name: entry.name,
+            isDirectory: entry.isDirectory(),
+            isFile: entry.isFile()
+        }));
+        return items;
+    } catch (error) {
+        console.error('[FileExplorer] read-directory error:', error);
+        return [];
+    }
+});
+
+ipcMain.handle('read-file', async (event, filePath) => {
+    try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        return content;
+    } catch (error) {
+        console.error('[FileExplorer] read-file error:', error);
+        throw new Error(`Cannot read file: ${error.message}`);
+    }
+});
+
+ipcMain.handle('rename-file', async (event, { oldPath, newPath }) => {
+    try {
+        fs.renameSync(oldPath, newPath);
+        return { success: true };
+    } catch (error) {
+        console.error('[FileExplorer] rename-file error:', error);
+        throw new Error(`Cannot rename file: ${error.message}`);
+    }
+});
+
+ipcMain.handle('delete-file', async (event, filePath) => {
+    try {
+        fs.unlinkSync(filePath);
+        return { success: true };
+    } catch (error) {
+        console.error('[FileExplorer] delete-file error:', error);
+        throw new Error(`Cannot delete file: ${error.message}`);
+    }
+});
+
+ipcMain.handle('show-item-in-folder', async (event, filePath) => {
+    try {
+        shell.showItemInFolder(filePath);
+        return { success: true };
+    } catch (error) {
+        console.error('[FileExplorer] show-item-in-folder error:', error);
+        throw new Error(`Cannot show item in folder: ${error.message}`);
+    }
+});
+
 // Global PCH cache path
 // Global PCH cache path - Optimization: Use %TEMP% (RAM-backed) to reduce disk I/O
 const pchDir = path.join(app.getPath('temp'), 'cpp-ide-pch');
