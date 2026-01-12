@@ -156,6 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initCompetitiveCompanion();
     updateUI();
 
+    // Initialize File Explorer
+    if (typeof FileExplorer !== 'undefined') {
+        FileExplorer.init();
+    }
+
 
     let resizeTimer;
     window.addEventListener('resize', () => {
@@ -2027,13 +2032,45 @@ function applyBackgroundSettings() {
 // KEYBOARD SHORTCUTS
 // ============================================================================
 function initShortcuts() {
+    let ctrlKPressed = false;
+    let ctrlKTimer = null;
+
     document.addEventListener('keydown', e => {
+        // Ctrl+K chord handling (VS Code style)
+        if (e.ctrlKey && e.key.toLowerCase() === 'k' && !e.shiftKey && !e.altKey) {
+            e.preventDefault();
+            ctrlKPressed = true;
+            // Reset after 2 seconds
+            clearTimeout(ctrlKTimer);
+            ctrlKTimer = setTimeout(() => { ctrlKPressed = false; }, 2000);
+            return;
+        }
+
+        // Ctrl+K, O - Open Folder
+        if (ctrlKPressed && e.key.toLowerCase() === 'o') {
+            e.preventDefault();
+            ctrlKPressed = false;
+            if (typeof FileExplorer !== 'undefined') {
+                FileExplorer.openFolderDialog();
+            }
+            return;
+        }
+
+        // Reset chord if other key pressed
+        if (ctrlKPressed && e.key !== 'Control') {
+            ctrlKPressed = false;
+        }
+
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); save(); }
-        if (e.ctrlKey && e.key === 'o') { e.preventDefault(); openFile(); }
+        if (e.ctrlKey && e.key === 'o' && !ctrlKPressed) { e.preventDefault(); openFile(); }
         if (e.ctrlKey && e.key === 'n') { e.preventDefault(); newFile(); }
         if (e.ctrlKey && e.key === 'w') { e.preventDefault(); if (App.activeTabId) closeTab(App.activeTabId); }
         if (e.ctrlKey && e.key === 'j') { e.preventDefault(); toggleProblems(); }
         if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettings(); }
+        if (e.ctrlKey && e.key.toLowerCase() === 'e' && !e.shiftKey) {
+            e.preventDefault();
+            if (typeof FileExplorer !== 'undefined') FileExplorer.toggle();
+        }
         if (e.ctrlKey && !e.shiftKey && e.key === '\\') { e.preventDefault(); toggleSplit(); }
         if (e.ctrlKey && e.shiftKey && e.key === '|') { e.preventDefault(); swapSplitEditors(); }
         if (e.key === 'F11') { e.preventDefault(); buildRun(); }
@@ -3097,6 +3134,61 @@ function closeTab(id) {
     updateUI();
 }
 
+/**
+ * Open a file from a given path (for File Explorer integration)
+ * Creates a new tab or switches to existing tab if file is already open
+ */
+async function openFileFromPath(filePath) {
+    if (!filePath) return;
+
+    // Normalize path for comparison
+    const normalizedPath = filePath.replace(/\\/g, '/');
+
+    // Check if file is already open
+    const existingTab = App.tabs.find(t => t.path && t.path.replace(/\\/g, '/') === normalizedPath);
+    if (existingTab) {
+        setActive(existingTab.id);
+        return;
+    }
+
+    // Read file content
+    try {
+        let content;
+        if (window.electronAPI && window.electronAPI.readFile) {
+            content = await window.electronAPI.readFile(filePath);
+        } else {
+            console.error('[openFileFromPath] electronAPI.readFile not available');
+            return;
+        }
+
+        // Create new tab
+        const id = 'tab_' + Date.now();
+        const fileName = filePath.split(/[/\\]/).pop();
+        const tab = {
+            id,
+            name: fileName,
+            path: filePath,
+            content: content,
+            original: content,
+            modified: false
+        };
+        App.tabs.push(tab);
+        setActive(id);
+        updateUI();
+
+        // Hide welcome screen
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'none';
+
+        console.log(`[openFileFromPath] Opened: ${fileName}`);
+    } catch (err) {
+        console.error('[openFileFromPath] Failed to open file:', err);
+    }
+}
+
+// Expose to window for FileExplorer
+window.openFromPath = openFileFromPath;
+
 function renderTabs() {
     const c = document.getElementById('tabs-container');
     c.innerHTML = '';
@@ -3186,6 +3278,11 @@ function doAction(action) {
         undo: () => getActiveEditor()?.trigger('keyboard', 'undo'),
         redo: () => getActiveEditor()?.trigger('keyboard', 'redo'),
         find: () => getActiveEditor()?.trigger('keyboard', 'actions.find'),
+        toggleexplorer: () => {
+            if (typeof FileExplorer !== 'undefined') {
+                FileExplorer.toggle();
+            }
+        },
         toggleio: toggleIO,
         toggleterm: toggleTerm,
         toggleproblems: toggleProblems,
