@@ -1,4 +1,3 @@
-// === CANVAS GRID LOGIC ===
 const canvas = document.getElementById('grid-canvas');
 const ctx = canvas.getContext('2d');
 let width, height;
@@ -13,7 +12,6 @@ function init() {
     height = canvas.height = window.innerHeight;
     points = [];
 
-    // Only create points if screen size is reasonable to avoid crash on massive virtual screens
     if (width * height > 50000000) return;
 
     for (let x = 0; x < width + spacing; x += spacing) {
@@ -34,7 +32,6 @@ window.addEventListener('mousemove', e => {
     mouse.y = e.clientY;
 });
 
-// Optimization: Stop loop when not visible
 function checkAnimationStatus() {
     const shouldAnimate = window.scrollY < window.innerHeight + 100;
 
@@ -44,7 +41,6 @@ function checkAnimationStatus() {
     } else if (!shouldAnimate && isAnimating) {
         isAnimating = false;
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        // CRITICAL FIX: Clear the canvas so dots don't freeze on screen
         ctx.clearRect(0, 0, width, height);
     }
 }
@@ -55,8 +51,7 @@ function animate() {
     if (!isAnimating) return;
 
     ctx.clearRect(0, 0, width, height);
-
-    ctx.fillStyle = 'rgba(100, 181, 246, 0.36)';
+    ctx.fillStyle = window.dotColor || 'rgba(100, 181, 246, 0.36)';
     ctx.beginPath();
 
     const maxDist = 300;
@@ -64,7 +59,6 @@ function animate() {
 
     for (let i = 0; i < points.length; i++) {
         const p = points[i];
-
         const dx = mouse.x - p.x;
         const dy = mouse.y - p.y;
         const distSq = dx * dx + dy * dy;
@@ -98,19 +92,13 @@ function animate() {
     animationFrameId = requestAnimationFrame(animate);
 }
 
-// Start
 init();
-// Initial check to handle refresh at bottom of page
 checkAnimationStatus();
-// Only start strictly if needed (checkAnimationStatus handles it), 
-// but to be safe for Hero view:
 if (window.scrollY < window.innerHeight + 100) {
     isAnimating = true;
     animate();
 }
 
-
-// === SCROLL REVEAL LOGIC ===
 const observerOptions = {
     threshold: 0.1,
     rootMargin: "0px 0px -50px 0px"
@@ -127,8 +115,6 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-
-// === AUTO-DOWNLOAD LINK ===
 fetch('https://api.github.com/repos/QuangquyNguyenvo/Sameko-Dev-CPP/releases')
     .then(res => res.json())
     .then(data => {
@@ -139,3 +125,75 @@ fetch('https://api.github.com/repos/QuangquyNguyenvo/Sameko-Dev-CPP/releases')
         }
     })
     .catch(e => console.log('GitHub API warning: ', e));
+
+const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const bars = entry.target.querySelectorAll('.bar-value');
+            bars.forEach((bar, index) => {
+                setTimeout(() => bar.classList.add('animate'), index * 100);
+            });
+            barObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.3 });
+
+const benchmarkCard = document.getElementById('benchmark-card');
+if (benchmarkCard) barObserver.observe(benchmarkCard);
+
+// ===== THEME TOGGLE =====
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+// Get stored theme or detect system preference
+function getPreferredTheme() {
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme) {
+        return storedTheme;
+    }
+    // Check system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+// Apply theme
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        html.setAttribute('data-theme', 'dark');
+    } else {
+        html.removeAttribute('data-theme');
+    }
+    localStorage.setItem('theme', theme);
+
+    // Update canvas dot color based on theme
+    updateCanvasColor(theme);
+}
+
+// Update canvas animation color based on theme
+function updateCanvasColor(theme) {
+    const isDark = theme === 'dark';
+    // The animate function will use this color
+    window.dotColor = isDark ? 'rgba(100, 181, 246, 0.5)' : 'rgba(100, 181, 246, 0.36)';
+}
+
+// Toggle theme
+function toggleTheme() {
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+}
+
+// Initialize theme
+applyTheme(getPreferredTheme());
+
+// Add click listener
+if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+}
+
+// Listen for system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    // Only apply if no stored preference
+    if (!localStorage.getItem('theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+    }
+});
