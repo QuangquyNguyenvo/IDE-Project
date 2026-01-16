@@ -1159,13 +1159,31 @@ ipcMain.handle('syntax-check', async (event, { content, filePath }) => {
 app.whenReady().then(async () => {
     createWindow();
 
-    // Get compiler version
-    await getCompilerVersion();
-    console.log(`[System] Compiler: ${compilerInfo.name} ${compilerInfo.version}`);
+    // Get compiler version (non-blocking)
+    getCompilerVersion().then(() => {
+        console.log(`[System] Compiler: ${compilerInfo.name} ${compilerInfo.version}`);
+    });
 
-    // Pre-build common PCH (-O0) so first build remains fast
-    const pch = await ensurePCH('-O0');
-    console.log(`[System] PCH (-O0) ready: ${pch.ready}`);
+    // Pre-build common PCH configurations in background (don't await - let app start fast!)
+    // This runs while user is creating/opening files, so first compile is instant
+    setTimeout(async () => {
+        console.log('[System] Preloading PCH configurations...');
+
+        // Common configurations to preload
+        const configs = [
+            '-O0',                    // Debug (default)
+            '-O0 -std=c++17',         // Debug + C++17
+            '-O2',                    // Release
+            '-O2 -std=c++17',         // Release + C++17
+        ];
+
+        for (const flags of configs) {
+            const pch = await ensurePCH(flags);
+            console.log(`[System] PCH (${flags}) ready: ${pch.ready}`);
+        }
+
+        console.log('[System] All PCH configurations preloaded!');
+    }, 500); // Start after 500ms to not compete with window render
 });
 
 app.on('window-all-closed', () => {
