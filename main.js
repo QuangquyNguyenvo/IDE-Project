@@ -543,7 +543,7 @@ const getPCHKey = (flags = '') => {
     return `${opt}_${std}`.replace(/[^a-zA-Z0-9_]/g, '');
 };
 
-async function ensurePCH(flags = '') {
+async function ensurePCH(flags = '', silent = false) {
     if (!fs.existsSync(pchDir)) {
         fs.mkdirSync(pchDir, { recursive: true });
     }
@@ -560,11 +560,19 @@ async function ensurePCH(flags = '') {
 
     const compilerExe = detectedCompiler || 'g++';
 
+    // Helper to notify renderer
+    const notifyRenderer = (msg) => {
+        if (!silent && mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('system-message', { type: 'info', message: msg });
+        }
+    };
+
     if (fs.existsSync(pchFile) && fs.existsSync(pchInfoFile)) {
         try {
             const pchInfo = JSON.parse(fs.readFileSync(pchInfoFile, 'utf-8'));
             if (pchInfo.compiler === compilerExe && pchInfo.version === compilerInfo.version) {
-                return { ready: true, pchSubDir, pchKey };
+                // notifyRenderer(`Using cached libraries (${pchKey})`); // Disabled per user request
+                return { ready: true, cached: true, pchSubDir, pchKey };
             }
         } catch (e) { }
     }
@@ -579,12 +587,7 @@ async function ensurePCH(flags = '') {
         fs.writeFileSync(pchHeader, '#include <bits/stdc++.h>\n', 'utf-8');
     }
 
-    if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('system-message', {
-            type: 'info',
-            message: `Đang tối ưu thư viện cho cấu hình ${optMatch ? optMatch[0] : '-O0'}${stdMatch ? ' ' + stdMatch[0] : ''}...`
-        });
-    }
+    notifyRenderer(`Đang tối ưu thư viện lần đầu cho cấu hình ${optMatch ? optMatch[0] : '-O0'}... (Sẽ nhanh hơn ở lần sau)`);
 
     return new Promise((resolve) => {
         // Inject compiler path into environment to find DLLs
@@ -1178,8 +1181,11 @@ app.whenReady().then(async () => {
         ];
 
         for (const flags of configs) {
-            const pch = await ensurePCH(flags);
-            console.log(`[System] PCH (${flags}) ready: ${pch.ready}`);
+            const pch = await ensurePCH(flags, true); // Silent preload
+            const status = pch.ready
+                ? (pch.cached ? 'CACHED (Instant)' : 'FIRST BUILD (Optimizing...)')
+                : 'FAILED';
+            console.log(`[System] PCH (${flags}): ${status}`);
         }
 
         console.log('[System] All PCH configurations preloaded!');
