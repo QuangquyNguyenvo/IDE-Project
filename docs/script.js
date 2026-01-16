@@ -197,3 +197,76 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
         applyTheme(e.matches ? 'dark' : 'light');
     }
 });
+
+// ===== SCROLL TO TOP =====
+const scrollTopBtn = document.getElementById('scroll-top');
+
+// Generic Smooth Scroll Function
+function smoothScrollTo(targetY, duration = 1000) {
+    const startY = window.scrollY;
+    // Handle document height limit
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const effectiveTargetY = Math.min(targetY, maxScroll);
+
+    const diff = effectiveTargetY - startY;
+
+    // If distance is 0, don't animate
+    if (diff === 0) return;
+
+    const startTime = performance.now();
+
+    function scrollStep(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+
+        window.scrollTo(0, startY + diff * ease);
+
+        if (progress < 1) {
+            requestAnimationFrame(scrollStep);
+        }
+    }
+
+    requestAnimationFrame(scrollStep);
+}
+
+function checkScrollTop() {
+    if (window.scrollY > 300) {
+        scrollTopBtn.classList.add('visible');
+    } else {
+        scrollTopBtn.classList.remove('visible');
+    }
+}
+
+function scrollToTop() {
+    smoothScrollTo(0);
+}
+
+// Bind smooth scroll to nav links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        // Only trigger for links on the same page
+        const targetId = this.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetId);
+
+        if (targetElement) {
+            e.preventDefault();
+            // Account for sticky header height (approx 80px)
+            const headerOffset = 80;
+            const elementPosition = targetElement.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            smoothScrollTo(offsetPosition);
+
+            // Optional: Update URL without jumping
+            history.pushState(null, null, '#' + targetId);
+        }
+    });
+});
+
+if (scrollTopBtn) {
+    window.addEventListener('scroll', checkScrollTop, { passive: true });
+    scrollTopBtn.addEventListener('click', scrollToTop);
+    // Initial check
+    checkScrollTop();
+}

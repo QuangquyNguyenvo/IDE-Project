@@ -94,20 +94,28 @@
         </svg>
     </button>
 
+    <!-- Scroll To Top Button -->
+    <button class="scroll-top" id="scroll-top" aria-label="Scroll to top" title="Scroll to top">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+
     <!-- Canvas Background -->
     <canvas id="grid-canvas"></canvas>
 
     <!-- Navigation -->
-    <nav class="container">
+    <nav>
         <div class="logo">
             <img src="https://raw.githubusercontent.com/QuangquyNguyenvo/Sameko-Dev-CPP/main/src/assets/icon.png"
                 alt="Logo">
             Sameko Dev C++
         </div>
-        <div class="nav-spacer"></div>
         <div class="nav-links">
             <a href="#features">Features</a>
             <a href="#benchmark">Benchmarks</a>
+            <a href="wiki.html">Wiki</a>
             <a target="_blank" href="https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases">Download</a>
         </div>
     </nav>
@@ -160,7 +168,11 @@
             </div>
         </header>
 
-        <!-- Wave Divider -->
+    </div>
+
+
+    <!-- ZONE 2: CONTENT -->
+    <div class="content-wrapper">
         <div class="wave-divider">
             <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
                 preserveAspectRatio="none">
@@ -169,10 +181,6 @@
                     class="shape-fill"></path>
             </svg>
         </div>
-    </div>
-
-    <!-- ZONE 2: CONTENT -->
-    <div class="content-wrapper">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
 
@@ -184,7 +192,8 @@
 
             <div class="benchmark-layout">
                 <div class="box-card reveal zoom-in" id="benchmark-card">
-                    <h3 class="card-title" style="margin-bottom: 30px; font-size: 18px;">Build Speed (bits/stdc++.h)
+                    <h3 class="card-title" style="margin-bottom: 30px; font-size: 18px;">Build Speed
+                        (<code>#include &lt;bits/stdc++.h&gt;</code>)
                     </h3>
                     <div class="chart-item">
                         <div class="chart-header">
@@ -223,7 +232,7 @@
 
                 <div class="box-card reveal zoom-in delay-200">
                     <h3 class="card-title" style="margin-bottom: 24px; font-size: 18px;">C++ Support</h3>
-                    <div class="standard-item"><span>C++26 (Sameko GCC)</span><span class="tag-supported">Full</span>
+                    <div class="standard-item"><span>C++26 (Sameko GCC)</span><span class="tag-supported">Beta</span>
                     </div>
                     <div class="standard-item"><span>C++23 (std::print)</span><span class="tag-supported">Full</span>
                     </div>
