@@ -1,0 +1,107 @@
+/**
+ * Sameko Dev C++ IDE - GCC Syntax Checker
+ * Semantic syntax checking using g++ -fsyntax-only
+ * @module app/services/syntax/gcc-checker
+ */
+
+'use strict';
+
+const { app } = require('electron');
+const path = require('path');
+const fs = require('fs');
+const { spawn } = require('child_process');
+const { getDetectedCompiler } = require('../compiler/detector');
+
+// ============================================================================
+// SYNTAX CHECK
+// ============================================================================
+
+/**
+ * Check syntax using GCC (g++ -fsyntax-only)
+ * Provides semantic error checking
+ * 
+ * @param {string} content - Source code
+ * @param {string} [filePath] - Original file path (for include resolution)
+ * @returns {Promise<import('../../../shared/types').SyntaxError[]>}
+ */
+async function checkSyntax(content, filePath = null) {
+    const compilerExe = getDetectedCompiler() || 'g++';
+
+    // Create temp file for checking
+    const tempDir = path.join(app.getPath('temp'), 'cpp-ide-check');
+    if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    const tempFile = path.join(tempDir, 'check_temp.cpp');
+    fs.writeFileSync(tempFile, content, 'utf-8');
+
+    const args = [
+        '-fsyntax-only',
+        '-fmax-errors=50',
+        '-Wall',
+        '-Wextra',
+        '-pipe',
+        '-fno-exceptions',
+        '-fno-rtti',
+        tempFile
+    ];
+
+    // Add include path if original file path provided
+    if (filePath) {
+        args.push('-I', path.dirname(filePath));
+    }
+
+    return new Promise((resolve) => {
+        const checker = spawn(compilerExe, args, { cwd: tempDir });
+        let stderr = '';
+
+        checker.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        checker.on('close', (code) => {
+            const diagnostics = parseGccOutput(stderr);
+            resolve(diagnostics);
+        });
+
+        checker.on('error', () => {
+            resolve([]);
+        });
+    });
+}
+
+/**
+ * Parse GCC error output into structured diagnostics
+ * @param {string} output - GCC stderr output
+ * @returns {import('../../../shared/types').SyntaxError[]}
+ */
+function parseGccOutput(output) {
+    const diagnostics = [];
+    const lines = output.split('\n');
+
+    for (const line of lines) {
+        // Pattern: /path/file.cpp:10:5: error: message
+        const match = line.match(/^(?:[A-Za-z]:)?[^:]*:(\d+):(\d+):\s*(error|warning|note):\s*(.+)$/);
+        if (match) {
+            diagnostics.push({
+                line: parseInt(match[1], 10),
+                column: parseInt(match[2], 10),
+                severity: match[3],
+                message: match[4],
+                source: 'gcc'
+            });
+        }
+    }
+
+    return diagnostics;
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+module.exports = {
+    checkSyntax,
+    parseGccOutput,
+};

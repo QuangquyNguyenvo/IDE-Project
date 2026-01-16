@@ -1,0 +1,80 @@
+/**
+ * Sameko Dev C++ IDE - Compiler IPC Handlers
+ * Handles compile, run, stop operations
+ * @module app/ipc/compiler-handlers
+ */
+
+'use strict';
+
+const { ipcMain } = require('electron');
+const { IPC } = require('../../shared/constants');
+const compiler = require('../services/compiler');
+
+/** @type {import('electron').BrowserWindow|null} */
+let mainWindow = null;
+
+// ============================================================================
+// SETUP
+// ============================================================================
+
+/**
+ * Set main window reference
+ * @param {import('electron').BrowserWindow} window
+ */
+function setMainWindow(window) {
+    mainWindow = window;
+
+    // Setup renderer callback
+    compiler.setSendToRendererCallback((channel, data) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send(channel, data);
+        }
+    });
+}
+
+// ============================================================================
+// IPC HANDLERS
+// ============================================================================
+
+/**
+ * Register all compiler-related IPC handlers
+ */
+function registerHandlers() {
+    // Compile
+    ipcMain.handle(IPC.COMPILER.COMPILE, async (event, { filePath, content, flags }) => {
+        return await compiler.compile({ filePath, content, flags });
+    });
+
+    // Run
+    ipcMain.handle(IPC.COMPILER.RUN, async (event, { exePath, cwd }) => {
+        return await compiler.run({ exePath, cwd });
+    });
+
+    // Stop
+    ipcMain.handle(IPC.COMPILER.STOP, async () => {
+        compiler.stopProcess();
+        return { success: true };
+    });
+
+    // Send input to running process
+    ipcMain.handle(IPC.COMPILER.SEND_INPUT, async (event, input) => {
+        return compiler.sendInput(input);
+    });
+
+    // Get compiler info
+    ipcMain.handle(IPC.COMPILER.GET_INFO, async () => {
+        await compiler.getCompilerVersion();
+        return compiler.getCompilerInfo();
+    });
+
+    console.log('[IPC] Compiler handlers registered');
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+module.exports = {
+    registerHandlers,
+    setMainWindow,
+};
