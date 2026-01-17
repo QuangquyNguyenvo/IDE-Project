@@ -43,10 +43,10 @@ app.whenReady().then(async () => {
     await initializeApp();
 
     // Create the main window
-    createMainWindow();
+    const mainWindow = createMainWindow();
 
-    // Register IPC handlers
-    registerLegacyHandlers();
+    // Register IPC handlers (pass mainWindow for process output callbacks)
+    registerLegacyHandlers(mainWindow);
 
     console.log('[App] Sameko Dev C++ is ready!');
 });
