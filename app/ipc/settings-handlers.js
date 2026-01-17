@@ -48,6 +48,22 @@ function registerHandlers() {
         }
     });
 
+    // Get current app version
+    ipcMain.handle('get-current-version', async () => {
+        return app.getVersion();
+    });
+
+    // Check for updates (placeholder - can be expanded with GitHub API)
+    ipcMain.handle('check-for-updates', async () => {
+        // For now, just return no updates available
+        // Future: Check GitHub releases API
+        return {
+            hasUpdate: false,
+            currentVersion: app.getVersion(),
+            latestVersion: app.getVersion()
+        };
+    });
+
     console.log('[IPC] Settings handlers registered');
 }
 

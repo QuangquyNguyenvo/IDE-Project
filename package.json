@@ -2,7 +2,7 @@
     "name": "sameko-dev-cpp",
     "version": "1.0.0-beta.9",
     "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
-    "main": "main.js",
+    "main": "app/main.js",
     "author": "QuangquyNguyenvo",
     "license": "MIT",
     "homepage": "https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP",
@@ -88,8 +88,9 @@
             "output": "release_build"
         },
         "files": [
-            "main.js",
-            "preload.js",
+            "app/**/*",
+            "preload/**/*",
+            "shared/**/*",
             "src/**/*",
             "node_modules/**/*",
             "mingw64/**/*",
