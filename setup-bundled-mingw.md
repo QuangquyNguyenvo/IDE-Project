@@ -1,100 +1,108 @@
-# Hướng dẫn Bundle MinGW vào IDE
+# Bundling MinGW/GCC into the IDE
 
-## Mục tiêu
-Bundle MinGW64 vào app để user **không cần cài đặt gì thêm** - tải về, giải nén, chạy!
+How to bundle the compiler so users don't need to install anything — just download, extract, and run!
 
-## Bước 1: Download MinGW64 Portable
+---
 
-### Option A: WinLibs (Khuyến nghị - nhỏ gọn, mới nhất)
-1. Truy cập: https://winlibs.com/
-2. Download **GCC 13.x.x + LLVM/Clang/LLD/LLDB + MinGW-w64 (UCRT) - Win64** 
-3. Chọn bản **without LLVM** nếu chỉ cần GCC (nhỏ hơn ~200MB)
-4. File ZIP khoảng ~100-200MB, giải nén ra ~500MB-1GB
+## Overview
 
-### Option B: TDM-GCC (Như Dev-C++ dùng)
-1. Truy cập: https://jmeubank.github.io/tdm-gcc/download/
-2. Download **tdm64-gcc-10.3.0-2.exe** (installer)
-3. Cài đặt vào folder tạm, ví dụ: `C:\temp\tdm-gcc`
-4. Copy folder `C:\temp\tdm-gcc` vào project
+Sameko IDE uses **Sameko-GCC** — a GCC 16 build optimized for competitive programming:
+- Pre-configured `bits/stdc++.h`  
+- Supports C++98/11/14/17/20/23/26
+- Optimized for Windows 10/11
 
-### Option C: Dev-C++ MinGW (Đã có sẵn)
-1. Nếu đã cài Dev-C++, copy folder: `C:\Program Files (x86)\Dev-Cpp\MinGW64`
 
-## Bước 2: Đặt vào thư mục project
+---
 
-Copy folder MinGW vào thư mục IDE với tên:
+## Step 1: Download the Compiler
+
+### Option A: From GitHub Releases (Recommended)
+1. Go to [Releases Page](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases)
+2. Download `Sameko-GCC-16.x.x.zip` or the full portable package
+
+### Option B: Build from WinLibs
+1. Visit https://winlibs.com/
+2. Download **GCC 16.x + MinGW-w64 (UCRT) - Win64**
+3. Choose the version **without LLVM** for smaller size
+
+---
+
+## Step 2: Place in Project Directory
+
+Copy the compiler folder into the project:
+
 ```
-D:\Code\Project\IDE\
-├── mingw64\           <-- ĐẶT Ở ĐÂY
-│   ├── bin\
+Sameko-Dev-CPP/
+├── Sameko-GCC/           ← PUT HERE
+│   ├── bin/
 │   │   ├── g++.exe
 │   │   ├── gcc.exe
 │   │   └── ...
-│   ├── include\
-│   ├── lib\
-│   └── ...
+│   ├── include/
+│   └── lib/
 ├── main.js
-├── src\
-└── ...
+└── src/
 ```
 
-**Các tên folder được hỗ trợ:**
-- `Sameko-GCC` (khuyến nghị cho Sameko IDE)
-- `mingw64`
-- `mingw32`
-- `MinGW`
-- `compiler`
+Supported folder names:
 
-## Bước 3: Kiểm tra
+| Folder name  | Notes          |
+| :----------- | :------------- |
+| `Sameko-GCC` | Recommended    |
+| `mingw64`    | Standard MinGW |
+| `compiler`   | Generic name   |
 
-1. Chạy IDE: `npm start`
-2. Xem Terminal, sẽ hiển thị:
-   ```
-   [System] Compiler: Bundled MinGW 13.x.x
-   [System] Precompiled header ready - faster compilation enabled!
-   ```
+---
 
-## Bước 4: Build cho distribution
+## Step 3: Verify
 
-Khi build app (`npm run build`), folder mingw64 sẽ được đóng gói cùng app.
+1. Run the IDE: `npm start`
+2. Check the terminal output:
 
-### Lưu ý kích thước:
-| Option              | Kích thước | bits/stdc++.h |
-| ------------------- | ---------- | ------------- |
-| WinLibs minimal     | ~150MB     | ✅ Có          |
-| TDM-GCC             | ~300MB     | ✅ Có          |
-| Full WinLibs + LLVM | ~800MB     | ✅ Có          |
-
-## Cấu trúc thư mục MinGW cần thiết (tối thiểu)
-
-Để giảm kích thước, bạn chỉ cần giữ:
 ```
-mingw64\
-├── bin\
-│   ├── g++.exe
-│   ├── gcc.exe
-│   ├── as.exe
-│   ├── ld.exe
-│   └── các .dll cần thiết
-├── include\
-│   ├── c++\           (C++ headers)
-│   └── ...
-├── lib\
-│   ├── gcc\
-│   └── ...
-└── libexec\           (compiler internals)
+[System] Compiler: Bundled Sameko-GCC 16.x.x
+[System] PCH Status: CACHED (Instant) or FIRST BUILD (Optimizing...)
 ```
+
+---
+
+## Minimal Structure
+
+To reduce size, you only need:
+
+```
+Sameko-GCC/
+├── bin/
+│   ├── g++.exe, gcc.exe, as.exe, ld.exe
+│   └── required DLLs
+├── include/
+│   └── c++/16.x.x/  (C++ headers + bits/stdc++.h)
+├── lib/
+│   └── gcc/
+└── libexec/
+```
+
+
+---
 
 ## Troubleshooting
 
-### "bits/stdc++.h not found"
-- Đảm bảo có folder: `mingw64\include\c++\13.x.x\bits\stdc++.h`
-- Hoặc sử dụng includes riêng lẻ: `<iostream>`, `<vector>`, etc.
+### ❌ "bits/stdc++.h not found"
+Check that this file exists: `Sameko-GCC/include/c++/16.x.x/bits/stdc++.h`
 
-### "g++.exe not found"
-- Kiểm tra đường dẫn: `mingw64\bin\g++.exe` phải tồn tại
-- Restart IDE sau khi copy folder
+### ❌ "g++.exe not found"
+Check that this file exists: `Sameko-GCC/bin/g++.exe`
 
-### IDE chậm khởi động
-- PCH đang được tạo lần đầu (mất ~5-10 giây)
-- Các lần sau sẽ nhanh hơn
+### ⏳ IDE slow to start on first run
+PCH is being built for the first time (~5-10 seconds). Subsequent runs will be instant.
+
+### ❌ Compilation doesn't work
+- Path should not contain special characters or spaces
+- Antivirus is not blocking gcc.exe
+- File is saved with `.cpp` extension
+
+---
+
+## Need Help?
+
+Open an issue on [GitHub](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues) with details! 🐟

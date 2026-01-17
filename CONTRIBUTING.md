@@ -7,9 +7,9 @@
   
   # 🤝 Contributing to Sameko IDE ⚓
   
-  <b>Yay! You want to help us build the cutest IDE ever? (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</b>
+  <b>Thanks for wanting to contribute! (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</b>
   <br/>
-  <i>We are super happy to have you on board! Let's make coding magical together!</i> 💙
+  <i>Every contribution, big or small, is appreciated~ 💙</i>
   
 </div>
 
@@ -17,96 +17,115 @@
 
 ## 🫧 How to Contribute
 
-Hii! Whether you found a bug 🐛 or have a super cool idea 💡, we'd love to hear from you!
-
-### 🐞 Reporting Bugs
-
-1.  **Check Issues**: Maybe someone else already spotted it! Check [Issues](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues) first.
-2.  **Create Issue**: If not, tell us about it!
-    *   **Title**: Short & sweet description.
-    *   **Steps**: How can we see the bug too?
-    *   **Expected**: What should have happened?
-    *   **Actual**: What actually happened? (Oopsie!)
-    *   **Screenshots**: Pictures help a lot! 📸
-
-### ✨ Suggesting Features
-
-1.  Open an issue with the `enhancement` label.
-2.  Tell us your dream feature! 🌈
-3.  We can discuss how to make it happen!
+| Type              | Description                 |
+| :---------------- | :-------------------------- |
+| 🐞 Bug Report      | Found a bug? Let us know!   |
+| ✨ Feature Request | Have a cool idea? Share it~ |
+| 📖 Documentation   | Help improve docs           |
+| 💻 Code            | Submit a pull request       |
 
 <br />
 
-## ⚓ Pull Requests (The Fun Part!)
+## 🐞 Bug Reports
 
-Ready to code? Let's go! ⛵
+1. **Check Issues first** — maybe someone already reported it!
+   👉 [Issues Page](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues)
 
-1.  **Fork** the repository 🍴
-2.  **Clone** your fork to your machine:
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/Sameko-Dev-CPP.git
-    ```
-3.  **Create a branch** for your magic:
-    ```bash
-    git checkout -b feature/super-cool-feature
-    ```
-4.  **Make changes** and test them! (Don't break the ship! 🦈)
-5.  **Commit** with nice messages:
-    ```bash
-    git commit -m "feat: add sparkles to everything"
-    ```
-6.  **Push** to your fork:
-    ```bash
-    git push origin feature/super-cool-feature
-    ```
-7.  **Open a Pull Request** and wait for us to review! 👀
+2. **Create a new Issue** with:
+   - Title: short description
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - Screenshots if possible 📸
+
+<br />
+
+## ✨ Feature Requests
+
+1. Open an issue with the `enhancement` label
+2. Describe what you want
+3. Explain why it would be useful
+
+> 💡 The more specific, the easier to implement!
+
+<br />
+
+## ⚓ Pull Request Workflow
+
+```bash
+# 1. Fork the repo on GitHub
+
+# 2. Clone your fork
+git clone https://github.com/YOUR_USERNAME/Sameko-Dev-CPP.git
+cd Sameko-Dev-CPP
+
+# 3. Create a new branch
+git checkout -b feature/your-feature-name
+
+# 4. Install dependencies
+npm install
+
+# 5. Code and test
+npm start
+
+# 6. Commit with a proper message
+git commit -m "feat: add XYZ feature"
+
+# 7. Push to your fork
+git push origin feature/your-feature-name
+
+# 8. Open a Pull Request on GitHub
+```
 
 <br />
 
 ## 🎨 Code Style
 
-To keep our code kawaii and clean:
-
-*   Use **4 spaces** for indentation.
-*   Use **meaningful names** for variables (like `happyShark`, not `x`).
-*   **Comment** if your magic spell is complicated.
-*   Keep it simple and readable! ✨
+| Rule        | Description                                     |
+| :---------- | :---------------------------------------------- |
+| Indentation | 4 spaces                                        |
+| Naming      | Meaningful names (e.g., `fileContent`, not `x`) |
+| Comments    | Explain complex logic                           |
+| Format      | Run AStyle before committing                    |
 
 <br />
 
 ## 📝 Commit Messages
 
-We like **Conventional Commits** (It keeps things organized!):
+We use Conventional Commits:
 
-*   `feat`: New cool stuff 🎁
-*   `fix`: Fixing bugs 🩹
-*   `docs`: Updating the scrolls 📜
-*   `style`: Making it pretty 💄
-*   `refactor`: Cleaning up code 🧹
-*   `test`: Adding tests 🧪
-*   `chore`: Boring maintenance stuff 🔧
+| Prefix     | Meaning          | Example                      |
+| :--------- | :--------------- | :--------------------------- |
+| `feat`     | New feature      | `feat: add dark mode`        |
+| `fix`      | Bug fix          | `fix: compile error on Win7` |
+| `docs`     | Documentation    | `docs: update install guide` |
+| `style`    | Code formatting  | `style: run AStyle`          |
+| `refactor` | Code refactoring | `refactor: split utils file` |
+| `chore`    | Maintenance      | `chore: update deps`         |
 
 <br />
 
 ## 🛠️ Development Setup
 
 ```bash
-# Install the crew (dependencies)
+# Install dependencies
 npm install
 
-# Run the ship (development mode)
+# Run dev mode
 npm start
+
+# Build for production
+npm run build:win
 ```
 
 <br />
 
 ## 💌 Questions?
 
-Just open an issue or ask us! We don't bite (unless we are hungry sharks... just kidding!).
+Just open an issue or ask in Discussions! We're friendly~ 🐟
 
 <div align="center">
   <br/>
-  <b>Thank you for being awesome! 💙</b>
+  <b>Thank you for contributing! 💙</b>
   <br/><br/>
 </div>
 

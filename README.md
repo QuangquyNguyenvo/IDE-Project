@@ -57,8 +57,8 @@
 <table>
   <tr>
     <td width="70%">
-      <p><strong>Sameko IDE</strong> is a lightweight, beautiful <strong>C++ IDE for Windows</strong> designed specifically for <strong>competitive programmers</strong>, students, and beginners. Built with Electron and Monaco Editor, it combines the simplicity of <strong>Dev-C++</strong> with a modern, customizable interface. This <strong>portable C++ compiler</strong> requires no installation - just download and code!</p>
-      <blockquote>💡 <strong>Why Sameko?</strong> No complex setup. No Visual Studio bloat. No MinGW installation. Just download, extract, and start coding with a <strong>beginner-friendly C++ IDE</strong> that includes everything you need: GCC 16.0 compiler, syntax highlighting, auto-completion, and competitive programming tools.</blockquote>
+      <p><b>Sameko IDE</b> is a lightweight C++ IDE for Windows, built for competitive programming and learning. It comes with GCC 16 pre-configured — no MinGW installation needed. Just download, extract, and start coding.</p>
+      <blockquote>💡 Think of it as a modern Dev-C++ alternative: simple interface, fast compilation, works out of the box.</blockquote>
     </td>
     <td width="30%" align="center">
       <img src="src/assets/fish.png" alt="Sameko Fish" width="180" />
@@ -70,14 +70,16 @@
 
 ## ✨ Features
 
-|                                                                     |                                                                |
-| :------------------------------------------------------------------ | :------------------------------------------------------------- |
-| 🚀 **Zero Setup** — GCC 16.0.0 (Sameko-GCC) bundled, no MinGW needed | ⚡ **Instant Run** — F11 to compile & run without saving        |
-| 🔗 **Smart Header Linking** — Auto-links .cpp when #include headers  | 👁️ **File Watcher** — Detects external changes, prompts reload  |
-| 🏆 **Competitive Companion** — Auto-fetch tests from CF, AtCoder, LC | ✂️ **Snippet Editor** — Custom IntelliSense snippets & manager  |
-| 🎨 **6 Beautiful Themes** — Kawaii, Dracula, Monokai, Nord, One Dark | 🧹 **AStyle Formatting** — Clean code with `Ctrl + Shift + A`   |
-| 📑 **Multi-tab & Split View** — Drag to reorder, split editor        | 💾 **Auto-Save** — Customizable background saving intervals     |
-| ⚙️ **Highly Customizable** — Backgrounds, C++11/14/17/20, flags      | 📋 **Template Manager** — boilerplate code for new source files |
+- 🚀 GCC 16 bundled, no setup required
+- ⚡ Press F11 to compile and run instantly
+- 🏆 Fetch test cases from Codeforces, AtCoder, LeetCode via Competitive Companion
+- 🔗 Auto-links .cpp files when you `#include` custom headers
+- 🎨 6 themes: Kawaii, Dracula, Monokai, Nord, One Dark, Sakura
+- 📑 Multi-tab editor with split view
+- ✂️ Custom snippets and templates (BFS, DFS, Segment Tree, etc.)
+- 🧹 Format code with AStyle (`Ctrl+Shift+A`)
+- 💾 Auto-save with configurable intervals
+- 👁️ File watcher detects external changes
 
 <br />
 

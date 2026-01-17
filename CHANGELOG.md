@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta.9] - 2026-01-18
+
+### Added
+- **Documentation Overhaul**: Rewrote README, CONTRIBUTING with wiki-style format
+- **Visual Badges**: New Wiki, Download, Website buttons in Sameko ocean style
+- **Batch Testing UI**: Enhanced competitive programming test runner
+
+### Changed
+- **Modular Architecture**: Refactored main.js into app/ directory structure
+- **PCH Logging**: Clearer precompiled header build status messages
+
+### Fixed
+- Various UI stability improvements and theme consistency fixes
+
 ## [1.0.0-beta.8] - 2026-01-01
 
 ### Added
