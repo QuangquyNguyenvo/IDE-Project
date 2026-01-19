@@ -1039,7 +1039,14 @@ const ThemeCustomizer = {
                 display: flex;
                 flex-direction: column;
                 position: relative;
-                background: var(--editor-bg, #1e1e1e);
+                background: var(--bg-ocean-dark, #1e1e1e); /* Use base app color, not editor color */
+            }
+
+            .tc6-editor-bg-container {
+                position: relative;
+                flex: 1;
+                background: var(--editor-bg, rgba(0,0,0,0.2)); /* This handles the solid editor color */
+                overflow: hidden;
             }
             
             .tc6-ide-bg {
@@ -1452,12 +1459,15 @@ const ThemeCustomizer = {
             }
             
             /* Fix sidebar item active state */
+            /* Fix sidebar item active state */
             .tc6-color-item.tc6-color-active {
-                background: transparent !important; /* Prevent background color change */
+                background-color: transparent !important; /* Force transparent background */
+                box-shadow: none !important;
             }
             .tc6-color-item.tc6-color-active .tc6-color-swatch {
                 border-color: var(--accent, #88c9ea) !important;
                 box-shadow: 0 0 0 2px var(--bg-panel, #e8f4fc), 0 0 0 4px var(--accent, #88c9ea) !important;
+                transform: scale(1.1);
             }
 
             .tc6-drag-confirm-btn {
@@ -2022,6 +2032,7 @@ const ThemeCustomizer = {
                 overflow: hidden;
                 padding: 8px;
                 gap: 8px;
+                background: var(--bg-ocean-medium, #bce2f5); /* Use lighter main color behind content */
             }
             
             /* Editor Column */
@@ -2038,6 +2049,8 @@ const ThemeCustomizer = {
                 display: flex;
                 flex-direction: column;
                 gap: 6px;
+                background: var(--bg-ocean-dark, #3a7ca5); /* Use darker main color for sidebar */
+                padding: 6px; /* Add padding to match visual style */
             }
         `;
         document.head.appendChild(style);
@@ -2057,6 +2070,27 @@ const ThemeCustomizer = {
         container.innerHTML = `
             <!-- UI Colors Panel - Simplified Groups -->
             <div class="tc6-category-panel active" data-panel="ui">
+                
+                <!-- Smart Theme Generator -->
+                <!-- Smart Theme Generator -->
+                <div class="tc6-section" style="border: 1px solid var(--border); background: var(--bg-panel);">
+                    <div class="tc6-section-title" style="color: var(--accent); display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>
+                        Smart Theme Generator
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Pick ONE color, we'll calculate the rest!</p>
+                    
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Master Color</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="color" id="tc6-master-color" value="${c.accent || '#88c9ea'}" style="height: 36px; width: 50px; border: 1px solid var(--border); padding: 0; cursor: pointer; border-radius: 4px; background: transparent;">
+                            <button class="tc6-btn-primary" id="tc6-generate-btn" style="flex: 1; padding: 8px 12px; border-radius: 4px; border: none; background: var(--accent); color: var(--bg-base); font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+                                Auto-Generate Theme
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="tc6-section">
                     <div class="tc6-section-title">Theme Info</div>
                     <div class="tc6-field">
@@ -2064,38 +2098,45 @@ const ThemeCustomizer = {
                         <input type="text" class="tc6-input" id="tc6-name" value="${this._escape(this.workingTheme?.name || '')}" placeholder="My Theme">
                     </div>
                 </div>
-                
-                <div class="tc6-section">
-                    <div class="tc6-section-title">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-                        Color Groups
-                    </div>
-                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Change one color → updates all related elements</p>
-                    <div class="tc6-color-grid">
-                        ${this._renderGroupColor('background', 'Background', c.editorBg || c.bgOceanDark || '#1a2530', 'moon')}
-                        ${this._renderGroupColor('surface', 'Surface', c.bgPanel || '#2a3a4a', 'layers')}
-                        ${this._renderGroupColor('accent', 'Accent', c.accent || '#88c9ea', 'star')}
-                        ${this._renderGroupColor('text', 'Text', c.textPrimary || '#e0f0ff', 'type')}
-                        ${this._renderGroupColor('border', 'Border', c.border || '#3a6075', 'square')}
-                    </div>
-                </div>
 
+                <!-- Panel Variants (Moved to UI) -->
                 <div class="tc6-section">
                     <div class="tc6-section-title">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18"/></svg>
                         Panel Variants
                     </div>
-                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Tune Input / Expected panels separately</p>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Customize specific panel backgrounds</p>
                     <div class="tc6-color-grid">
                         ${this._renderColorItem('bgPanel-input', 'Input Panel')}
                         ${this._renderColorItem('bgPanel-expected', 'Expected Panel')}
                     </div>
                 </div>
-                
+
+                <!-- Editor & Terminal (Moved to UI) -->
                 <div class="tc6-section">
+                    <div class="tc6-section-title">Editor & Terminal</div>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('editorBg', 'Editor Background')}
+                        ${this._renderColorItem('terminalBg', 'Terminal Background')}
+                    </div>
+                </div>
+                
+                <div class="tc6-section" style="opacity: 0.5; pointer-events: none;">
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                        Fine Tuning (Manual) <span style="font-size: 10px; background: var(--bg-panel); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Coming Soon</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Manual color tuning is temporarily disabled while we improve it.</p>
+                    <div class="tc6-color-grid">
+                        ${this._renderGroupColor('main', 'Main Colors', c.bgOceanDark || '#1a2530', 'sliders')}
+                        ${this._renderGroupColor('background', 'Background', c.editorBg || '#1e1e1e', 'moon')}
+                    </div>
+                </div>
+                
+                <div class="tc6-section" style="opacity: 0.5; pointer-events: none;">
                     <div class="tc6-section-title">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                        Status Colors
+                        Status Colors <span style="font-size: 10px; background: var(--bg-panel); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Coming Soon</span>
                     </div>
                     <div class="tc6-color-grid">
                         ${this._renderColorItem('success', 'Success')}
@@ -2116,16 +2157,10 @@ const ThemeCustomizer = {
                         ${this._renderColorItem('syntaxKeyword', 'Keywords')}
                         ${this._renderColorItem('syntaxString', 'Strings')}
                         ${this._renderColorItem('syntaxFunction', 'Functions')}
+                        ${this._renderColorItem('syntaxVariable', 'Output Streams (cout)')}
                         ${this._renderColorItem('syntaxType', 'Types')}
                         ${this._renderColorItem('syntaxNumber', 'Numbers')}
                         ${this._renderColorItem('syntaxComment', 'Comments')}
-                    </div>
-                </div>
-                <div class="tc6-section">
-                    <div class="tc6-section-title">Editor & Terminal</div>
-                    <div class="tc6-color-grid">
-                        ${this._renderColorItem('editorBg', 'Editor Background')}
-                        ${this._renderColorItem('terminalBg', 'Terminal Background')}
                     </div>
                 </div>
             </div>
@@ -2442,10 +2477,13 @@ const ThemeCustomizer = {
 
                 const key = item.dataset.key;
                 const label = item.querySelector('label')?.textContent || key;
-                const swatch = item.querySelector('.tc6-color-swatch');
 
-                // Show color picker directly for this item
-                this._showIndividualColorPicker(key, label, swatch, item);
+                // Feature change: Unify UI by using the Top Edit Bar even for sidebar clicks
+                // This prevents the "detached popup" issue and keeps interaction consistent
+                this._updateEditBar(key, label);
+
+                // Optional: Scroll preview to show the element if possible
+                // this._simulatePreviewClick(key);
             });
         });
 
@@ -2574,7 +2612,29 @@ const ThemeCustomizer = {
             const openPicker = () => {
                 // Feature change: Click on sidebar group simulates clicking the element in preview
                 // This keeps the UI consistent (one way to edit) and syncs the top bar
-                this._simulatePreviewClick(groupId);
+
+                // We need to find the "representative" key for this group to activate the edit bar
+                let representativeKey = null;
+                switch (groupId) {
+                    case 'main': representativeKey = 'bgOceanDark'; break;
+                    case 'background': representativeKey = 'editorBg'; break;
+                    case 'surface': representativeKey = 'bgPanel'; break;
+                    case 'accent': representativeKey = 'accent'; break;
+                    case 'text': representativeKey = 'textPrimary'; break;
+                    case 'border': representativeKey = 'border'; break;
+                    case 'status': representativeKey = 'success'; break;
+                    case 'syntax': representativeKey = 'syntaxKeyword'; break;
+                }
+
+                if (representativeKey) {
+                    // Highlight the group item
+                    container.querySelectorAll('.tc6-color-item').forEach(i => i.classList.remove('tc6-color-active'));
+                    // Note: Groups don't have .tc6-color-active styles usually, but we could add them if needed
+
+                    // Trigger the edit bar
+                    const groupLabel = item.querySelector('label')?.textContent || groupId;
+                    this._updateEditBar(representativeKey, groupLabel);
+                }
             };
 
             // Click on entire row
@@ -3249,8 +3309,7 @@ const ThemeCustomizer = {
                             <div class="tc6-clickable tc6-ui-element tc6-panel-input" 
                                  data-key="bgPanel-input" data-label="Input Panel">
                                 <div class="tc6-panel-title tc6-accent-text">INPUT</div>
-                                <div class="tc6-clickable tc6-input-area" 
-                                     data-key="bgInput" data-label="Input Background">
+                                <div class="tc6-input-area" style="background: transparent;">
                                     Nhập dữ liệu test...
                                 </div>
                             </div>
@@ -4529,11 +4588,14 @@ const ThemeCustomizer = {
         } else {
             // CRITICAL: Store EXACT key, do NOT normalize to base key
             // This fixes scope leakage where bgPanel-input was being stored as bgPanel
+            // CRITICAL: Store EXACT key, do NOT normalize to base key
+            // This fixes scope leakage where bgPanel-input was being stored as bgPanel
             if (key === 'bgPanel-input' || key === 'bgPanel-expected') {
                 const counterpart = key === 'bgPanel-input' ? 'bgPanel-expected' : 'bgPanel-input';
                 this.workingTheme.colors[key] = value;
                 this.workingTheme.colors[counterpart] = value;
                 this._injectPreviewVariable(counterpart, value);
+                // Also update the preview for the counterpart
                 if (this.popup) {
                     this._updatePreviewWithoutRerender(counterpart);
                 }

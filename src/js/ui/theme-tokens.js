@@ -21,10 +21,10 @@ const ThemeTokens = {
     definitions: {
         // ============= BACKGROUND GROUP =============
         bgBase: { cssVar: '--bg-base', type: 'color', group: 'background' },
-        bgOceanDark: { cssVar: '--bg-ocean-dark', type: 'color', group: 'background' },
-        bgOceanMedium: { cssVar: '--bg-ocean-medium', type: 'color', group: 'background' },
+        bgOceanDark: { cssVar: '--bg-ocean-dark', type: 'color', group: 'main' },
+        bgOceanMedium: { cssVar: '--bg-ocean-medium', type: 'color', group: 'main' },
         editorBg: { cssVar: '--editor-bg', type: 'color', group: 'background' },
-        bgInput: { cssVar: '--bg-input', type: 'color', group: 'background' },
+        bgInput: { cssVar: '--bg-input', type: 'color', group: 'surface' },
         terminalBg: { cssVar: '--terminal-bg', type: 'color', group: 'terminal' },
 
         // ============= SURFACE GROUP =============
@@ -43,13 +43,13 @@ const ThemeTokens = {
         bgButtonHover: { cssVar: '--bg-button-hover', type: 'color', group: 'surface' },
 
         // ============= ACCENT GROUP =============
-        accent: { cssVar: '--accent', type: 'color', group: 'accent' },
+        accent: { cssVar: '--accent', type: 'color', group: 'main' },
         accentHover: { cssVar: '--accent-hover', type: 'color', group: 'accent' },
         bgOceanDeep: { cssVar: '--bg-ocean-deep', type: 'color', group: 'accent' },
         borderStrong: { cssVar: '--border-strong', type: 'color', group: 'accent' },
 
         // ============= TEXT GROUP =============
-        textPrimary: { cssVar: '--text-primary', type: 'color', group: 'text' },
+        textPrimary: { cssVar: '--text-primary', type: 'color', group: 'main' },
         textSecondary: { cssVar: '--text-secondary', type: 'color', group: 'text' },
         textMuted: { cssVar: '--text-muted', type: 'color', group: 'text' },
         settingsLabelColor: { cssVar: '--settings-label-color', type: 'color', group: 'text' },
@@ -109,6 +109,7 @@ const ThemeTokens = {
         syntaxNumber: { cssVar: '--syntax-number', type: 'color', group: 'syntax' },
         syntaxType: { cssVar: '--syntax-type', type: 'color', group: 'syntax' },
         syntaxFunction: { cssVar: '--syntax-function', type: 'color', group: 'syntax' },
+        syntaxVariable: { cssVar: '--syntax-variable', type: 'color', group: 'syntax' },
         syntaxComment: { cssVar: '--syntax-comment', type: 'color', group: 'syntax' }
     },
 

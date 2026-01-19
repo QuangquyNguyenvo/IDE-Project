@@ -5121,6 +5121,51 @@ body.split-active .editor-pane {
     background: var(--bg-panel-input, var(--bg-panel, var(--bg-glass-heavy)));
 }
 
+
 .io-panel.io-panel-expected {
     background: var(--bg-panel-expected, var(--bg-panel, var(--bg-glass-heavy)));
+}
+
+/* Layout Resizer (Gutter) */
+.gutter {
+    background-color: var(--bg-base, #ffffff);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transition: background-color 0.2s;
+}
+
+.gutter.gutter-horizontal {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+    cursor: col-resize;
+}
+
+.gutter.gutter-vertical {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+    cursor: row-resize;
+}
+
+.gutter:hover {
+    background-color: var(--accent, #88c9ea);
+}
+
+/* Layout Resizer (Gutter) */
+.gutter {
+    background-color: var(--bg-base, #ffffff);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transition: background-color 0.2s;
+}
+
+.gutter.gutter-horizontal {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+    cursor: col-resize;
+}
+
+.gutter.gutter-vertical {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+    cursor: row-resize;
+}
+
+.gutter:hover {
+    background-color: var(--accent, #88c9ea);
 }

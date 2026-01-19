@@ -131,6 +131,7 @@ const ColorRegistry = {
         'syntaxNumber': '--syntax-number',
         'syntaxType': '--syntax-type',
         'syntaxFunction': '--syntax-function',
+        'syntaxVariable': '--syntax-variable', // Added for custom variables like cout
         'syntaxComment': '--syntax-comment',
 
         // Effects (kept for compatibility)
@@ -217,6 +218,27 @@ const ColorRegistry = {
                 rgb.r + (gray - rgb.r) * amount,
                 rgb.g + (gray - rgb.g) * amount,
                 rgb.b + (gray - rgb.b) * amount
+            );
+        },
+
+        /**
+         * Mix two colors (linear interpolation)
+         * @param {string} color1 - Hex color 1
+         * @param {string} color2 - Hex color 2
+         * @param {number} weight - Percentage of color1 to keep (0-100)
+         */
+        mix(color1, color2, weight = 50) {
+            const rgb1 = this.hexToRgb(color1);
+            const rgb2 = this.hexToRgb(color2);
+            if (!rgb1 || !rgb2) return color1;
+
+            const w = weight / 100;
+            const a = 1 - w;
+
+            return this.rgbToHex(
+                rgb1.r * w + rgb2.r * a,
+                rgb1.g * w + rgb2.g * a,
+                rgb1.b * w + rgb2.b * a
             );
         }
     },
