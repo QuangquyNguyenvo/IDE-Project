@@ -2221,9 +2221,9 @@ const ThemeCustomizer = {
      */
     _renderGroupColor(groupId, label, currentColor, icon = '') {
         const icons = {
-            moon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+            moon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
             layers: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
-            star: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+            star: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
             type: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
             square: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>'
         };
@@ -2542,13 +2542,9 @@ const ThemeCustomizer = {
             const groupId = item.dataset.group;
 
             const openPicker = () => {
-                const group = window.ColorRegistry?.getGroup(groupId);
-                if (!group) {
-                    console.warn('[Customizer] No group found:', groupId);
-                    return;
-                }
-                // Show color picker for group
-                this._showGroupColorPicker(groupId, group.label, swatch);
+                // Feature change: Click on sidebar group simulates clicking the element in preview
+                // This keeps the UI consistent (one way to edit) and syncs the top bar
+                this._simulatePreviewClick(groupId);
             };
 
             // Click on entire row
@@ -2905,13 +2901,17 @@ const ThemeCustomizer = {
 
             // Replace edit bar content with drag mode notification
             editBar.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
-                        </svg>
-                        <span style="font-weight: 700; color: #2a5a75; font-size: 13px; font-family: 'Fredoka', sans-serif;">Drag Mode Active</span>
-                        <span style="color: #5a8a95; font-size: 12px;">Drag to reposition ${isEditor ? 'editor' : 'app'} background</span>
+                        <div style="background: var(--bg-ocean-medium); color: #fff; padding: 6px; border-radius: 8px;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+                            </svg>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 700; color: var(--text-primary); font-size: 13px; font-family: 'Fredoka', sans-serif;">Drag Mode Active</span>
+                            <span style="color: var(--text-secondary); font-size: 11px;">Drag to reposition ${isEditor ? 'editor' : 'app'} background</span>
+                        </div>
                     </div>
                     <button class="tc6-drag-confirm-btn" id="tc6-drag-confirm">
                         <svg viewBox="0 0 24 24" width="14" height="14">
@@ -2922,10 +2922,10 @@ const ThemeCustomizer = {
                 </div>
             `;
 
-            // Apply kawaii gradient styling
-            editBar.style.background = 'linear-gradient(135deg, #FFD93D 0%, #FFA96C 100%)';
-            editBar.style.border = '3px solid #FFB84D';
-            editBar.style.boxShadow = '4px 4px 0 rgba(255, 184, 77, 0.3)';
+            // Apply standard clean styling
+            editBar.style.background = 'var(--bg-input, #ffffff)';
+            editBar.style.borderBottom = '2px solid var(--accent, #88c9ea)';
+            editBar.style.boxShadow = '0 4px 12px rgba(136, 201, 234, 0.15)';
 
             // Bind confirm button
             const confirmBtn = editBar.querySelector('#tc6-drag-confirm');
@@ -3037,6 +3037,76 @@ const ThemeCustomizer = {
             editorBgEl.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
             // Extend inset to prevent blur edge artifacts
             editorBgEl.style.inset = blur > 0 ? `-${blur}px` : '0';
+        }
+
+        // Terminal Effects
+        const terminalEl = this.popup?.querySelector('.tc6-terminal');
+        if (terminalEl) {
+            // Update opacity
+            const termOpacity = (c.terminalOpacity ?? 100) / 100;
+            // We need to apply this to the background color's alpha channel if possible,
+            // or use opacity property (but that affects text).
+            // Better approach: Update the background color variable or style to include alpha.
+            // Since .tc6-terminal uses var(--terminal-bg), we might need to manipulate the element's style directly
+            // if we want to change opacity independently of the color definition.
+
+            // However, typical implementation for "Terminal Opacity" often means the background layer opacity.
+            // Let's assume we update the rgba value of the background.
+            // But here, for simplicity and performance in preview, let's use direct style manipulation
+            // assuming the element has a background color set.
+
+            // Actually, we should check if there's a blur filter to apply to the backdrop or element
+            const termBlur = c.terminalBgBlur ?? 0;
+            if (termBlur > 0) {
+                terminalEl.style.backdropFilter = `blur(${termBlur}px)`;
+                terminalEl.style.webkitBackdropFilter = `blur(${termBlur}px)`;
+            } else {
+                terminalEl.style.backdropFilter = 'none';
+                terminalEl.style.webkitBackdropFilter = 'none';
+            }
+
+            // For opacity, if we want to affect background only, we need to ensure the color has alpha.
+            // Here we'll rely on the fact that if user changes opacity, they might be expecting 
+            // the whole container or just bg. Let's try to update the backgroundColor with alpha.
+            const termBg = this._getColor('terminalBg');
+            if (termBg) {
+                const rgb = this._hexToRgb(termBg);
+                if (rgb) {
+                    terminalEl.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${termOpacity})`;
+                }
+            }
+        }
+    },
+
+    /**
+     * Simulate clicking an element in the preview
+     * Used to sync sidebar selection with preview edit bar
+     */
+    _simulatePreviewClick(groupId) {
+        // Map groups to representative elements in the preview
+        const groupMap = {
+            'background': 'editorBg', // Editor background
+            'surface': 'bgPanel-input', // Input Panel
+            'accent': 'accent', // Accent badge
+            'text': 'textPrimary', // File menu item
+            'border': 'bgPanel-input', // Input Panel (has border)
+            'status': 'success', // Success indicator
+            'syntax': 'syntaxKeyword' // Keyword
+        };
+
+        const key = groupMap[groupId];
+        if (!key) return;
+
+        // Find the element
+        const el = this.popup?.querySelector(`.tc6-clickable[data-key="${key}"]`);
+        if (el) {
+            // Trigger the click handler
+            // We can't just use el.click() because we want to trigger our internal logic
+            // defined in _renderPreview listeners.
+            // So we manually dispatch a click event.
+            el.click();
+
+            // Scroll to element if needed? (Optional)
         }
     },
 
@@ -3203,10 +3273,11 @@ const ThemeCustomizer = {
         // Bind click handlers for color editing
         wrapper.querySelectorAll('.tc6-clickable[data-key]').forEach(el => {
             el.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default
                 e.stopPropagation();
                 if (this.bgDragMode) return; // Don't activate edit bar in drag mode
 
-                // Close any open color picker first (Issue 2 fix)
+                // Close any open color picker first (Issue 2 & 4 fix)
                 this._hideColorPicker();
 
                 const key = el.dataset.key;
@@ -3313,32 +3384,10 @@ const ThemeCustomizer = {
                 <!-- Advanced Tab -->
                 <div class="tc6-picker-tab-panel" data-panel="advanced" style="display: none;">
                     <div class="tc6-picker-section">
-                        <div class="tc6-picker-section-title">Opacity</div>
-                        <div class="tc6-picker-row">
-                            <span class="tc6-picker-label">Alpha:</span>
-                            <div class="tc6-picker-control">
-                                <input type="range" min="0" max="100" value="${currentOpacity}" id="tc6-opacity-slider" style="flex: 1;">
-                                <span class="tc6-picker-value" id="tc6-opacity-value">${currentOpacity}%</span>
-                            </div>
-                        </div>
+                         <p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px 0;">
+                            No advanced options available for this element.
+                        </p>
                     </div>
-                    ${this._supportsBorder(key) ? `
-                    <div class="tc6-picker-section">
-                        <div class="tc6-picker-section-title">Border</div>
-                        <div class="tc6-picker-row">
-                            <span class="tc6-picker-label">Color:</span>
-                            <input type="color" id="tc6-border-color" value="${this._toHex(currentBorder)}" style="width: 40px; height: 28px; border: none; border-radius: 4px; cursor: pointer;">
-                            <input type="text" class="tc6-input" id="tc6-border-hex" value="${this._toHex(currentBorder).toUpperCase()}" style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 4px 6px;">
-                        </div>
-                        <div class="tc6-picker-row">
-                            <span class="tc6-picker-label">Width:</span>
-                            <div class="tc6-picker-control">
-                                <input type="range" min="0" max="5" value="${c.borderWidth || 1}" id="tc6-border-width" style="flex: 1;">
-                                <span class="tc6-picker-value" id="tc6-border-width-value">${c.borderWidth || 1}px</span>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
         `;
@@ -3519,34 +3568,56 @@ const ThemeCustomizer = {
      * Rewrote to avoid fallback which causes visual conflicts
      */
     _updatePreviewWithoutRerender(key) {
-        // Map base keys to all their variants
-        const keyVariants = this._getKeyVariants(key);
+        // Fix for Issue 3: Live Preview CSS Variable Synchronization Errors
+        // Instead of blindly updating all variants, we must respect inheritance rules.
+        // If a child variant (e.g. bgPanel-expected) has its OWN color set,
+        // updating the parent (bgPanel) should NOT overwrite the child in the preview.
 
         const c = this.workingTheme?.colors || {};
         const color = this._getColor(key);
 
-        // Find all elements matching this key or its variants
-        let elements = [];
-        keyVariants.forEach(variantKey => {
-            const found = this.popup?.querySelectorAll(`[data-key="${variantKey}"]`);
-            if (found && found.length > 0) {
-                elements.push(...Array.from(found));
+        // 1. Update the main element(s) for this key
+        this._applyColorToElements(key, color);
+
+        // 2. Check for functionality-based variants (inheritance)
+        // Using ThemeTokens if available to get accurate inheritance map
+        const inheritance = window.ThemeTokens?.inheritance || {
+            'bgHeader-main': 'bgHeader',
+            'bgHeader-statusbar': 'bgHeader',
+            'bgPanel-problems': 'bgPanel',
+            'bgPanel-input': 'bgPanel',
+            'bgPanel-expected': 'bgPanel'
+        };
+
+        // Find keys that inherit from the current key and update them IF they don't have their own value
+        Object.entries(inheritance).forEach(([childKey, parentKey]) => {
+            if (parentKey === key) {
+                // Check if child has explicit value
+                if (!c[childKey]) {
+                    // No explicit value, so it inherits. Update it with parent's new color.
+                    this._applyColorToElements(childKey, color);
+                }
             }
         });
 
-        // Update all found elements
-        elements.forEach(el => {
-            // Check what type of color property this element uses
-            const computedStyle = el.style;
+        // Always update background styles to keep them in sync
+        this._updateBgStyles();
+    },
 
-            // Update colors appropriately based on element type
+    /**
+     * Helper to apply color to elements of a specific key
+     */
+    _applyColorToElements(key, color) {
+        const elements = this.popup?.querySelectorAll(`[data-key="${key}"]`);
+        if (!elements) return;
+
+        const c = this.workingTheme?.colors || {};
+
+        elements.forEach(el => {
             if (key.startsWith('text') || key.startsWith('syntax')) {
-                // Text color keys - update color property
                 el.style.color = color;
             } else if (key === 'accent' || key === 'success' || key === 'error' || key === 'warning') {
-                // Status/accent colors - update background for indicators, color for text
                 if (el.classList.contains('tc6-clickable') && el.textContent) {
-                    // Text element with accent color
                     if (el.style.background || el.style.backgroundColor) {
                         el.style.backgroundColor = color;
                     } else {
@@ -3556,7 +3627,7 @@ const ThemeCustomizer = {
                     el.style.backgroundColor = color;
                 }
             } else {
-                // Background colors - apply with opacity if needed
+                // Backgrounds
                 const opacity = this._getOpacity(key);
                 if (opacity !== undefined && opacity < 100) {
                     const rgb = this._hexToRgb(color);
@@ -3567,7 +3638,6 @@ const ThemeCustomizer = {
                     el.style.backgroundColor = color;
                 }
 
-                // Update border if supported
                 if (this._supportsBorder(key) && c.border) {
                     el.style.borderColor = c.border;
                     if (c.borderWidth) {
@@ -3576,9 +3646,6 @@ const ThemeCustomizer = {
                 }
             }
         });
-
-        // Always update background styles to keep them in sync
-        this._updateBgStyles();
     },
 
     /**
