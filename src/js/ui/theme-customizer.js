@@ -625,26 +625,71 @@ const ThemeCustomizer = {
                 border: 2px solid var(--border, #e0f0ff);
                 border-radius: 10px 12px 11px 13px;
                 cursor: pointer;
-                transition: all 0.2s ease;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+            }
+            .tc6-color-item::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 4px;
+                height: 100%;
+                background: var(--accent, #88c9ea);
+                transform: scaleY(0);
+                transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             }
             .tc6-color-item:hover {
                 background: var(--bg-ocean-light, #eff8fe);
                 border-color: var(--border-strong, #b3e2fa);
-                transform: translateX(3px);
+                transform: translateX(4px);
+                box-shadow: -4px 0 12px rgba(136, 201, 234, 0.15);
+            }
+            .tc6-color-item:hover::before {
+                transform: scaleY(1);
+            }
+            .tc6-color-item:active {
+                transform: translateX(2px) scale(0.98);
+            }
+            .tc6-color-item.tc6-color-active {
+                border-color: var(--accent, #88c9ea);
+                background: var(--bg-ocean-light, #eff8fe);
+                box-shadow: 0 0 0 3px rgba(136, 201, 234, 0.2);
+            }
+            .tc6-color-item.tc6-color-active::before {
+                transform: scaleY(1);
             }
             .tc6-color-item label {
                 font-size: 11px;
                 font-weight: 600;
                 color: var(--settings-label-color, #5a8a95);
                 cursor: pointer;
+                transition: color 0.2s ease;
+            }
+            .tc6-color-item:hover label {
+                color: var(--text-primary, #2a5a75);
             }
             .tc6-color-item .tc6-color-swatch {
-                width: 26px;
-                height: 26px;
-                border-radius: 6px;
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
                 border: 2px solid var(--border, #e0f0ff);
                 flex-shrink: 0;
-                box-shadow: 0 2px 4px rgba(136, 201, 234, 0.1);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .tc6-color-item:hover .tc6-color-swatch {
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            }
+            .tc6-color-item .tc6-color-swatch.tc6-swatch-pulse {
+                animation: tc6-swatch-pulse 0.4s ease;
+            }
+            @keyframes tc6-swatch-pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.2); box-shadow: 0 0 20px currentColor; }
+                100% { transform: scale(1); }
             }
             
             .tc6-field {
@@ -1157,15 +1202,16 @@ const ThemeCustomizer = {
             .tc6-color-picker {
                 position: fixed;
                 z-index: 100001;
-                background: var(--bg-input, #ffffff);
-                border: 4px solid var(--border-strong, #b3e2fa);
-                border-radius: 20px 25px 22px 28px;
-                box-shadow: 8px 8px 0 rgba(136, 201, 234, 0.15), 0 15px 40px rgba(136, 201, 234, 0.25);
+                background: var(--bg-panel, #e8f4fc);
+                border: 2px solid var(--border, #b3e2fa);
+                border-radius: 16px;
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(136, 201, 234, 0.25) inset;
                 padding: 0;
                 min-width: 320px;
                 max-width: 360px;
                 display: none;
                 overflow: hidden;
+                backdrop-filter: blur(8px);
             }
             .tc6-color-picker.visible { display: block; }
             
@@ -1416,15 +1462,16 @@ const ThemeCustomizer = {
             .tc6-color-dropdown {
                 position: fixed;
                 z-index: 100001;
-                background: var(--bg-input, #ffffff);
+                background: var(--bg-panel, #e8f4fc);
                 border: 2px solid var(--border, #e0f0ff);
-                border-radius: 12px 14px 13px 15px;
+                border-radius: 14px;
                 padding: 12px;
                 min-width: 240px;
-                box-shadow: 0 8px 24px rgba(136, 201, 234, 0.3);
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(136, 201, 234, 0.2) inset;
                 opacity: 0;
                 transform: translateY(-10px) scale(0.95);
                 transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+                backdrop-filter: blur(8px);
             }
             .tc6-color-dropdown.visible {
                 opacity: 1;
@@ -2002,6 +2049,18 @@ const ThemeCustomizer = {
                         ${this._renderGroupColor('border', 'Border', c.border || '#3a6075', 'square')}
                     </div>
                 </div>
+
+                <div class="tc6-section">
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18"/></svg>
+                        Panel Variants
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Tune Input / Expected panels separately</p>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('bgPanel-input', 'Input Panel')}
+                        ${this._renderColorItem('bgPanel-expected', 'Expected Panel')}
+                    </div>
+                </div>
                 
                 <div class="tc6-section">
                     <div class="tc6-section-title">
@@ -2210,6 +2269,56 @@ const ThemeCustomizer = {
     },
 
     /**
+     * Sync all color swatches in left panel with current workingTheme colors
+     * Called after color changes to keep UI in sync
+     */
+    _syncLeftPanelSwatches() {
+        if (!this.popup) return;
+        const c = this.workingTheme?.colors || {};
+
+        // Update group swatches (data-group attribute)
+        this.popup.querySelectorAll('.tc6-color-swatch[data-group]').forEach(swatch => {
+            const groupId = swatch.dataset.group;
+            let color = null;
+            switch (groupId) {
+                case 'background':
+                    color = c.editorBg || c.bgOceanDark;
+                    break;
+                case 'surface':
+                    color = c.bgSurface || c.bgPanel;
+                    break;
+                case 'accent':
+                    color = c.accent;
+                    break;
+                case 'text':
+                    color = c.textPrimary;
+                    break;
+                case 'border':
+                    color = c.border;
+                    break;
+                case 'status':
+                    color = c.success;
+                    break;
+                case 'syntax':
+                    color = c.syntaxKeyword;
+                    break;
+            }
+            if (color) {
+                swatch.style.background = color;
+            }
+        });
+
+        // Update individual color swatches (data-key attribute)
+        this.popup.querySelectorAll('.tc6-color-swatch[data-key]').forEach(swatch => {
+            const key = swatch.dataset.key;
+            const color = c[key];
+            if (color) {
+                swatch.style.background = color;
+            }
+        });
+    },
+
+    /**
      * Bind all events
      */
     _bindEvents() {
@@ -2293,13 +2402,20 @@ const ThemeCustomizer = {
         const container = this.popup?.querySelector('#tc6-controls-content');
         if (!container) return;
 
-        // Color item clicks
-        container.querySelectorAll('.tc6-color-item').forEach(item => {
+        // Color item clicks - only for individual colors, not group colors
+        container.querySelectorAll('.tc6-color-item:not(.tc6-group-color)').forEach(item => {
             item.addEventListener('click', () => {
+                // Remove active from all items
+                container.querySelectorAll('.tc6-color-item').forEach(i => i.classList.remove('tc6-color-active'));
+                // Add active to clicked item
+                item.classList.add('tc6-color-active');
+
                 const key = item.dataset.key;
                 const label = item.querySelector('label')?.textContent || key;
-                // Activate edit bar instead of showing old modal picker
-                this._updateEditBar(key, label);
+                const swatch = item.querySelector('.tc6-color-swatch');
+
+                // Show color picker directly for this item
+                this._showIndividualColorPicker(key, label, swatch, item);
             });
         });
 
@@ -2471,6 +2587,12 @@ const ThemeCustomizer = {
             case 'border':
                 currentColor = c.border || '#3a6075';
                 break;
+            case 'status':
+                currentColor = c.success || '#10b981';
+                break;
+            case 'syntax':
+                currentColor = c.syntaxKeyword || '#88c9ea';
+                break;
         }
 
         // Create simple color picker for group
@@ -2505,6 +2627,7 @@ const ThemeCustomizer = {
 
         this.popup?.appendChild(picker);
         this.currentColorPicker = picker;
+        requestAnimationFrame(() => picker.classList.add('visible'));
 
         // Event handlers
         const colorInput = picker.querySelector('input[type="color"]');
@@ -2513,20 +2636,32 @@ const ThemeCustomizer = {
         const closeBtn = picker.querySelector('.tc6-picker-close');
 
         const updateGroupColor = (newColor) => {
+            // Update picker UI
             swatch.style.background = newColor;
             hexInput.value = newColor.toUpperCase();
             targetEl.style.background = newColor;
 
+            // Pulse animation on swatch
+            targetEl.classList.remove('tc6-swatch-pulse');
+            void targetEl.offsetWidth; // Force reflow
+            targetEl.classList.add('tc6-swatch-pulse');
+
             // Derive all member colors using ColorRegistry
             const derivedColors = ColorRegistry.deriveGroupColors(groupId, newColor);
 
-            // Apply all derived colors to workingTheme
+            // Apply all derived colors to workingTheme and inject to preview
+            if (!this.workingTheme.colors) this.workingTheme.colors = {};
             for (const [key, value] of Object.entries(derivedColors)) {
-                this._setColor(key, value);
+                // Update workingTheme
+                this.workingTheme.colors[key] = value;
+                // Inject to preview immediately using ThemeTokens
+                this._injectPreviewVariable(key, value);
             }
 
-            this._renderPreview();
+            // Update all related swatches in the left panel
+            this._syncLeftPanelSwatches();
         };
+
 
         colorInput.addEventListener('input', (e) => updateGroupColor(e.target.value));
 
@@ -3070,6 +3205,10 @@ const ThemeCustomizer = {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (this.bgDragMode) return; // Don't activate edit bar in drag mode
+
+                // Close any open color picker first (Issue 2 fix)
+                this._hideColorPicker();
+
                 const key = el.dataset.key;
                 const label = el.dataset.label || key;
                 // Activate edit bar (Canva-style floating toolbar)
@@ -3241,9 +3380,15 @@ const ThemeCustomizer = {
         const updateColor = (newColor) => {
             swatch.style.background = newColor;
             hexInput.value = newColor.toUpperCase();
-            this._setColor(key, newColor);
-            this._updatePreviewWithoutRerender(key);
+            // Update workingTheme directly
+            if (!this.workingTheme.colors) this.workingTheme.colors = {};
+            this.workingTheme.colors[key] = newColor;
+            // Inject to preview immediately
+            this._injectPreviewVariable(key, newColor);
+            // Update the swatch in left panel if it exists
+            this._syncLeftPanelSwatches();
         };
+
 
         colorInput.addEventListener('input', (e) => {
             updateColor(e.target.value);
@@ -3498,7 +3643,10 @@ const ThemeCustomizer = {
      */
     _updateEditBar(elementKey, elementLabel) {
         const editBar = this.popup?.querySelector('#tc6-edit-bar');
-        if (!editBar) return;
+        if (!editBar) {
+            console.warn('[Customizer] Edit bar not found');
+            return;
+        }
 
         const hintEl = editBar.querySelector('#tc6-edit-hint');
         const elementEl = editBar.querySelector('#tc6-edit-element');
@@ -3537,11 +3685,12 @@ const ThemeCustomizer = {
                 // Click handler for color dropdown
                 colorPreview.onclick = (e) => {
                     e.stopPropagation();
-                    if (group) {
-                        // Open Group Picker if it belongs to a group
+                    const useGroupPicker = !!(group && group.baseKey && elementKey === group.baseKey);
+                    if (useGroupPicker) {
+                        // Only use group picker when editing the group's base key
                         this._showGroupColorPicker(groupId, group.label, colorPreview);
                     } else {
-                        // Fallback to old dropdown for non-group items
+                        // Default to individual picker to avoid unintended group-wide changes
                         this._showColorDropdown(elementKey, elementLabel, colorPreview);
                     }
                 };
@@ -3620,6 +3769,153 @@ const ThemeCustomizer = {
         }
 
         return properties;
+    },
+
+    /**
+     * Show individual color picker for a single color key (from left panel)
+     * @param {string} key - Color key
+     * @param {string} label - Display label
+     * @param {HTMLElement} swatchEl - The swatch element in the left panel
+     * @param {HTMLElement} itemEl - The parent color item element
+     */
+    _showIndividualColorPicker(key, label, swatchEl, itemEl) {
+        this._hideColorPicker();
+        this._activeColorKey = key;
+
+        const currentColor = this._getColor(key);
+        const hexColor = this._toHex(currentColor);
+
+        const picker = document.createElement('div');
+        picker.className = 'tc6-color-picker';
+        picker.id = 'tc6-active-picker';
+        picker.innerHTML = `
+            <div class="tc6-picker-header">
+                <span class="tc6-picker-title">${label}</span>
+                <button class="tc6-picker-close">✕</button>
+            </div>
+            <div class="tc6-picker-content">
+                <div class="tc6-picker-row">
+                    <div class="tc6-color-swatch" style="background: ${hexColor}; width: 40px; height: 40px;"></div>
+                    <input type="color" value="${hexColor}" style="width: 60px; height: 40px; border: none; cursor: pointer;">
+                    <input type="text" id="tc6-hex-input" value="${hexColor.toUpperCase()}" maxlength="7" 
+                        style="width: 80px; padding: 8px; font-family: monospace; text-transform: uppercase;">
+                </div>
+            </div>
+        `;
+
+        // Position picker next to the item
+        const rect = itemEl.getBoundingClientRect();
+        const popupRect = this.popup?.getBoundingClientRect() || { left: 0, top: 0 };
+        picker.style.position = 'absolute';
+        picker.style.left = `${rect.right - popupRect.left + 10}px`;
+        picker.style.top = `${rect.top - popupRect.top}px`;
+        picker.style.zIndex = '10001';
+
+        this.popup?.appendChild(picker);
+        this.currentColorPicker = picker;
+        requestAnimationFrame(() => picker.classList.add('visible'));
+
+        // Event handlers
+        const colorInput = picker.querySelector('input[type="color"]');
+        const hexInput = picker.querySelector('#tc6-hex-input');
+        const swatch = picker.querySelector('.tc6-color-swatch');
+        const closeBtn = picker.querySelector('.tc6-picker-close');
+
+        const updateColor = (newColor) => {
+            swatch.style.background = newColor;
+            hexInput.value = newColor.toUpperCase();
+
+            // Update left panel swatch
+            swatchEl.style.background = newColor;
+            swatchEl.classList.remove('tc6-swatch-pulse');
+            void swatchEl.offsetWidth;
+            swatchEl.classList.add('tc6-swatch-pulse');
+
+            // Set the color
+            this._setColor(key, newColor);
+
+            // Sync all swatches in left panel
+            this._syncLeftPanelSwatches();
+
+            // Update preview
+            this._renderPreview();
+        };
+
+        colorInput.addEventListener('input', (e) => updateColor(e.target.value));
+
+        hexInput.addEventListener('input', (e) => {
+            const val = e.target.value.replace(/[^0-9A-Fa-f#]/g, '');
+            if (val.length === 7 && val.startsWith('#')) {
+                colorInput.value = val;
+                updateColor(val);
+            } else if (val.length === 6 && !val.startsWith('#')) {
+                const color = '#' + val;
+                colorInput.value = color;
+                updateColor(color);
+            }
+        });
+
+        closeBtn.addEventListener('click', () => {
+            this._hideColorPicker();
+            itemEl.classList.remove('tc6-color-active');
+        });
+
+        // Close on outside click
+        this._pickerClickHandler = (e) => {
+            if (!picker.contains(e.target) && !itemEl.contains(e.target)) {
+                this._hideColorPicker();
+                itemEl.classList.remove('tc6-color-active');
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click', this._pickerClickHandler);
+        }, 100);
+    },
+
+    /**
+     * Sync all color swatches in the left panel with current workingTheme colors
+     */
+    _syncLeftPanelSwatches() {
+        const container = this.popup?.querySelector('#tc6-controls-content');
+        if (!container) return;
+
+        // Update individual color items
+        container.querySelectorAll('.tc6-color-item[data-key]').forEach(item => {
+            const key = item.dataset.key;
+            const swatch = item.querySelector('.tc6-color-swatch');
+            if (swatch && key) {
+                const color = this._getColor(key);
+                swatch.style.background = color;
+            }
+        });
+
+        // Update group color items
+        const c = this.workingTheme?.colors || {};
+        container.querySelectorAll('.tc6-group-color[data-group]').forEach(item => {
+            const groupId = item.dataset.group;
+            const swatch = item.querySelector('.tc6-color-swatch');
+            if (swatch && groupId) {
+                let color = '#888888';
+                switch (groupId) {
+                    case 'background':
+                        color = c.editorBg || c.bgOceanDark || '#1a2530';
+                        break;
+                    case 'surface':
+                        color = this._toHex(c.bgPanel) || '#2a3a4a';
+                        break;
+                    case 'accent':
+                        color = c.accent || '#88c9ea';
+                        break;
+                    case 'text':
+                        color = c.textPrimary || '#e0f0ff';
+                        break;
+                    case 'border':
+                        color = c.border || '#3a6075';
+                        break;
+                }
+                swatch.style.background = color;
+            }
+        });
     },
 
     /**
@@ -3849,7 +4145,14 @@ const ThemeCustomizer = {
 
             if (typeof App !== 'undefined') {
                 App.settings.appearance.theme = id;
-                if (typeof saveSettings === 'function') saveSettings();
+                if (typeof saveSettings === 'function') {
+                    // Await for settings to save
+                    saveSettings().then(() => {
+                        console.log('[Customizer] Settings saved successfully');
+                    }).catch((err) => {
+                        console.error('[Customizer] Failed to save settings:', err);
+                    });
+                }
             }
 
             if (typeof ThemeMarketplace !== 'undefined') {
@@ -3914,7 +4217,14 @@ const ThemeCustomizer = {
 
             if (typeof App !== 'undefined') {
                 App.settings.appearance.theme = this.sourceThemeId;
-                if (typeof saveSettings === 'function') saveSettings();
+                if (typeof saveSettings === 'function') {
+                    // Await for settings to save before closing
+                    saveSettings().then(() => {
+                        console.log('[Customizer] Settings saved successfully');
+                    }).catch((err) => {
+                        console.error('[Customizer] Failed to save settings:', err);
+                    });
+                }
             }
 
             if (typeof ThemeMarketplace !== 'undefined') {
@@ -4065,6 +4375,9 @@ const ThemeCustomizer = {
     _getColor(key) {
         const c = this.workingTheme?.colors || {};
 
+        // Prefer exact key for variants, then fall back to base key
+        if (c[key]) return c[key];
+
         // Normalize unique keys to base keys
         const baseKey = this._getBaseKey(key);
 
@@ -4095,6 +4408,12 @@ const ThemeCustomizer = {
         if (!this.workingTheme) return;
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
 
+        // Validate hex color format
+        if (!this._isValidHexColor(value)) {
+            console.warn(`[Customizer] Invalid color format for ${key}: ${value}`);
+            return;
+        }
+
         // Handle syntax colors specially - they go to editor.syntax
         if (key.startsWith('syntax')) {
             const syntaxKey = key.replace('syntax', '').toLowerCase();
@@ -4109,7 +4428,27 @@ const ThemeCustomizer = {
         } else {
             // CRITICAL: Store EXACT key, do NOT normalize to base key
             // This fixes scope leakage where bgPanel-input was being stored as bgPanel
-            this.workingTheme.colors[key] = value;
+            if (key === 'bgPanel-input' || key === 'bgPanel-expected') {
+                const counterpart = key === 'bgPanel-input' ? 'bgPanel-expected' : 'bgPanel-input';
+                this.workingTheme.colors[key] = value;
+                this.workingTheme.colors[counterpart] = value;
+                this._injectPreviewVariable(counterpart, value);
+                if (this.popup) {
+                    this._updatePreviewWithoutRerender(counterpart);
+                }
+            } else {
+                this.workingTheme.colors[key] = value;
+            }
+            // Sync variant colors when base keys change
+            if (key === 'bgHeader') {
+                this.workingTheme.colors['bgHeader-main'] = value;
+                this.workingTheme.colors['bgHeader-statusbar'] = value;
+            }
+            if (key === 'bgPanel') {
+                this.workingTheme.colors['bgPanel-problems'] = value;
+                this.workingTheme.colors['bgPanel-input'] = value;
+                this.workingTheme.colors['bgPanel-expected'] = value;
+            }
         }
 
         // Inject CSS variable onto preview wrapper for scoped live preview
@@ -4117,8 +4456,20 @@ const ThemeCustomizer = {
     },
 
     /**
+     * Validate hex color format
+     * Accepts: #RGB, #RRGGBB, rgb, rrggbb
+     */
+    _isValidHexColor(color) {
+        if (typeof color !== 'string') return false;
+        // Match #RGB, #RRGGBB, or just RGB/RRGGBB
+        const hexRegex = /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+        return hexRegex.test(color);
+    },
+
+    /**
      * Inject a single CSS variable onto the preview wrapper
      * This scopes color changes to the preview only, preventing leakage to customizer UI
+     * Uses ThemeTokens as Single Source of Truth
      * 
      * @param {string} key - Color key (e.g., 'bgPanel-input')
      * @param {string} value - Color value (hex)
@@ -4127,45 +4478,46 @@ const ThemeCustomizer = {
         const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
         if (!wrapper) return;
 
-        // Use ColorRegistry to get correct CSS variable name
-        const cssVar = window.ColorRegistry?.getCssVar(key);
-        if (cssVar) {
-            wrapper.style.setProperty(cssVar, value);
+        // Use ThemeTokens for consistent value application
+        if (typeof ThemeTokens !== 'undefined') {
+            ThemeTokens.applyValue(wrapper, key, value);
         } else {
-            // Fallback: convert camelCase to kebab-case
-            const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-            wrapper.style.setProperty(`--${kebabKey}`, value);
+            // Fallback: use ColorRegistry for CSS variable name
+            const cssVar = window.ColorRegistry?.getCssVar(key);
+            if (cssVar) {
+                wrapper.style.setProperty(cssVar, value);
+            } else {
+                // Fallback: convert camelCase to kebab-case
+                const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                wrapper.style.setProperty(`--${kebabKey}`, value);
+            }
         }
     },
+
 
     /**
      * Inject ALL CSS variables from workingTheme onto preview wrapper
      * Called after _renderPreview() to ensure all colors are applied
+     * Uses ThemeTokens as Single Source of Truth
      */
     _injectAllPreviewVariables() {
         const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
         if (!wrapper) return;
 
-        const c = this.workingTheme?.colors || {};
-        const allCssVars = window.ColorRegistry?.getAllCssVars() || {};
+        const colors = this.workingTheme?.colors || {};
 
-        // Apply all color values from workingTheme
-        for (const [key, cssVar] of Object.entries(allCssVars)) {
-            const value = c[key];
-            if (value !== undefined && value !== null) {
-                wrapper.style.setProperty(cssVar, value);
-            }
-        }
+        // Use unified ThemeTokens module
+        if (typeof ThemeTokens !== 'undefined') {
+            ThemeTokens.applyToElement(wrapper, colors);
 
-        // Also apply syntax colors
-        const syn = this.workingTheme?.editor?.syntax || {};
-        for (const [name, data] of Object.entries(syn)) {
-            if (data?.color) {
-                const hexColor = data.color.startsWith('#') ? data.color : '#' + data.color;
-                wrapper.style.setProperty(`--syntax-${name}`, hexColor);
-            }
+            // Also apply syntax colors
+            const syntax = this.workingTheme?.editor?.syntax || {};
+            ThemeTokens.applySyntax(wrapper, syntax);
+        } else {
+            console.warn('[ThemeCustomizer] ThemeTokens not loaded, preview may not update correctly');
         }
     },
+
 
 
     _getSyntaxColors() {

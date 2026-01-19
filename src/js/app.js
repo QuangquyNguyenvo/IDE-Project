@@ -747,12 +747,14 @@ function saveSettings() {
     try {
         console.log('[Settings] Saving:', JSON.stringify(App.settings.appearance));
         if (window.electronAPI?.saveSettings) {
-            window.electronAPI.saveSettings(App.settings);
+            return window.electronAPI.saveSettings(App.settings);
         } else {
             localStorage.setItem('ide-settings', JSON.stringify(App.settings));
+            return Promise.resolve({ success: true });
         }
     } catch (e) {
         console.error('Failed to save settings', e);
+        return Promise.reject(e);
     }
 }
 

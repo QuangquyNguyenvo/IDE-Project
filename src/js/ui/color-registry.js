@@ -29,49 +29,49 @@ const ColorRegistry = {
         background: {
             label: 'Background',
             description: 'Main app background - darkest layer',
-            icon: '🌙',
+            icon: 'moon',
             baseKey: 'bgBase',
             members: ['bgOceanDark', 'editorBg', 'bgInput', 'terminalBg', 'bgOceanMedium']
         },
         surface: {
             label: 'Surface',
             description: 'Panels, headers, cards - slightly lighter',
-            icon: '📋',
+            icon: 'layers',
             baseKey: 'bgSurface',
-            members: ['bgPanel', 'bgHeader', 'bgGlass', 'bgGlassHeavy', 'bgButton', 'bgButtonHover', 'bgOceanLight']
+            members: ['bgPanel', 'bgPanel-problems', 'bgPanel-input', 'bgPanel-expected', 'bgHeader', 'bgGlass', 'bgGlassHeavy', 'bgButton', 'bgButtonHover', 'bgOceanLight']
         },
         accent: {
             label: 'Accent',
             description: 'Brand color - buttons, links, highlights',
-            icon: '✨',
+            icon: 'star',
             baseKey: 'accent',
             members: ['accent', 'accentHover', 'bgOceanDeep', 'borderStrong']
         },
         text: {
             label: 'Text',
             description: 'Text colors - auto 3 levels',
-            icon: '📝',
+            icon: 'type',
             baseKey: 'textPrimary',
             members: ['textPrimary', 'textSecondary', 'textMuted', 'settingsLabelColor']
         },
         border: {
             label: 'Border',
             description: 'Borders and separators',
-            icon: '🔲',
+            icon: 'square',
             baseKey: 'border',
             members: ['border', 'bgGlassBorder']
         },
         status: {
             label: 'Status',
             description: 'Success, error, warning colors',
-            icon: '🚦',
+            icon: 'activity',
             baseKey: null, // Has 3 separate pickers
             members: ['success', 'error', 'warning']
         },
         syntax: {
             label: 'Syntax',
             description: 'Code syntax highlighting',
-            icon: '💻',
+            icon: 'code',
             baseKey: null, // Has multiple pickers
             members: ['syntaxKeyword', 'syntaxString', 'syntaxNumber', 'syntaxType', 'syntaxFunction', 'syntaxComment']
         }
@@ -95,6 +95,9 @@ const ColorRegistry = {
         // Surface group
         'bgSurface': '--bg-surface',
         'bgPanel': '--bg-panel',
+        'bgPanel-problems': '--bg-panel-problems',
+        'bgPanel-input': '--bg-panel-input',
+        'bgPanel-expected': '--bg-panel-expected',
         'bgHeader': '--bg-header',
         'bgGlass': '--bg-glass',
         'bgGlassHeavy': '--bg-glass-heavy',
@@ -242,6 +245,9 @@ const ColorRegistry = {
                 return {
                     bgSurface: baseColor,
                     bgPanel: utils.toRgba(baseColor, 0.95),
+                    'bgPanel-problems': utils.toRgba(baseColor, 0.95),
+                    'bgPanel-input': utils.toRgba(baseColor, 0.95),
+                    'bgPanel-expected': utils.toRgba(baseColor, 0.95),
                     bgHeader: utils.toRgba(utils.darken(baseColor, 10), 0.97),
                     bgGlass: utils.toRgba(baseColor, 0.92),
                     bgGlassHeavy: utils.toRgba(baseColor, 0.97),
@@ -278,12 +284,19 @@ const ColorRegistry = {
         }
     },
 
+
     /**
      * Get CSS variable name for a color key
+     * Uses ThemeTokens as Single Source of Truth
      */
     getCssVar(colorKey) {
+        // Use ThemeTokens if available, fallback to local mapping
+        if (typeof ThemeTokens !== 'undefined') {
+            return ThemeTokens.getCssVar(colorKey);
+        }
         return this._cssVars[colorKey] || null;
     },
+
 
     /**
      * Get all keys in a group
@@ -323,6 +336,23 @@ const ColorRegistry = {
      */
     getAllCssVars() {
         return { ...this._cssVars };
+    },
+
+    /**
+     * Get SVG icon for an icon type
+     * Used by UI components to render color group icons
+     */
+    getIconSvg(iconType) {
+        const icons = {
+            moon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+            layers: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+            star: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+            type: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+            square: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
+            activity: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+            code: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'
+        };
+        return icons[iconType] || '';
     }
 };
 

@@ -623,141 +623,26 @@ const ThemeManager = {
 
     /**
      * Apply CSS variables from theme colors
+     * Uses ThemeTokens as Single Source of Truth
      */
     _applyCSSVariables(theme) {
         const root = document.documentElement;
-
-        // Map JSON keys to CSS variable names
-        const varMappings = {
-            // Simplified Group Base Keys
-            'bgBase': '--bg-base',
-            'bgSurface': '--bg-surface',
-
-            'bgOceanLight': '--bg-ocean-light',
-            'bgOceanMedium': '--bg-ocean-medium',
-            'bgOceanDeep': '--bg-ocean-deep',
-            'bgOceanDark': '--bg-ocean-dark',
-            'bgGlass': '--bg-glass',
-            'bgGlassHeavy': '--bg-glass-heavy',
-            'bgGlassBorder': '--bg-glass-border',
-            'accent': '--accent',
-            'accentHover': '--accent-hover',
-            'textPrimary': '--text-primary',
-            'textSecondary': '--text-secondary',
-            'textMuted': '--text-muted',
-            'success': '--success',
-            'error': '--error',
-            'warning': '--warning',
-            'border': '--border',
-            'borderStrong': '--border-strong',
-            'shadowSoft': '--shadow-soft',
-            'shadowCard': '--shadow-card',
-            'glow': '--glow',
-            'bgHeader': '--bg-header',
-            'bgPanel': '--bg-panel',
-            'bgInput': '--bg-input',
-            'bgButton': '--bg-button',
-            'bgButtonHover': '--bg-button-hover',
-
-            // Component Layer - Header Variants (NEW: fixes scope leakage)
-            'bgHeader-main': '--bg-header-main',
-            'bgHeader-statusbar': '--bg-header-statusbar',
-
-            // Component Layer - Panel Variants (NEW: fixes scope leakage)
-            'bgPanel-problems': '--bg-panel-problems',
-            'bgPanel-input': '--bg-panel-input',
-            'bgPanel-expected': '--bg-panel-expected',
-
-            'editorBg': '--editor-bg',
-            'editorBackground': '--editor-bg-image',
-            'appBackground': '--app-bg-image',
-            'bgPosition': '--app-bg-position',
-            'editorBgPosition': '--editor-bg-position',
-            'bgOpacity': '--app-bg-opacity',
-            'bgBlur': '--app-bg-blur',
-            'editorBgOpacity': '--editor-bg-opacity',
-            'editorBgBlur': '--editor-bg-blur',
-            'terminalBg': '--terminal-bg',
-            'terminalBgBlur': '--terminal-bg-blur',
-            'settingsLabelColor': '--settings-label-color',
-            'settingsSectionColor': '--settings-section-color',
-            'buttonTextOnAccent': '--button-text-on-accent',
-
-            // Button CSS Variables
-            'btnBg': '--btn-bg',
-            'btnBgHover': '--btn-bg-hover',
-            'btnBorder': '--btn-border',
-            'btnText': '--btn-text',
-            'btnTextHover': '--btn-text-hover',
-            'btnPrimaryBg': '--btn-primary-bg',
-            'btnPrimaryBgHover': '--btn-primary-bg-hover',
-            'btnPrimaryText': '--btn-primary-text',
-            'btnSuccessBg': '--btn-success-bg',
-            'btnSuccessText': '--btn-success-text',
-            'btnErrorBg': '--btn-error-bg',
-            'btnErrorText': '--btn-error-text',
-
-            // Opacity variables
-            'terminalOpacity': '--terminal-opacity',
-            'panelOpacity': '--panel-opacity'
-        };
-
-        // 1. First clear all existing theme variables from root style
-        Object.values(varMappings).forEach(cssVar => {
-            root.style.removeProperty(cssVar);
-        });
-
-        // 2. Apply current theme variables
         const colors = theme.colors || {};
-        Object.entries(colors).forEach(([key, value]) => {
-            const cssVar = varMappings[key];
-            if (cssVar && value !== undefined && value !== null) {
-                // Wrap image values in url() for background-image properties
-                if (key === 'editorBackground' || key === 'appBackground') {
-                    // Check if it's already wrapped in url() or is none/empty
-                    if (value && value !== 'none' && !value.startsWith('url(')) {
-                        // For data URLs, use double quotes to avoid escaping issues
-                        // For file paths, escape single quotes
-                        if (value.startsWith('data:')) {
-                            // Data URLs can contain special characters, use double quotes
-                            root.style.setProperty(cssVar, `url("${value}")`);
-                        } else {
-                            // File paths - escape single quotes
-                            const escapedValue = value.replace(/'/g, "\\'");
-                            root.style.setProperty(cssVar, `url('${escapedValue}')`);
-                        }
-                    } else {
-                        root.style.setProperty(cssVar, value || 'none');
-                    }
-                } else if (key === 'bgOpacity' || key === 'editorBgOpacity' ||
-                    key === 'terminalOpacity' || key === 'panelOpacity') {
-                    // Convert percentage to decimal for opacity (70 → 0.7)
-                    root.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
-                } else if (key === 'bgBlur' || key === 'editorBgBlur' || key === 'terminalBgBlur') {
-                    // Add px unit for blur values
-                    root.style.setProperty(cssVar, `${parseInt(value)}px`);
-                } else if (key === 'bgPosition' || key === 'editorBgPosition') {
-                    // Set background position directly
-                    root.style.setProperty(cssVar, value || 'center center');
-                } else {
-                    root.style.setProperty(cssVar, value);
-                }
-            }
-        });
 
-        // 3. Apply inheritance for variant colors
-        // If variant not explicitly set, inherit from parent
-        this._applyInheritance(root, colors, 'bgHeader-main', 'bgHeader', '--bg-header-main');
-        this._applyInheritance(root, colors, 'bgHeader-statusbar', 'bgHeader', '--bg-header-statusbar');
-        this._applyInheritance(root, colors, 'bgPanel-problems', 'bgPanel', '--bg-panel-problems');
-        this._applyInheritance(root, colors, 'bgPanel-input', 'bgPanel', '--bg-panel-input');
-        this._applyInheritance(root, colors, 'bgPanel-expected', 'bgPanel', '--bg-panel-expected');
+        // Use unified ThemeTokens module for applying colors
+        // clearFirst: true removes old values before applying new ones
+        if (typeof ThemeTokens !== 'undefined') {
+            ThemeTokens.applyToElement(root, colors, { clearFirst: true });
+        } else {
+            console.warn('[ThemeManager] ThemeTokens not loaded, colors may not apply correctly');
+        }
     },
 
     /**
      * Apply inheritance: if child not set, use parent value
      * This ensures variant CSS variables always have a value
      * @private
+     * @deprecated - Now handled by ThemeTokens.applyToElement()
      */
     _applyInheritance(root, colors, childKey, parentKey, cssVar) {
         // Check if child already has explicit value
@@ -766,6 +651,7 @@ const ThemeManager = {
             root.style.setProperty(cssVar, colors[parentKey]);
         }
     },
+
 
     /**
      * Get list of all available themes

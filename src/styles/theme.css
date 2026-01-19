@@ -224,7 +224,7 @@ body.customizer-open::before {
     display: flex;
     align-items: center;
     height: var(--header-height);
-    background: var(--bg-header, var(--bg-glass-heavy));
+    background: var(--bg-header-main, var(--bg-header, var(--bg-glass-heavy)));
     backdrop-filter: var(--blur-filter-light);
     /* Apply blur only here */
     border-bottom: 2px solid white;
@@ -1843,7 +1843,7 @@ input[type="color"] {
     align-items: center;
     height: var(--statusbar-height);
     padding: 0 16px;
-    background: var(--bg-glass-heavy);
+    background: var(--bg-header-statusbar, var(--bg-header, var(--bg-glass-heavy)));
     border-top: 2px solid white;
     font-size: 12px;
     color: var(--text-secondary);
@@ -1950,7 +1950,7 @@ input[type="color"] {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: var(--bg-glass-heavy);
+    background: var(--bg-panel, var(--bg-glass-heavy));
     border: 2px solid white;
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -2024,7 +2024,7 @@ body.split-active .editor-pane {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    background: var(--bg-glass-heavy);
+    background: var(--bg-panel-problems, var(--bg-panel, var(--bg-glass-heavy)));
     border-top: 2px solid white;
     border-radius: 0 0 var(--radius) var(--radius);
     /* Smooth transition */
@@ -5115,4 +5115,12 @@ body.split-active .editor-pane {
 [data-theme="monokai"] .explorer-note-icon:hover::after {
     background: var(--bg-secondary, #2a2f3a);
     border-color: var(--border, rgba(255, 255, 255, 0.15));
+}
+
+.io-panel.io-panel-input {
+    background: var(--bg-panel-input, var(--bg-panel, var(--bg-glass-heavy)));
+}
+
+.io-panel.io-panel-expected {
+    background: var(--bg-panel-expected, var(--bg-panel, var(--bg-glass-heavy)));
 }
