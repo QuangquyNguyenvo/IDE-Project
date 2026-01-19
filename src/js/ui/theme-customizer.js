@@ -3271,21 +3271,25 @@ const ThemeCustomizer = {
         this._setupBgDrag();
 
         // Bind click handlers for color editing
-        wrapper.querySelectorAll('.tc6-clickable[data-key]').forEach(el => {
-            el.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default
-                e.stopPropagation();
-                if (this.bgDragMode) return; // Don't activate edit bar in drag mode
+        // Bind click handlers for color editing using Event Delegation
+        // This is more robust against DOM updates and ensures clicks are always caught
+        wrapper.onclick = (e) => {
+            const el = e.target.closest('.tc6-clickable[data-key]');
+            if (!el) return;
 
-                // Close any open color picker first (Issue 2 & 4 fix)
-                this._hideColorPicker();
+            e.preventDefault();
+            e.stopPropagation();
+            if (this.bgDragMode) return; // Don't activate edit bar in drag mode
 
-                const key = el.dataset.key;
-                const label = el.dataset.label || key;
-                // Activate edit bar (Canva-style floating toolbar)
-                this._updateEditBar(key, label);
-            });
-        });
+            // Forcefully close any open color picker first (Fixes persistence issue)
+            this._hideColorPicker();
+
+            const key = el.dataset.key;
+            const label = el.dataset.label || key;
+
+            // Activate edit bar (Canva-style floating toolbar)
+            this._updateEditBar(key, label);
+        };
 
         // Inject all CSS variables onto preview wrapper for live preview
         this._injectAllPreviewVariables();
