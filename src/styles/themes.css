@@ -46,7 +46,16 @@
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
 
     --bg-header: rgba(21, 37, 53, 0.97);
+    /* Header Variants - Inherit from base unless overridden */
+    --bg-header-main: var(--bg-header);
+    --bg-header-statusbar: var(--bg-header);
+
     --bg-panel: rgba(26, 37, 48, 0.95);
+    /* Panel Variants - Inherit from base unless overridden */
+    --bg-panel-problems: var(--bg-panel);
+    --bg-panel-input: var(--bg-panel);
+    --bg-panel-expected: var(--bg-panel);
+
     --bg-input: #1a2a3a;
     --bg-button: #2a4050;
     --bg-button-hover: #3a5565;
@@ -107,7 +116,16 @@
     --shadow-card: 0 4px 8px rgba(255, 105, 180, 0.15);
 
     --bg-header: rgba(255, 228, 225, 0.97);
+    /* Header Variants - Inherit from base unless overridden */
+    --bg-header-main: var(--bg-header);
+    --bg-header-statusbar: var(--bg-header);
+
     --bg-panel: rgba(255, 245, 248, 0.95);
+    /* Panel Variants - Inherit from base unless overridden */
+    --bg-panel-problems: var(--bg-panel);
+    --bg-panel-input: var(--bg-panel);
+    --bg-panel-expected: var(--bg-panel);
+
     --bg-input: #fffafa;
     --bg-button: #fff0f5;
     --bg-button-hover: #ffe4e1;
@@ -162,7 +180,16 @@
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     --bg-header: rgba(33, 34, 44, 0.97);
+    /* Header Variants - Inherit from base unless overridden */
+    --bg-header-main: var(--bg-header);
+    --bg-header-statusbar: var(--bg-header);
+
     --bg-panel: rgba(40, 42, 54, 0.95);
+    /* Panel Variants - Inherit from base unless overridden */
+    --bg-panel-problems: var(--bg-panel);
+    --bg-panel-input: var(--bg-panel);
+    --bg-panel-expected: var(--bg-panel);
+
     --bg-input: #282a36;
     --bg-button: #44475a;
     --bg-button-hover: #6272a4;
@@ -212,7 +239,16 @@
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     --bg-header: rgba(30, 31, 28, 0.97);
+    /* Header Variants - Inherit from base unless overridden */
+    --bg-header-main: var(--bg-header);
+    --bg-header-statusbar: var(--bg-header);
+
     --bg-panel: rgba(39, 40, 34, 0.95);
+    /* Panel Variants - Inherit from base unless overridden */
+    --bg-panel-problems: var(--bg-panel);
+    --bg-panel-input: var(--bg-panel);
+    --bg-panel-expected: var(--bg-panel);
+
     --bg-input: #272822;
     --bg-button: #3e3d32;
     --bg-button-hover: #49483e;
@@ -262,7 +298,16 @@
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
 
     --bg-header: rgba(36, 41, 51, 0.97);
+    /* Header Variants - Inherit from base unless overridden */
+    --bg-header-main: var(--bg-header);
+    --bg-header-statusbar: var(--bg-header);
+
     --bg-panel: rgba(46, 52, 64, 0.95);
+    /* Panel Variants - Inherit from base unless overridden */
+    --bg-panel-problems: var(--bg-panel);
+    --bg-panel-input: var(--bg-panel);
+    --bg-panel-expected: var(--bg-panel);
+
     --bg-input: #2e3440;
     --bg-button: #3b4252;
     --bg-button-hover: #434c5e;
@@ -566,6 +611,9 @@
     background: var(--terminal-bg);
     color: var(--text-primary);
     opacity: var(--terminal-opacity, 1);
+    /* Acrylic blur effect */
+    backdrop-filter: blur(var(--terminal-bg-blur, 0px));
+    -webkit-backdrop-filter: blur(var(--terminal-bg-blur, 0px));
 }
 
 [data-theme="kawaii-dark"] .terminal-input,

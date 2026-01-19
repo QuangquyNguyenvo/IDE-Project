@@ -629,6 +629,10 @@ const ThemeManager = {
 
         // Map JSON keys to CSS variable names
         const varMappings = {
+            // Simplified Group Base Keys
+            'bgBase': '--bg-base',
+            'bgSurface': '--bg-surface',
+
             'bgOceanLight': '--bg-ocean-light',
             'bgOceanMedium': '--bg-ocean-medium',
             'bgOceanDeep': '--bg-ocean-deep',
@@ -654,6 +658,16 @@ const ThemeManager = {
             'bgInput': '--bg-input',
             'bgButton': '--bg-button',
             'bgButtonHover': '--bg-button-hover',
+
+            // Component Layer - Header Variants (NEW: fixes scope leakage)
+            'bgHeader-main': '--bg-header-main',
+            'bgHeader-statusbar': '--bg-header-statusbar',
+
+            // Component Layer - Panel Variants (NEW: fixes scope leakage)
+            'bgPanel-problems': '--bg-panel-problems',
+            'bgPanel-input': '--bg-panel-input',
+            'bgPanel-expected': '--bg-panel-expected',
+
             'editorBg': '--editor-bg',
             'editorBackground': '--editor-bg-image',
             'appBackground': '--app-bg-image',
@@ -664,6 +678,7 @@ const ThemeManager = {
             'editorBgOpacity': '--editor-bg-opacity',
             'editorBgBlur': '--editor-bg-blur',
             'terminalBg': '--terminal-bg',
+            'terminalBgBlur': '--terminal-bg-blur',
             'settingsLabelColor': '--settings-label-color',
             'settingsSectionColor': '--settings-section-color',
             'buttonTextOnAccent': '--button-text-on-accent',
@@ -714,10 +729,11 @@ const ThemeManager = {
                     } else {
                         root.style.setProperty(cssVar, value || 'none');
                     }
-                } else if (key === 'bgOpacity' || key === 'editorBgOpacity') {
-                    // Convert percentage to decimal for opacity
+                } else if (key === 'bgOpacity' || key === 'editorBgOpacity' ||
+                    key === 'terminalOpacity' || key === 'panelOpacity') {
+                    // Convert percentage to decimal for opacity (70 → 0.7)
                     root.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
-                } else if (key === 'bgBlur' || key === 'editorBgBlur') {
+                } else if (key === 'bgBlur' || key === 'editorBgBlur' || key === 'terminalBgBlur') {
                     // Add px unit for blur values
                     root.style.setProperty(cssVar, `${parseInt(value)}px`);
                 } else if (key === 'bgPosition' || key === 'editorBgPosition') {
@@ -728,6 +744,27 @@ const ThemeManager = {
                 }
             }
         });
+
+        // 3. Apply inheritance for variant colors
+        // If variant not explicitly set, inherit from parent
+        this._applyInheritance(root, colors, 'bgHeader-main', 'bgHeader', '--bg-header-main');
+        this._applyInheritance(root, colors, 'bgHeader-statusbar', 'bgHeader', '--bg-header-statusbar');
+        this._applyInheritance(root, colors, 'bgPanel-problems', 'bgPanel', '--bg-panel-problems');
+        this._applyInheritance(root, colors, 'bgPanel-input', 'bgPanel', '--bg-panel-input');
+        this._applyInheritance(root, colors, 'bgPanel-expected', 'bgPanel', '--bg-panel-expected');
+    },
+
+    /**
+     * Apply inheritance: if child not set, use parent value
+     * This ensures variant CSS variables always have a value
+     * @private
+     */
+    _applyInheritance(root, colors, childKey, parentKey, cssVar) {
+        // Check if child already has explicit value
+        const hasChild = colors[childKey] !== undefined && colors[childKey] !== null;
+        if (!hasChild && colors[parentKey]) {
+            root.style.setProperty(cssVar, colors[parentKey]);
+        }
     },
 
     /**

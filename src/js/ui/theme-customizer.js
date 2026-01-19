@@ -51,6 +51,9 @@ const ThemeCustomizer = {
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
         if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
 
+        // Migrate old theme format to new format with variant keys
+        this._migrateThemeFormat(this.workingTheme);
+
         // Initialize history stack with initial state
         this.historyStack = [this._deepClone(this.workingTheme)];
         this.historyIndex = 0;
@@ -171,6 +174,41 @@ const ThemeCustomizer = {
 
         this.workingTheme = null;
         this.sourceThemeId = null;
+    },
+
+    /**
+     * Migrate old theme format to new format with variant keys
+     * Old format: only base keys (bgHeader, bgPanel)
+     * New format: variant keys (bgHeader-main, bgPanel-input, etc.)
+     * 
+     * This ensures backward compatibility when loading themes created
+     * before the variant key system was introduced.
+     * 
+     * @param {object} theme - Theme object to migrate (mutated in place)
+     */
+    _migrateThemeFormat(theme) {
+        if (!theme || !theme.colors) return;
+
+        const colors = theme.colors;
+
+        // Header variants: if not set, inherit from base
+        if (!colors['bgHeader-main'] && colors.bgHeader) {
+            colors['bgHeader-main'] = colors.bgHeader;
+        }
+        if (!colors['bgHeader-statusbar'] && colors.bgHeader) {
+            colors['bgHeader-statusbar'] = colors.bgHeader;
+        }
+
+        // Panel variants: if not set, inherit from base
+        if (!colors['bgPanel-problems'] && colors.bgPanel) {
+            colors['bgPanel-problems'] = colors.bgPanel;
+        }
+        if (!colors['bgPanel-input'] && colors.bgPanel) {
+            colors['bgPanel-input'] = colors.bgPanel;
+        }
+        if (!colors['bgPanel-expected'] && colors.bgPanel) {
+            colors['bgPanel-expected'] = colors.bgPanel;
+        }
     },
 
     /**
@@ -1657,12 +1695,279 @@ const ThemeCustomizer = {
                 from { opacity: 0; transform: translateX(-10px); }
                 to { opacity: 1; transform: translateX(0); }
             }
+            
+            /* ========================================
+               PREVIEW ELEMENT STYLES
+               CSS Variable-based styling for scope isolation
+               Each element reads its own CSS variable with fallback
+               ======================================== */
+            
+            /* Header - Uses --bg-header-main with fallback to --bg-header */
+            .tc6-header-main {
+                height: 32px;
+                display: flex;
+                align-items: center;
+                padding: 0 10px;
+                gap: 8px;
+                background: var(--bg-header-main, var(--bg-header, #1a1e2e));
+                border-bottom: 1px solid var(--border, #333);
+            }
+            
+            /* Status Bar - Uses --bg-header-statusbar with fallback */
+            .tc6-statusbar {
+                height: 20px;
+                display: flex;
+                align-items: center;
+                padding: 0 8px;
+                gap: 6px;
+                background: var(--bg-header-statusbar, var(--bg-header, #1a1e2e));
+                border-top: 1px solid var(--border, #333);
+                font-size: 9px;
+            }
+            
+            /* Problem Panel - Uses --bg-panel-problems with fallback */
+            .tc6-panel-problems {
+                height: 60px;
+                border-radius: 6px;
+                background: var(--bg-panel-problems, var(--bg-panel, #1a1e2e));
+                border: 1px solid var(--border, #333);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Input Panel - Uses --bg-panel-input with fallback */
+            .tc6-panel-input {
+                flex: 1;
+                background: var(--bg-panel-input, var(--bg-panel, #1a1e2e));
+                border: 1px solid var(--border, #333);
+                border-radius: 6px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Expected Panel - Uses --bg-panel-expected with fallback */
+            .tc6-panel-expected {
+                flex: 1;
+                background: var(--bg-panel-expected, var(--bg-panel, #1a1e2e));
+                border: 1px solid var(--border, #333);
+                border-radius: 6px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Editor Background */
+            .tc6-editor-bg-container {
+                flex: 1;
+                min-height: 180px;
+                border-radius: 8px;
+                background: var(--editor-bg, #1e1e1e);
+                border: 1px solid var(--border, #333);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            /* Terminal */
+            .tc6-terminal {
+                width: 160px;
+                background: var(--terminal-bg, #0d1520);
+                border: 1px solid var(--border, #333);
+                border-radius: 6px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Input Area */
+            .tc6-input-area {
+                flex: 1;
+                padding: 8px;
+                font-size: 10px;
+                color: var(--text-muted, #888);
+                background: var(--bg-input, #222);
+                margin: 4px;
+                border-radius: 4px;
+            }
+            
+            /* Panel Header (shared) */
+            .tc6-panel-header {
+                padding: 4px 8px;
+                font-size: 9px;
+                font-weight: 700;
+                color: var(--text-primary, #fff);
+                border-bottom: 1px solid var(--border, #333);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: var(--bg-header, #1a1e2e);
+            }
+            
+            /* Panel Title */
+            .tc6-panel-title {
+                padding: 5px 8px;
+                font-size: 9px;
+                font-weight: 700;
+                color: var(--accent, #88c9ea);
+                border-bottom: 1px solid var(--border, #333);
+            }
+            
+            /* Panel Body */
+            .tc6-panel-body {
+                flex: 1;
+                padding: 8px;
+                font-size: 9px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Terminal Body */
+            .tc6-terminal-body {
+                flex: 1;
+                padding: 8px;
+                font-size: 10px;
+                overflow: hidden;
+            }
+            
+            /* Terminal Input */
+            .tc6-terminal-input {
+                padding: 4px 8px;
+                border-top: 1px solid var(--border, #333);
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            
+            /* Terminal Send Button */
+            .tc6-terminal-send {
+                margin-left: auto;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: var(--accent, #88c9ea);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Text Color Classes */
+            .tc6-text-primary { color: var(--text-primary, #fff); }
+            .tc6-text-secondary { color: var(--text-secondary, #aaa); }
+            .tc6-text-muted { color: var(--text-muted, #888); }
+            .tc6-text-success { color: var(--success, #7dcea0); }
+            .tc6-accent-text { color: var(--accent, #88c9ea); }
+            .tc6-accent-bg { background: var(--accent, #88c9ea); }
+            
+            /* Syntax Color Classes */
+            .tc6-syntax-keyword { color: var(--syntax-keyword, #569cd6); }
+            .tc6-syntax-string { color: var(--syntax-string, #ce9178); }
+            .tc6-syntax-type { color: var(--syntax-type, #4ec9b0); }
+            .tc6-syntax-function { color: var(--syntax-function, #dcdcaa); }
+            .tc6-syntax-number { color: var(--syntax-number, #b5cea8); }
+            .tc6-line-number { 
+                color: var(--text-muted, #666); 
+                margin-right: 12px; 
+                user-select: none; 
+            }
+            
+            /* Status Indicators */
+            .tc6-indicator-success { 
+                width: 8px; 
+                height: 8px; 
+                border-radius: 50%; 
+                background: var(--success, #7dcea0); 
+            }
+            .tc6-indicator-error { 
+                width: 8px; 
+                height: 8px; 
+                border-radius: 50%; 
+                background: var(--error, #ff6b6b); 
+            }
+            .tc6-badge-error {
+                background: var(--error, #ff6b6b);
+                color: #fff;
+                padding: 1px 6px;
+                border-radius: 8px;
+                font-size: 8px;
+            }
+            
+            /* Accent Badge */
+            .tc6-accent-badge {
+                font-weight: 700;
+                font-size: 10px;
+                padding: 3px 6px;
+                border-radius: 3px;
+                background: var(--accent, #88c9ea);
+                color: #fff;
+            }
+            
+            /* Menu Items */
+            .tc6-menu-items {
+                display: flex;
+                gap: 8px;
+                font-size: 9px;
+                color: var(--text-primary, #fff);
+            }
+            
+            /* Header Indicators */
+            .tc6-header-indicators {
+                margin-left: auto;
+                display: flex;
+                gap: 5px;
+            }
+            
+            /* Statusbar Right */
+            .tc6-statusbar-right {
+                margin-left: auto;
+            }
+            
+            /* Code Content */
+            .tc6-code-content {
+                position: relative;
+                z-index: 1;
+                padding: 12px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11px;
+                line-height: 1.7;
+            }
+            
+            /* Code Line */
+            .tc6-code-line {
+                display: block;
+            }
+            
+            /* Main Area Layout */
+            .tc6-main-area {
+                display: flex;
+                flex: 1;
+                overflow: hidden;
+                padding: 8px;
+                gap: 8px;
+            }
+            
+            /* Editor Column */
+            .tc6-editor-column {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            /* Sidebar */
+            .tc6-sidebar {
+                width: 140px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
         `;
         document.head.appendChild(style);
     },
 
     /**
-     * Render controls panel content with category panels
+     * Render controls panel content with simplified color groups
      */
     _renderControls() {
         const container = this.popup?.querySelector('#tc6-controls-content');
@@ -1673,7 +1978,7 @@ const ThemeCustomizer = {
         const syn = this._getSyntaxColors();
 
         container.innerHTML = `
-            <!-- UI Colors Panel -->
+            <!-- UI Colors Panel - Simplified Groups -->
             <div class="tc6-category-panel active" data-panel="ui">
                 <div class="tc6-section">
                     <div class="tc6-section-title">Theme Info</div>
@@ -1684,39 +1989,29 @@ const ThemeCustomizer = {
                 </div>
                 
                 <div class="tc6-section">
-                    <div class="tc6-section-title">UI Colors</div>
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                        Color Groups
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Change one color → updates all related elements</p>
                     <div class="tc6-color-grid">
-                        ${this._renderColorItem('bgHeader', 'Header Background')}
-                        ${this._renderColorItem('bgPanel', 'Panel Background')}
-                        ${this._renderColorItem('bgInput', 'Input Background')}
-                        ${this._renderColorItem('accent', 'Accent Color')}
-                        ${this._renderColorItem('textPrimary', 'Primary Text')}
-                        ${this._renderColorItem('textSecondary', 'Secondary Text')}
-                        ${this._renderColorItem('textMuted', 'Muted Text')}
-                        ${this._renderColorItem('success', 'Success Color')}
-                        ${this._renderColorItem('error', 'Error Color')}
-                        ${this._renderColorItem('border', 'Border Color')}
+                        ${this._renderGroupColor('background', 'Background', c.editorBg || c.bgOceanDark || '#1a2530', 'moon')}
+                        ${this._renderGroupColor('surface', 'Surface', c.bgPanel || '#2a3a4a', 'layers')}
+                        ${this._renderGroupColor('accent', 'Accent', c.accent || '#88c9ea', 'star')}
+                        ${this._renderGroupColor('text', 'Text', c.textPrimary || '#e0f0ff', 'type')}
+                        ${this._renderGroupColor('border', 'Border', c.border || '#3a6075', 'square')}
                     </div>
                 </div>
                 
                 <div class="tc6-section">
-                    <div class="tc6-section-title">Button Colors</div>
-                    <div class="tc6-color-grid">
-                        ${this._renderColorItem('bgButton', 'Button Background')}
-                        ${this._renderColorItem('bgButtonHover', 'Button Hover')}
-                        ${this._renderColorItem('bgOceanLight', 'Light Accent')}
-                        ${this._renderColorItem('bgOceanMedium', 'Medium Accent')}
-                        ${this._renderColorItem('bgOceanDeep', 'Deep Accent')}
-                        ${this._renderColorItem('bgOceanDark', 'Dark Accent')}
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        Status Colors
                     </div>
-                </div>
-                
-                <div class="tc6-section">
-                    <div class="tc6-section-title">Border & Glass</div>
                     <div class="tc6-color-grid">
-                        ${this._renderColorItem('borderStrong', 'Strong Border')}
-                        ${this._renderColorItem('bgGlass', 'Glass Background')}
-                        ${this._renderColorItem('bgGlassHeavy', 'Heavy Glass')}
+                        ${this._renderColorItem('success', 'Success')}
+                        ${this._renderColorItem('error', 'Error')}
+                        ${this._renderColorItem('warning', 'Warning')}
                     </div>
                 </div>
             </div>
@@ -1724,7 +2019,10 @@ const ThemeCustomizer = {
             <!-- Syntax Colors Panel -->
             <div class="tc6-category-panel" data-panel="syntax">
                 <div class="tc6-section">
-                    <div class="tc6-section-title">Syntax Highlighting</div>
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        Syntax Highlighting
+                    </div>
                     <div class="tc6-color-grid">
                         ${this._renderColorItem('syntaxKeyword', 'Keywords')}
                         ${this._renderColorItem('syntaxString', 'Strings')}
@@ -1735,7 +2033,7 @@ const ThemeCustomizer = {
                     </div>
                 </div>
                 <div class="tc6-section">
-                    <div class="tc6-section-title">Editor</div>
+                    <div class="tc6-section-title">Editor & Terminal</div>
                     <div class="tc6-color-grid">
                         ${this._renderColorItem('editorBg', 'Editor Background')}
                         ${this._renderColorItem('terminalBg', 'Terminal Background')}
@@ -1808,6 +2106,24 @@ const ThemeCustomizer = {
                         </div>
                     </div>
                 </div>
+                
+                <div class="tc6-section">
+                    <div class="tc6-section-title">Terminal Effects</div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Opacity</label>
+                        <div class="tc6-slider-row">
+                            <input type="range" min="0" max="100" value="${c.terminalOpacity ?? 100}" id="tc6-terminal-opacity">
+                            <span class="tc6-slider-val" id="tc6-terminal-opacity-val">${c.terminalOpacity ?? 100}%</span>
+                        </div>
+                    </div>
+                    <div class="tc6-field">
+                        <label class="tc6-field-label">Blur</label>
+                        <div class="tc6-slider-row">
+                            <input type="range" min="0" max="30" value="${c.terminalBgBlur ?? 0}" id="tc6-terminal-blur">
+                            <span class="tc6-slider-val" id="tc6-terminal-blur-val">${c.terminalBgBlur ?? 0}px</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Advanced Panel -->
@@ -1835,6 +2151,31 @@ const ThemeCustomizer = {
 
         this._bindControlsEvents();
         this._updateBgHints();
+    },
+
+    /**
+     * Render a color group item (changes multiple colors at once)
+     * @param {string} groupId - Group identifier
+     * @param {string} label - Display label
+     * @param {string} currentColor - Current color value
+     * @param {string} icon - Icon type (moon, layers, star, type, square)
+     */
+    _renderGroupColor(groupId, label, currentColor, icon = '') {
+        const icons = {
+            moon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+            layers: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+            star: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+            type: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+            square: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>'
+        };
+        const iconSvg = icons[icon] || '';
+
+        return `
+            <div class="tc6-color-item tc6-group-color" data-group="${groupId}">
+                <span class="tc6-color-label">${iconSvg} ${label}</span>
+                <div class="tc6-color-swatch" style="background: ${currentColor}" data-group="${groupId}"></div>
+            </div>
+        `;
     },
 
     /**
@@ -2075,6 +2416,133 @@ const ThemeCustomizer = {
         this._bindSlider('#tc6-app-blur', 'bgBlur', 'px', '#tc6-app-blur-val');
         this._bindSlider('#tc6-editor-opacity', 'editorBgOpacity', '%', '#tc6-editor-opacity-val');
         this._bindSlider('#tc6-editor-blur', 'editorBgBlur', 'px', '#tc6-editor-blur-val');
+        this._bindSlider('#tc6-terminal-opacity', 'terminalOpacity', '%', '#tc6-terminal-opacity-val');
+        this._bindSlider('#tc6-terminal-blur', 'terminalBgBlur', 'px', '#tc6-terminal-blur-val');
+
+        // Color group clicks - change multiple colors at once
+        // Make entire row clickable, not just swatch
+        container.querySelectorAll('.tc6-group-color').forEach(item => {
+            const swatch = item.querySelector('.tc6-color-swatch');
+            const groupId = item.dataset.group;
+
+            const openPicker = () => {
+                const group = window.ColorRegistry?.getGroup(groupId);
+                if (!group) {
+                    console.warn('[Customizer] No group found:', groupId);
+                    return;
+                }
+                // Show color picker for group
+                this._showGroupColorPicker(groupId, group.label, swatch);
+            };
+
+            // Click on entire row
+            item.addEventListener('click', openPicker);
+        });
+    },
+
+    /**
+     * Show color picker for a color group
+     * When color changes, derives and applies all member colors
+     */
+    _showGroupColorPicker(groupId, label, targetEl) {
+        this._hideColorPicker();
+
+        // Get current base color for this group
+        const c = this.workingTheme?.colors || {};
+        let currentColor = '#888888';
+
+        switch (groupId) {
+            case 'background':
+                currentColor = c.editorBg || c.bgOceanDark || '#1a2530';
+                break;
+            case 'surface':
+                currentColor = c.bgPanel?.replace(/rgba?\([^)]+\)/, '') || '#2a3a4a';
+                // Extract hex from rgba if needed
+                if (currentColor.includes('rgba')) {
+                    currentColor = '#2a3a4a';
+                }
+                break;
+            case 'accent':
+                currentColor = c.accent || '#88c9ea';
+                break;
+            case 'text':
+                currentColor = c.textPrimary || '#e0f0ff';
+                break;
+            case 'border':
+                currentColor = c.border || '#3a6075';
+                break;
+        }
+
+        // Create simple color picker for group
+        const picker = document.createElement('div');
+        picker.className = 'tc6-color-picker';
+        picker.id = 'tc6-active-picker';
+        picker.innerHTML = `
+            <div class="tc6-picker-header">
+                <span class="tc6-picker-title">${label}</span>
+                <button class="tc6-picker-close">✕</button>
+            </div>
+            <div class="tc6-picker-content">
+                <div class="tc6-picker-row">
+                    <div class="tc6-color-swatch" style="background: ${currentColor}; width: 40px; height: 40px;"></div>
+                    <input type="color" value="${currentColor}" style="width: 60px; height: 40px; border: none; cursor: pointer;">
+                    <input type="text" id="tc6-hex-input" value="${currentColor.toUpperCase()}" maxlength="7" 
+                        style="width: 80px; padding: 8px; font-family: monospace; text-transform: uppercase;">
+                </div>
+                <p style="font-size: 10px; color: var(--text-muted); margin: 8px 0 0;">
+                    Changes ${ColorRegistry.getGroupMembers(groupId).length} colors at once
+                </p>
+            </div>
+        `;
+
+        // Position picker
+        const rect = targetEl.getBoundingClientRect();
+        const popupRect = this.popup?.getBoundingClientRect() || { left: 0, top: 0 };
+        picker.style.position = 'absolute';
+        picker.style.left = `${rect.left - popupRect.left}px`;
+        picker.style.top = `${rect.bottom - popupRect.top + 5}px`;
+        picker.style.zIndex = '10001';
+
+        this.popup?.appendChild(picker);
+        this.currentColorPicker = picker;
+
+        // Event handlers
+        const colorInput = picker.querySelector('input[type="color"]');
+        const hexInput = picker.querySelector('#tc6-hex-input');
+        const swatch = picker.querySelector('.tc6-color-swatch');
+        const closeBtn = picker.querySelector('.tc6-picker-close');
+
+        const updateGroupColor = (newColor) => {
+            swatch.style.background = newColor;
+            hexInput.value = newColor.toUpperCase();
+            targetEl.style.background = newColor;
+
+            // Derive all member colors using ColorRegistry
+            const derivedColors = ColorRegistry.deriveGroupColors(groupId, newColor);
+
+            // Apply all derived colors to workingTheme
+            for (const [key, value] of Object.entries(derivedColors)) {
+                this._setColor(key, value);
+            }
+
+            this._renderPreview();
+        };
+
+        colorInput.addEventListener('input', (e) => updateGroupColor(e.target.value));
+
+        hexInput.addEventListener('input', (e) => {
+            const val = e.target.value.replace(/[^0-9A-Fa-f#]/g, '');
+            if (val.length === 7 && val.startsWith('#')) {
+                colorInput.value = val;
+                updateGroupColor(val);
+            } else if (val.length === 6 && !val.startsWith('#')) {
+                const color = '#' + val;
+                colorInput.value = color;
+                updateGroupColor(color);
+            }
+        });
+
+        closeBtn.addEventListener('click', () => this._hideColorPicker());
     },
 
     /**
@@ -2463,86 +2931,129 @@ const ThemeCustomizer = {
                 ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${bgBlur > 0 ? 'blur(' + bgBlur + 'px)' : 'none'};"></div>` : ''}
                 
                 <div class="tc6-ide-content ${this.bgDragMode ? 'tc6-dimmed' : ''}">
-                    <!-- Header -->
-                    <div class="tc6-clickable tc6-ui-element" data-key="bgHeader-main" data-label="Header Background" style="height: 32px; display: flex; align-items: center; padding: 0 10px; gap: 8px; background: ${c.bgHeader || '#1a1e2e'}; border-bottom: 1px solid ${c.border || '#333'};">
-                        <div class="tc6-clickable" data-key="accent" data-label="Accent Color" style="font-weight: 700; font-size: 10px; padding: 3px 6px; border-radius: 3px; background: ${c.accent || '#88c9ea'}; color: #fff;">C++</div>
-                        <div style="display: flex; gap: 8px; font-size: 9px; color: ${c.textPrimary || '#fff'};">
-                            <span class="tc6-clickable" data-key="textPrimary" data-label="Primary Text">File</span>
+                    <!-- Header - Uses CSS variable via tc6-header-main class -->
+                    <div class="tc6-clickable tc6-ui-element tc6-header-main" 
+                         data-key="bgHeader-main" data-label="Header Background">
+                        <div class="tc6-clickable tc6-accent-badge" 
+                             data-key="accent" data-label="Accent Color">C++</div>
+                        <div class="tc6-menu-items">
+                            <span class="tc6-clickable tc6-text-primary" 
+                                  data-key="textPrimary" data-label="Primary Text">File</span>
                             <span>Edit</span>
                             <span>View</span>
                         </div>
-                        <div style="margin-left: auto; display: flex; gap: 5px;">
-                            <div class="tc6-clickable" data-key="success" data-label="Success" style="width: 8px; height: 8px; border-radius: 50%; background: ${c.success || '#7dcea0'};"></div>
-                            <div class="tc6-clickable" data-key="error" data-label="Error" style="width: 8px; height: 8px; border-radius: 50%; background: ${c.error || '#ff6b6b'};"></div>
+                        <div class="tc6-header-indicators">
+                            <div class="tc6-clickable tc6-indicator-success" 
+                                 data-key="success" data-label="Success"></div>
+                            <div class="tc6-clickable tc6-indicator-error" 
+                                 data-key="error" data-label="Error"></div>
                         </div>
                     </div>
                     
                     <!-- Main Area -->
-                    <div style="display: flex; flex: 1; overflow: hidden; padding: 8px; gap: 8px;">
+                    <div class="tc6-main-area">
                         <!-- Editor Column -->
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                        <div class="tc6-editor-column">
                             <!-- Editor -->
-                            <div class="tc6-clickable tc6-ui-element tc6-editor-wrapper" data-key="editorBg" data-label="Editor Background" style="flex: 1; min-height: 180px; border-radius: 8px; background: ${c.editorBg || '#1e1e1e'}; border: 1px solid ${c.border || '#333'}; position: relative; overflow: hidden;">
+                            <div class="tc6-clickable tc6-ui-element tc6-editor-bg-container" 
+                                 data-key="editorBg" data-label="Editor Background">
                                 ${editorBg ? `<div class="tc6-editor-bg" style="position: absolute; inset: ${editorBlur > 0 ? -editorBlur + 'px' : '0'}; background-image: ${editorBg.startsWith('data:') ? `url("${editorBg}")` : `url('${editorBg.replace(/'/g, "\\'")}')`}; background-size: cover; background-position: ${editorBgPos}; opacity: ${editorOpacity}; filter: ${editorBlur > 0 ? 'blur(' + editorBlur + 'px)' : 'none'}; pointer-events: none;"></div>` : ''}
-                                <div style="position: relative; z-index: 1; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.7;">
-                                    <div><span class="tc6-clickable" data-key="textMuted" data-label="Line Numbers" style="color: ${c.textMuted || '#666'}; margin-right: 12px; user-select: none;">1</span><span class="tc6-clickable" data-key="syntaxKeyword" data-label="Keywords" style="color: ${syn.keyword}">#include</span><span class="tc6-clickable" data-key="syntaxString" data-label="Strings" style="color: ${syn.string}">&lt;bits/stdc++.h&gt;</span></div>
-                                    <div><span style="color: ${c.textMuted || '#666'}; margin-right: 12px; user-select: none;">2</span><span style="color: ${syn.keyword}">using namespace</span> <span style="color: ${c.textPrimary || '#d4d4d4'}">std;</span></div>
-                                    <div><span style="color: ${c.textMuted || '#666'}; margin-right: 12px; user-select: none;">3</span></div>
-                                    <div><span style="color: ${c.textMuted || '#666'}; margin-right: 12px; user-select: none;">4</span><span class="tc6-clickable" data-key="syntaxType" data-label="Types" style="color: ${syn.type}">int</span> <span class="tc6-clickable" data-key="syntaxFunction" data-label="Functions" style="color: ${syn.function}">main</span>() {</div>
-                                    <div><span style="color: ${c.textMuted || '#666'}; margin-right: 12px; user-select: none;">5</span>    cout << <span style="color: ${syn.string}">"hello"</span>;</div>
-                                    <div><span style="color: ${c.textMuted || '#666'}; margin-right: 12px; user-select: none;">6</span>    <span style="color: ${syn.keyword}">return</span> <span class="tc6-clickable" data-key="syntaxNumber" data-label="Numbers" style="color: ${syn.number}">0</span>;</div>
-                                    <div><span style="color: ${c.textMuted || '#666'}; margin-right: 12px; user-select: none;">7</span>}</div>
+                                <div class="tc6-code-content">
+                                    <div class="tc6-code-line">
+                                        <span class="tc6-clickable tc6-line-number" data-key="textMuted" data-label="Line Numbers">1</span>
+                                        <span class="tc6-clickable tc6-syntax-keyword" data-key="syntaxKeyword" data-label="Keywords">#include</span>
+                                        <span class="tc6-clickable tc6-syntax-string" data-key="syntaxString" data-label="Strings">&lt;bits/stdc++.h&gt;</span>
+                                    </div>
+                                    <div class="tc6-code-line">
+                                        <span class="tc6-line-number">2</span>
+                                        <span class="tc6-syntax-keyword">using namespace</span>
+                                        <span class="tc6-text-primary">std;</span>
+                                    </div>
+                                    <div class="tc6-code-line">
+                                        <span class="tc6-line-number">3</span>
+                                    </div>
+                                    <div class="tc6-code-line">
+                                        <span class="tc6-line-number">4</span>
+                                        <span class="tc6-clickable tc6-syntax-type" data-key="syntaxType" data-label="Types">int</span>
+                                        <span class="tc6-clickable tc6-syntax-function" data-key="syntaxFunction" data-label="Functions">main</span>() {
+                                    </div>
+                                    <div class="tc6-code-line">
+                                        <span class="tc6-line-number">5</span>
+                                        <span>    cout &lt;&lt; </span>
+                                        <span class="tc6-syntax-string">"hello"</span>;
+                                    </div>
+                                    <div class="tc6-code-line">
+                                        <span class="tc6-line-number">6</span>
+                                        <span>    </span>
+                                        <span class="tc6-syntax-keyword">return</span>
+                                        <span class="tc6-clickable tc6-syntax-number" data-key="syntaxNumber" data-label="Numbers">0</span>;
+                                    </div>
+                                    <div class="tc6-code-line">
+                                        <span class="tc6-line-number">7</span>}
+                                    </div>
                                 </div>
                             </div>
                             
-                            <!-- Problem Panel -->
-                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel-problems" data-label="Problem Panel" style="height: 60px; border-radius: 6px; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; overflow: hidden; display: flex; flex-direction: column;">
-                                <div style="padding: 4px 8px; font-size: 9px; font-weight: 700; color: ${c.textPrimary || '#fff'}; border-bottom: 1px solid ${c.border || '#333'}; display: flex; align-items: center; gap: 8px; background: ${c.bgHeader || '#1a1e2e'};">
+                            <!-- Problem Panel - Uses CSS variable via tc6-panel-problems class -->
+                            <div class="tc6-clickable tc6-ui-element tc6-panel-problems" 
+                                 data-key="bgPanel-problems" data-label="Problem Panel">
+                                <div class="tc6-panel-header">
                                     <span>PROBLEMS</span>
-                                    <span style="background: ${c.error || '#ff6b6b'}; color: #fff; padding: 1px 6px; border-radius: 8px; font-size: 8px;">0</span>
-                                    <span style="color: ${c.textMuted || '#888'};">TESTS</span>
+                                    <span class="tc6-badge-error">0</span>
+                                    <span class="tc6-text-muted">TESTS</span>
                                 </div>
-                                <div style="flex: 1; padding: 8px; font-size: 9px; color: ${c.textMuted || '#888'}; display: flex; align-items: center; justify-content: center;">
+                                <div class="tc6-panel-body tc6-text-muted">
                                     No problems detected
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Right Sidebar -->
-                        <div style="width: 140px; display: flex; flex-direction: column; gap: 6px;">
-                            <!-- INPUT Panel -->
-                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel-input" data-label="Input Panel" style="flex: 1; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
-                                <div style="padding: 5px 8px; font-size: 9px; font-weight: 700; color: ${c.accent || '#88c9ea'}; border-bottom: 1px solid ${c.border || '#333'};">INPUT</div>
-                                <div class="tc6-clickable" data-key="bgInput" data-label="Input Background" style="flex: 1; padding: 8px; font-size: 10px; color: ${c.textMuted || '#888'}; background: ${c.bgInput || '#222'}; margin: 4px; border-radius: 4px;">Nhập dữ liệu test...</div>
+                        <div class="tc6-sidebar">
+                            <!-- INPUT Panel - Uses CSS variable via tc6-panel-input class -->
+                            <div class="tc6-clickable tc6-ui-element tc6-panel-input" 
+                                 data-key="bgPanel-input" data-label="Input Panel">
+                                <div class="tc6-panel-title tc6-accent-text">INPUT</div>
+                                <div class="tc6-clickable tc6-input-area" 
+                                     data-key="bgInput" data-label="Input Background">
+                                    Nhập dữ liệu test...
+                                </div>
                             </div>
                             
-                            <!-- EXPECTED Panel -->
-                            <div class="tc6-clickable tc6-ui-element" data-key="bgPanel-expected" data-label="Expected Panel" style="flex: 1; background: ${c.bgPanel || '#1a1e2e'}; border: 1px solid ${c.border || '#333'}; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
-                                <div style="padding: 5px 8px; font-size: 9px; font-weight: 700; color: ${c.accent || '#88c9ea'}; border-bottom: 1px solid ${c.border || '#333'};">EXPECTED</div>
-                                <div style="flex: 1; padding: 8px; font-size: 10px; color: ${c.textMuted || '#888'};">Kết quả mong đợi...</div>
+                            <!-- EXPECTED Panel - Uses CSS variable via tc6-panel-expected class -->
+                            <div class="tc6-clickable tc6-ui-element tc6-panel-expected" 
+                                 data-key="bgPanel-expected" data-label="Expected Panel">
+                                <div class="tc6-panel-title tc6-accent-text">EXPECTED</div>
+                                <div class="tc6-panel-body tc6-text-muted">
+                                    Kết quả mong đợi...
+                                </div>
                             </div>
                         </div>
                         
-                        <!-- Terminal -->
-                        <div class="tc6-clickable tc6-ui-element" data-key="terminalBg" data-label="Terminal" style="width: 160px; background: ${c.terminalBg || '#0d1520'}; border: 1px solid ${c.border || '#333'}; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
-                            <div style="padding: 5px 8px; font-size: 9px; font-weight: 700; color: ${c.accent || '#88c9ea'}; border-bottom: 1px solid ${c.border || '#333'};">TERMINAL</div>
-                            <div style="flex: 1; padding: 8px; font-size: 10px; overflow: hidden;">
-                                <div style="color: ${c.success || '#7dcea0'};">Settings saved</div>
+                        <!-- Terminal - Uses CSS variable via tc6-terminal class -->
+                        <div class="tc6-clickable tc6-ui-element tc6-terminal" 
+                             data-key="terminalBg" data-label="Terminal">
+                            <div class="tc6-panel-title tc6-accent-text">TERMINAL</div>
+                            <div class="tc6-terminal-body">
+                                <div class="tc6-text-success">Settings saved</div>
                             </div>
-                            <div style="padding: 4px 8px; border-top: 1px solid ${c.border || '#333'}; display: flex; align-items: center; gap: 4px;">
-                                <span style="color: ${c.textMuted || '#888'}; font-size: 9px;">Input ...</span>
-                                <div style="margin-left: auto; width: 20px; height: 20px; border-radius: 50%; background: ${c.accent || '#88c9ea'}; display: flex; align-items: center; justify-content: center;">
-                                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            <div class="tc6-terminal-input">
+                                <span class="tc6-text-muted">Input ...</span>
+                                <div class="tc6-terminal-send tc6-accent-bg">
+                                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#fff" stroke-width="3">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Status Bar -->
-                    <div class="tc6-clickable tc6-ui-element" data-key="bgHeader-statusbar" data-label="Status Bar" style="height: 20px; display: flex; align-items: center; padding: 0 8px; gap: 6px; background: ${c.bgHeader || '#1a1e2e'}; border-top: 1px solid ${c.border || '#333'}; font-size: 9px;">
-                        <div style="width: 5px; height: 5px; border-radius: 50%; background: ${c.success || '#7dcea0'};"></div>
-                        <span style="color: ${c.textPrimary || '#fff'};">Ready</span>
-                        <span style="margin-left: auto; color: ${c.textMuted || '#888'};">Ln 1, Col 1</span>
+                    <!-- Status Bar - Uses CSS variable via tc6-statusbar class -->
+                    <div class="tc6-clickable tc6-ui-element tc6-statusbar" 
+                         data-key="bgHeader-statusbar" data-label="Status Bar">
+                        <div class="tc6-indicator-success"></div>
+                        <span class="tc6-text-primary">Ready</span>
+                        <span class="tc6-text-muted tc6-statusbar-right">Ln 1, Col 1</span>
                     </div>
                 </div>
             </div>
@@ -2565,6 +3076,9 @@ const ThemeCustomizer = {
                 this._updateEditBar(key, label);
             });
         });
+
+        // Inject all CSS variables onto preview wrapper for live preview
+        this._injectAllPreviewVariables();
     },
 
     /**
@@ -2835,22 +3349,23 @@ const ThemeCustomizer = {
 
     /**
      * Get opacity for a color key
+     * Uses exact key (e.g., 'bgPanel-inputOpacity') not normalized base key
      */
     _getOpacity(key) {
-        // Some colors might have opacity stored separately
         const c = this.workingTheme?.colors || {};
-        const baseKey = this._getBaseKey(key);
-        const opacityKey = baseKey + 'Opacity';
+        // Use exact key for opacity (e.g., 'bgPanel-input' → 'bgPanel-inputOpacity')
+        const opacityKey = key + 'Opacity';
         return c[opacityKey];
     },
 
     /**
      * Set opacity for a color key
+     * Uses exact key for variant-specific opacity values
      */
     _setOpacity(key, value) {
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
-        const baseKey = this._getBaseKey(key);
-        const opacityKey = baseKey + 'Opacity';
+        // Use exact key (e.g., 'bgPanel-input' → 'bgPanel-inputOpacity')
+        const opacityKey = key + 'Opacity';
         this.workingTheme.colors[opacityKey] = value;
     },
 
@@ -2976,6 +3491,11 @@ const ThemeCustomizer = {
      * @param {string|null} elementKey - Color key (null = idle state)
      * @param {string} elementLabel - Display label for element
      */
+    /**
+     * Update edit bar - Switch between idle and active states
+     * @param {string|null} elementKey - Color key (null = idle state)
+     * @param {string} elementLabel - Display label for element
+     */
     _updateEditBar(elementKey, elementLabel) {
         const editBar = this.popup?.querySelector('#tc6-edit-bar');
         if (!editBar) return;
@@ -2994,13 +3514,19 @@ const ThemeCustomizer = {
         // Switch to active state - hide hint, show element
         this._activeColorKey = elementKey;
 
+        // Check if this key belongs to a group
+        const groupId = window.ColorRegistry?.getGroupForKey(elementKey);
+        const group = groupId ? window.ColorRegistry?.getGroup(groupId) : null;
+
+        const displayLabel = group ? `${group.label} (${elementLabel})` : elementLabel;
+
         if (hintEl) hintEl.style.display = 'none';
         if (elementEl) {
             elementEl.style.display = 'flex';
 
             // Update element name
             const nameEl = elementEl.querySelector('#tc6-edit-name');
-            if (nameEl) nameEl.textContent = elementLabel;
+            if (nameEl) nameEl.textContent = displayLabel;
 
             // Update color preview
             const colorPreview = elementEl.querySelector('#tc6-edit-color');
@@ -3011,7 +3537,13 @@ const ThemeCustomizer = {
                 // Click handler for color dropdown
                 colorPreview.onclick = (e) => {
                     e.stopPropagation();
-                    this._showColorDropdown(elementKey, elementLabel, colorPreview);
+                    if (group) {
+                        // Open Group Picker if it belongs to a group
+                        this._showGroupColorPicker(groupId, group.label, colorPreview);
+                    } else {
+                        // Fallback to old dropdown for non-group items
+                        this._showColorDropdown(elementKey, elementLabel, colorPreview);
+                    }
                 };
             }
 
@@ -3551,25 +4083,87 @@ const ThemeCustomizer = {
         return '#888888';
     },
 
+    /**
+     * Set color value for a key
+     * CRITICAL: Stores EXACT key (e.g., 'bgPanel-input') instead of normalizing to base key.
+     * Also injects CSS variable onto preview wrapper for scoped live preview.
+     * 
+     * @param {string} key - Color key (exact key like 'bgPanel-input')
+     * @param {string} value - Color value (hex)
+     */
     _setColor(key, value) {
         if (!this.workingTheme) return;
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
 
-        // Normalize unique keys back to base keys for storage
-        const baseKey = this._getBaseKey(key);
-
-        if (baseKey.startsWith('syntax')) {
-            const syntaxKey = baseKey.replace('syntax', '').toLowerCase();
+        // Handle syntax colors specially - they go to editor.syntax
+        if (key.startsWith('syntax')) {
+            const syntaxKey = key.replace('syntax', '').toLowerCase();
             if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
             if (!this.workingTheme.editor.syntax) this.workingTheme.editor.syntax = {};
             if (!this.workingTheme.editor.syntax[syntaxKey]) this.workingTheme.editor.syntax[syntaxKey] = {};
             this.workingTheme.editor.syntax[syntaxKey].color = value.replace('#', '');
-        } else if (baseKey === 'editorBg') {
+        } else if (key === 'editorBg') {
             if (!this.workingTheme.editor) this.workingTheme.editor = {};
             this.workingTheme.editor.background = value;
             this.workingTheme.colors.editorBg = value;
         } else {
-            this.workingTheme.colors[baseKey] = value;
+            // CRITICAL: Store EXACT key, do NOT normalize to base key
+            // This fixes scope leakage where bgPanel-input was being stored as bgPanel
+            this.workingTheme.colors[key] = value;
+        }
+
+        // Inject CSS variable onto preview wrapper for scoped live preview
+        this._injectPreviewVariable(key, value);
+    },
+
+    /**
+     * Inject a single CSS variable onto the preview wrapper
+     * This scopes color changes to the preview only, preventing leakage to customizer UI
+     * 
+     * @param {string} key - Color key (e.g., 'bgPanel-input')
+     * @param {string} value - Color value (hex)
+     */
+    _injectPreviewVariable(key, value) {
+        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+        if (!wrapper) return;
+
+        // Use ColorRegistry to get correct CSS variable name
+        const cssVar = window.ColorRegistry?.getCssVar(key);
+        if (cssVar) {
+            wrapper.style.setProperty(cssVar, value);
+        } else {
+            // Fallback: convert camelCase to kebab-case
+            const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+            wrapper.style.setProperty(`--${kebabKey}`, value);
+        }
+    },
+
+    /**
+     * Inject ALL CSS variables from workingTheme onto preview wrapper
+     * Called after _renderPreview() to ensure all colors are applied
+     */
+    _injectAllPreviewVariables() {
+        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+        if (!wrapper) return;
+
+        const c = this.workingTheme?.colors || {};
+        const allCssVars = window.ColorRegistry?.getAllCssVars() || {};
+
+        // Apply all color values from workingTheme
+        for (const [key, cssVar] of Object.entries(allCssVars)) {
+            const value = c[key];
+            if (value !== undefined && value !== null) {
+                wrapper.style.setProperty(cssVar, value);
+            }
+        }
+
+        // Also apply syntax colors
+        const syn = this.workingTheme?.editor?.syntax || {};
+        for (const [name, data] of Object.entries(syn)) {
+            if (data?.color) {
+                const hexColor = data.color.startsWith('#') ? data.color : '#' + data.color;
+                wrapper.style.setProperty(`--syntax-${name}`, hexColor);
+            }
         }
     },
 
