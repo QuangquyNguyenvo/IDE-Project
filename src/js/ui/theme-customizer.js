@@ -1430,6 +1430,36 @@ const ThemeCustomizer = {
             }
             
             /* ===== DRAG MODE NOTIFICATION ===== */
+            .tc6-bg-drag-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 2px solid var(--border, #e0f0ff);
+                background: var(--bg-input, #ffffff);
+                color: var(--text-secondary, #7eb8c5);
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .tc6-bg-drag-btn:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--accent, #88c9ea);
+                color: var(--accent, #88c9ea);
+                transform: translateY(-1px);
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.15);
+            }
+            
+            /* Fix sidebar item active state */
+            .tc6-color-item.tc6-color-active {
+                background: transparent !important; /* Prevent background color change */
+            }
+            .tc6-color-item.tc6-color-active .tc6-color-swatch {
+                border-color: var(--accent, #88c9ea) !important;
+                box-shadow: 0 0 0 2px var(--bg-panel, #e8f4fc), 0 0 0 4px var(--accent, #88c9ea) !important;
+            }
+
             .tc6-drag-confirm-btn {
                 padding: 6px 14px;
                 background: var(--bg-input, #ffffff);
@@ -3133,7 +3163,7 @@ const ThemeCustomizer = {
 
         wrapper.innerHTML = `
             <div class="tc6-ide ${this.bgDragMode ? 'tc6-drag-mode' : ''}">
-                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${bgBlur > 0 ? 'blur(' + bgBlur + 'px)' : 'none'};"></div>` : ''}
+                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${bgBlur > 0 ? 'blur(' + bgBlur + 'px)' : 'none'}; pointer-events: none;"></div>` : ''}
                 
                 <div class="tc6-ide-content ${this.bgDragMode ? 'tc6-dimmed' : ''}">
                     <!-- Header - Uses CSS variable via tc6-header-main class -->
@@ -3996,8 +4026,8 @@ const ThemeCustomizer = {
      * @param {HTMLElement} targetEl - Target element to position dropdown
      */
     _showColorDropdown(key, label, targetEl) {
-        // Remove existing dropdown
-        document.querySelectorAll('.tc6-color-dropdown').forEach(el => el.remove());
+        // Remove existing picker cleanly
+        this._hideColorPicker();
 
         const currentColor = this._getColor(key);
         const hexColor = this._toHex(currentColor);
@@ -4024,6 +4054,7 @@ const ThemeCustomizer = {
         `;
 
         document.body.appendChild(dropdown);
+        this.currentColorPicker = dropdown; // Track active picker
 
         // Position dropdown below color preview
         const rect = targetEl.getBoundingClientRect();
@@ -4064,14 +4095,13 @@ const ThemeCustomizer = {
         });
 
         // Close on outside click
+        this._pickerClickHandler = (e) => {
+            if (!dropdown.contains(e.target) && !targetEl.contains(e.target)) {
+                this._hideColorPicker();
+            }
+        };
         setTimeout(() => {
-            const closeHandler = (e) => {
-                if (!dropdown.contains(e.target) && !targetEl.contains(e.target)) {
-                    dropdown.remove();
-                    document.removeEventListener('click', closeHandler);
-                }
-            };
-            document.addEventListener('click', closeHandler);
+            document.addEventListener('click', this._pickerClickHandler);
         }, 100);
     },
 

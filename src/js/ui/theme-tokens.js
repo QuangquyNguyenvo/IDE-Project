@@ -25,7 +25,7 @@ const ThemeTokens = {
         bgOceanMedium: { cssVar: '--bg-ocean-medium', type: 'color', group: 'background' },
         editorBg: { cssVar: '--editor-bg', type: 'color', group: 'background' },
         bgInput: { cssVar: '--bg-input', type: 'color', group: 'background' },
-        terminalBg: { cssVar: '--terminal-bg', type: 'color', group: 'background' },
+        terminalBg: { cssVar: '--terminal-bg', type: 'color', group: 'terminal' },
 
         // ============= SURFACE GROUP =============
         bgSurface: { cssVar: '--bg-surface', type: 'color', group: 'surface' },
