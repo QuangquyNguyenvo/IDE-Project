@@ -18,6 +18,13 @@ const { createMainWindow } = require('./core/window-manager');
 const registerLegacyHandlers = require('./ipc');
 
 // ============================================================================
+// REMOTE DEBUGGING (for browser DevTools)
+// ============================================================================
+const REMOTE_DEBUG_PORT = 9222;
+app.commandLine.appendSwitch('remote-debugging-port', REMOTE_DEBUG_PORT.toString());
+console.log(`\n🔧 Remote debugging enabled at: http://localhost:${REMOTE_DEBUG_PORT}\n`);
+
+// ============================================================================
 // SINGLE INSTANCE LOCK
 // ============================================================================
 // Set App User Model ID for Windows Taskbar Icon

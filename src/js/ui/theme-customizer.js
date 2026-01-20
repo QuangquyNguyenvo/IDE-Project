@@ -17,8 +17,10 @@ const ThemeCustomizer = {
     workingTheme: null,
     popup: null,
     bgDragMode: false,
+    bgDragTarget: null, // 'app' or 'editor' - which background is being dragged
     currentColorPicker: null,
     _activeColorKey: null, // Track which color is being edited
+    jsonMonacoEditor: null, // Monaco editor for JSON tab
 
     // History for undo/redo
     historyStack: [],
@@ -99,6 +101,12 @@ const ThemeCustomizer = {
 
         // Cleanup drag handlers
         this._cleanupBgDrag();
+        
+        // Dispose Monaco JSON editor
+        if (this.jsonMonacoEditor) {
+            this.jsonMonacoEditor.dispose();
+            this.jsonMonacoEditor = null;
+        }
 
         if (this.popup) {
             this.popup.classList.remove('visible');
@@ -124,27 +132,23 @@ const ThemeCustomizer = {
         const root = document.documentElement;
         const activeTheme = ThemeManager.themes.get(ThemeManager.activeThemeId);
 
-        // Restore opacity
-        if (this._savedAppBgOpacity) {
-            root.style.setProperty('--app-bg-opacity', this._savedAppBgOpacity);
-        } else if (activeTheme?.colors?.bgOpacity !== undefined) {
+        // Restore opacity - ALWAYS use active theme values as source of truth
+        if (activeTheme?.colors?.bgOpacity !== undefined) {
             root.style.setProperty('--app-bg-opacity', (activeTheme.colors.bgOpacity / 100).toString());
         } else {
-            root.style.removeProperty('--app-bg-opacity');
+            root.style.setProperty('--app-bg-opacity', '1'); // Default full opacity
         }
 
-        if (this._savedEditorBgOpacity) {
-            root.style.setProperty('--editor-bg-opacity', this._savedEditorBgOpacity);
-        } else if (activeTheme?.colors?.editorBgOpacity !== undefined) {
+        if (activeTheme?.colors?.editorBgOpacity !== undefined) {
             root.style.setProperty('--editor-bg-opacity', (activeTheme.colors.editorBgOpacity / 100).toString());
         } else {
-            root.style.removeProperty('--editor-bg-opacity');
+            root.style.setProperty('--editor-bg-opacity', '1'); // Default full opacity
         }
 
         // Restore background images
-        if (this._savedAppBgImage) {
-            root.style.setProperty('--app-bg-image', this._savedAppBgImage);
-        } else if (activeTheme?.colors?.appBackground) {
+        // ALWAYS use active theme values - ignore saved values to prevent stale data
+        // The active theme is the source of truth after any save operation
+        if (activeTheme?.colors?.appBackground) {
             const bgUrl = activeTheme.colors.appBackground.startsWith('data:')
                 ? `url("${activeTheme.colors.appBackground}")`
                 : `url('${activeTheme.colors.appBackground.replace(/'/g, "\\'")}')`;
@@ -153,15 +157,27 @@ const ThemeCustomizer = {
             root.style.removeProperty('--app-bg-image');
         }
 
-        if (this._savedEditorBgImage) {
-            root.style.setProperty('--editor-bg-image', this._savedEditorBgImage);
-        } else if (activeTheme?.colors?.editorBackground) {
+        // ALWAYS use active theme values - ignore saved values
+        if (activeTheme?.colors?.editorBackground) {
             const bgUrl = activeTheme.colors.editorBackground.startsWith('data:')
                 ? `url("${activeTheme.colors.editorBackground}")`
                 : `url('${activeTheme.colors.editorBackground.replace(/'/g, "\\'")}')`;
             root.style.setProperty('--editor-bg-image', bgUrl);
         } else {
             root.style.removeProperty('--editor-bg-image');
+        }
+
+        // Restore background positions
+        if (activeTheme?.colors?.bgPosition) {
+            root.style.setProperty('--app-bg-position', activeTheme.colors.bgPosition);
+        } else {
+            root.style.setProperty('--app-bg-position', 'center center');
+        }
+
+        if (activeTheme?.colors?.editorBgPosition) {
+            root.style.setProperty('--editor-bg-position', activeTheme.colors.editorBgPosition);
+        } else {
+            root.style.setProperty('--editor-bg-position', 'center center');
         }
 
         this._savedAppBgOpacity = null;
@@ -260,6 +276,15 @@ const ThemeCustomizer = {
                                 <path d="M21 15l-5-5L5 21"/>
                             </svg>
                             Backgrounds
+                        </button>
+                        <button class="tc6-toolbar-btn" data-category="json">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            JSON
                         </button>
                         <button class="tc6-toolbar-btn" data-category="advanced">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -721,6 +746,49 @@ const ThemeCustomizer = {
                 border-color: var(--error, #ff8fab);
             }
             
+            /* JSON Editor Styles - Monaco Container */
+            .tc6-json-section {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                padding-bottom: 0;
+            }
+            .tc6-monaco-container {
+                flex: 1;
+                min-height: 450px;
+                border-radius: 12px;
+                overflow: hidden;
+                border: 2px solid var(--border, #3a6075);
+            }
+            .tc6-monaco-container:focus-within {
+                border-color: var(--accent, #88c9ea);
+            }
+            .tc6-json-editor-actions {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 10px;
+                gap: 10px;
+                flex-shrink: 0;
+            }
+            .tc6-json-status {
+                font-size: 11px;
+                font-weight: 500;
+            }
+            .tc6-json-status.tc6-json-valid {
+                color: var(--success, #7dcea0);
+            }
+            .tc6-json-status.tc6-json-invalid {
+                color: var(--error, #ff8fab);
+            }
+            .tc6-json-apply-btn {
+                flex-shrink: 0;
+            }
+            .tc6-json-apply-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            
             .tc6-slider-row {
                 display: flex;
                 align-items: center;
@@ -995,6 +1063,7 @@ const ThemeCustomizer = {
                 flex-direction: column;
                 position: relative;
                 background: var(--editor-bg, #1e1e1e);
+                overflow: hidden;
             }
             
             .tc6-ide-bg {
@@ -1004,6 +1073,12 @@ const ThemeCustomizer = {
                 background-position: center;
                 pointer-events: none;
                 z-index: 0;
+            }
+            
+            /* When blur is applied, expand background to prevent edge artifacts */
+            .tc6-ide-bg.tc6-bg-blurred {
+                /* Negative inset to expand beyond container bounds */
+                /* Container's overflow:hidden will clip it properly */
             }
             
             .tc6-ide-content {
@@ -2133,6 +2208,22 @@ const ThemeCustomizer = {
                 </div>
             </div>
             
+            <!-- JSON Editor Panel with Monaco -->
+            <div class="tc6-category-panel" data-panel="json">
+                <div class="tc6-section tc6-json-section">
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Theme JSON Editor
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px;">Click color squares to pick • Ctrl+Enter to apply</p>
+                    <div class="tc6-monaco-container" id="tc6-monaco-container"></div>
+                    <div class="tc6-json-editor-actions">
+                        <span class="tc6-json-status" id="tc6-json-status"></span>
+                        <button class="tc6-upload-btn tc6-json-apply-btn" id="tc6-json-apply">Apply Changes</button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Advanced Panel -->
             <div class="tc6-category-panel" data-panel="advanced">
                 <div class="tc6-section">
@@ -2291,6 +2382,35 @@ const ThemeCustomizer = {
         this.popup.querySelectorAll('.tc6-category-panel').forEach(panel => {
             panel.classList.toggle('active', panel.dataset.panel === category);
         });
+        
+        // Initialize Monaco editor when JSON tab is selected
+        if (category === 'json') {
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                if (!this.jsonMonacoEditor) {
+                    this._bindJsonEditor();
+                } else {
+                    // Update content if editor exists
+                    const themeForEdit = this._prepareThemeForJsonEdit();
+                    const newContent = JSON.stringify(themeForEdit, null, 2);
+                    const currentContent = this.jsonMonacoEditor.getValue();
+                    
+                    // Only update if content changed significantly (not just formatting)
+                    try {
+                        const currentParsed = JSON.parse(currentContent);
+                        const newParsed = JSON.parse(newContent);
+                        if (JSON.stringify(currentParsed) !== JSON.stringify(newParsed)) {
+                            this.jsonMonacoEditor.setValue(newContent);
+                        }
+                    } catch (e) {
+                        // Current content is invalid JSON, don't update
+                    }
+                    
+                    // Trigger layout update
+                    this.jsonMonacoEditor.layout();
+                }
+            }, 50);
+        }
     },
 
     /**
@@ -2369,18 +2489,7 @@ const ThemeCustomizer = {
                 alert('Please upload an app background first!');
                 return;
             }
-            // Enter drag mode for app background
-            this.bgDragMode = true;
-            this._isDraggingEditor = false;
-            this._updateDragModeHint();
-
-            // Update UI
-            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-            if (wrapper) wrapper.style.cursor = 'grab';
-            const ide = this.popup?.querySelector('.tc6-ide');
-            const content = this.popup?.querySelector('.tc6-ide-content');
-            if (ide) ide.classList.add('tc6-drag-mode');
-            if (content) content.classList.add('tc6-dimmed');
+            this._enterDragMode('app');
         });
 
         // Editor background upload
@@ -2405,18 +2514,7 @@ const ThemeCustomizer = {
                 alert('Please upload an editor background first!');
                 return;
             }
-            // Enter drag mode for editor background
-            this.bgDragMode = true;
-            this._isDraggingEditor = true;
-            this._updateDragModeHint();
-
-            // Update UI
-            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-            if (wrapper) wrapper.style.cursor = 'grab';
-            const ide = this.popup?.querySelector('.tc6-ide');
-            const content = this.popup?.querySelector('.tc6-ide-content');
-            if (ide) ide.classList.add('tc6-drag-mode');
-            if (content) content.classList.add('tc6-dimmed');
+            this._enterDragMode('editor');
         });
 
         // Sliders
@@ -2446,6 +2544,366 @@ const ThemeCustomizer = {
             // Click on entire row
             item.addEventListener('click', openPicker);
         });
+        
+        // JSON Editor binding
+        this._bindJsonEditor();
+    },
+    
+    /**
+     * Bind JSON Editor events and initialize Monaco Editor
+     */
+    _bindJsonEditor() {
+        const container = this.popup?.querySelector('#tc6-monaco-container');
+        const applyBtn = this.popup?.querySelector('#tc6-json-apply');
+        const statusEl = this.popup?.querySelector('#tc6-json-status');
+        
+        if (!container) return;
+        
+        // Dispose old editor if exists
+        if (this.jsonMonacoEditor) {
+            this.jsonMonacoEditor.dispose();
+            this.jsonMonacoEditor = null;
+        }
+        
+        // Prepare theme JSON
+        const themeForEdit = this._prepareThemeForJsonEdit();
+        const jsonContent = JSON.stringify(themeForEdit, null, 2);
+        
+        // Create Monaco Editor
+        try {
+            this.jsonMonacoEditor = monaco.editor.create(container, {
+                value: jsonContent,
+                language: 'json',
+                theme: 'vs-dark',
+                minimap: { enabled: false },
+                fontSize: 12,
+                lineNumbers: 'off',
+                glyphMargin: false,
+                folding: true,
+                lineDecorationsWidth: 10,
+                lineNumbersMinChars: 0,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 2,
+                wordWrap: 'on',
+                formatOnPaste: true,
+                formatOnType: true,
+                renderLineHighlight: 'none',
+                colorDecorators: true,
+                scrollbar: {
+                    verticalScrollbarSize: 8,
+                    horizontalScrollbarSize: 8
+                },
+                padding: { top: 12, bottom: 12 }
+            });
+            
+            // Validate on content change
+            let debounceTimer = null;
+            this.jsonMonacoEditor.onDidChangeModelContent(() => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    this._validateJsonEditor();
+                }, 300);
+            });
+            
+            // Ctrl+Enter to apply
+            this.jsonMonacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                this._applyJsonEditorChanges();
+            });
+            
+            // Add color decorations for JSON
+            this._updateMonacoColorDecorations();
+            this.jsonMonacoEditor.onDidChangeModelContent(() => {
+                clearTimeout(this._colorDecoTimer);
+                this._colorDecoTimer = setTimeout(() => {
+                    this._updateMonacoColorDecorations();
+                }, 100);
+            });
+            
+            // Click handler for color picking
+            this._setupMonacoColorPicker();
+            
+            // Initial validation
+            setTimeout(() => this._validateJsonEditor(), 100);
+            
+        } catch (err) {
+            console.error('[Customizer] Failed to create Monaco editor:', err);
+            // Fallback to simple message
+            container.innerHTML = '<div style="padding: 20px; color: var(--text-muted);">Monaco Editor not available</div>';
+        }
+        
+        // Apply button
+        applyBtn?.addEventListener('click', () => {
+            this._applyJsonEditorChanges();
+        });
+    },
+    
+    /**
+     * Add color square decorations to JSON editor
+     */
+    _updateMonacoColorDecorations() {
+        if (!this.jsonMonacoEditor) return;
+        
+        const model = this.jsonMonacoEditor.getModel();
+        if (!model) return;
+        
+        const content = model.getValue();
+        const decorations = [];
+        
+        // Match hex colors and rgba colors
+        const colorRegex = /"(#[0-9a-fA-F]{3,8}|rgba?\s*\([^)]+\))"/g;
+        let match;
+        
+        while ((match = colorRegex.exec(content)) !== null) {
+            const colorValue = match[1];
+            const startPos = model.getPositionAt(match.index + 1); // +1 to skip opening quote
+            const endPos = model.getPositionAt(match.index + match[0].length - 1); // -1 to skip closing quote
+            
+            decorations.push({
+                range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+                options: {
+                    before: {
+                        content: '■',
+                        inlineClassName: `tc6-color-deco-${colorValue.replace(/[^a-zA-Z0-9]/g, '')}`,
+                        inlineClassNameAffectsLetterSpacing: true
+                    },
+                    hoverMessage: { value: `Click to pick color: ${colorValue}` }
+                }
+            });
+        }
+        
+        // Apply decorations
+        this._colorDecorations = this.jsonMonacoEditor.deltaDecorations(
+            this._colorDecorations || [],
+            decorations
+        );
+        
+        // Inject inline styles for color swatches
+        this._injectColorDecoStyles(content);
+    },
+    
+    /**
+     * Inject dynamic styles for color decorations
+     */
+    _injectColorDecoStyles(content) {
+        let styleEl = document.getElementById('tc6-color-deco-styles');
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = 'tc6-color-deco-styles';
+            document.head.appendChild(styleEl);
+        }
+        
+        const colorRegex = /"(#[0-9a-fA-F]{3,8}|rgba?\s*\([^)]+\))"/g;
+        let match;
+        let css = '';
+        
+        while ((match = colorRegex.exec(content)) !== null) {
+            const colorValue = match[1];
+            const className = colorValue.replace(/[^a-zA-Z0-9]/g, '');
+            css += `.tc6-color-deco-${className} { 
+                color: ${colorValue} !important; 
+                margin-right: 4px;
+                font-size: 14px;
+                text-shadow: 0 0 1px rgba(0,0,0,0.5);
+            }\n`;
+        }
+        
+        styleEl.textContent = css;
+    },
+    
+    /**
+     * Setup color picker on click for Monaco JSON editor
+     */
+    _setupMonacoColorPicker() {
+        if (!this.jsonMonacoEditor) return;
+        
+        // Create hidden color input
+        let colorInput = document.getElementById('tc6-monaco-color-picker');
+        if (!colorInput) {
+            colorInput = document.createElement('input');
+            colorInput.type = 'color';
+            colorInput.id = 'tc6-monaco-color-picker';
+            colorInput.style.cssText = 'position: absolute; visibility: hidden; pointer-events: none;';
+            document.body.appendChild(colorInput);
+        }
+        
+        // Track current editing position
+        let editRange = null;
+        
+        // Double click to open color picker
+        this.jsonMonacoEditor.onMouseDown((e) => {
+            if (e.event.detail !== 2) return; // Only double-click
+            
+            const model = this.jsonMonacoEditor.getModel();
+            if (!model) return;
+            
+            const position = e.target.position;
+            if (!position) return;
+            
+            const lineContent = model.getLineContent(position.lineNumber);
+            
+            // Find color value at click position
+            const colorRegex = /"(#[0-9a-fA-F]{3,8})"/g;
+            let match;
+            
+            while ((match = colorRegex.exec(lineContent)) !== null) {
+                const startCol = match.index + 2; // Skip opening quote and first char
+                const endCol = match.index + match[0].length - 1;
+                
+                if (position.column >= startCol && position.column <= endCol) {
+                    const colorValue = match[1];
+                    
+                    // Store range for replacement
+                    editRange = new monaco.Range(
+                        position.lineNumber, 
+                        match.index + 2, 
+                        position.lineNumber, 
+                        match.index + match[0].length - 1
+                    );
+                    
+                    // Open native color picker
+                    colorInput.value = colorValue.length === 4 
+                        ? `#${colorValue[1]}${colorValue[1]}${colorValue[2]}${colorValue[2]}${colorValue[3]}${colorValue[3]}`
+                        : colorValue.substring(0, 7);
+                    colorInput.click();
+                    break;
+                }
+            }
+        });
+        
+        // Handle color change
+        colorInput.addEventListener('input', (e) => {
+            if (!editRange || !this.jsonMonacoEditor) return;
+            
+            const newColor = e.target.value;
+            this.jsonMonacoEditor.executeEdits('color-picker', [{
+                range: editRange,
+                text: newColor
+            }]);
+        });
+    },
+    
+    /**
+     * Prepare theme object for JSON editing (strip large base64 images)
+     */
+    _prepareThemeForJsonEdit() {
+        const theme = this._deepClone(this.workingTheme);
+        
+        // Replace large base64 data URIs with placeholder
+        if (theme.colors?.appBackground?.startsWith('data:')) {
+            theme.colors.appBackground = '[BASE64_IMAGE_DATA]';
+        }
+        if (theme.colors?.editorBackground?.startsWith('data:')) {
+            theme.colors.editorBackground = '[BASE64_IMAGE_DATA]';
+        }
+        
+        return theme;
+    },
+    
+    /**
+     * Validate JSON in Monaco editor
+     */
+    _validateJsonEditor() {
+        const applyBtn = this.popup?.querySelector('#tc6-json-apply');
+        const statusEl = this.popup?.querySelector('#tc6-json-status');
+        
+        if (!this.jsonMonacoEditor || !statusEl) return false;
+        
+        const content = this.jsonMonacoEditor.getValue();
+        
+        try {
+            const parsed = JSON.parse(content);
+            
+            // Basic validation
+            if (!parsed.name || typeof parsed.name !== 'string') {
+                throw new Error('Theme must have a valid name');
+            }
+            if (!parsed.colors || typeof parsed.colors !== 'object') {
+                throw new Error('Theme must have colors object');
+            }
+            
+            statusEl.textContent = '✓ Valid JSON';
+            statusEl.className = 'tc6-json-status tc6-json-valid';
+            if (applyBtn) applyBtn.disabled = false;
+            return true;
+        } catch (err) {
+            statusEl.textContent = `✗ ${err.message}`;
+            statusEl.className = 'tc6-json-status tc6-json-invalid';
+            if (applyBtn) applyBtn.disabled = true;
+            return false;
+        }
+    },
+    
+    /**
+     * Apply changes from Monaco JSON editor to working theme
+     */
+    _applyJsonEditorChanges() {
+        const statusEl = this.popup?.querySelector('#tc6-json-status');
+        
+        if (!this.jsonMonacoEditor) return;
+        
+        const content = this.jsonMonacoEditor.getValue();
+        
+        try {
+            const parsed = JSON.parse(content);
+            
+            // Preserve base64 images if they were stripped
+            const currentAppBg = this.workingTheme?.colors?.appBackground;
+            const currentEditorBg = this.workingTheme?.colors?.editorBackground;
+            
+            // Merge parsed data into working theme
+            this.workingTheme = this._deepClone(parsed);
+            
+            // Restore base64 images if they were placeholders
+            if (parsed.colors?.appBackground === '[BASE64_IMAGE_DATA]' && currentAppBg?.startsWith('data:')) {
+                this.workingTheme.colors.appBackground = currentAppBg;
+            }
+            if (parsed.colors?.editorBackground === '[BASE64_IMAGE_DATA]' && currentEditorBg?.startsWith('data:')) {
+                this.workingTheme.colors.editorBackground = currentEditorBg;
+            }
+            
+            // Re-render everything (but not JSON editor to avoid cursor jump)
+            this._renderControlsWithoutJson();
+            this._renderPreview();
+            
+            if (statusEl) {
+                statusEl.textContent = '✓ Applied successfully!';
+                statusEl.className = 'tc6-json-status tc6-json-valid';
+            }
+            
+            console.log('[Customizer] JSON changes applied');
+        } catch (err) {
+            console.error('[Customizer] Failed to apply JSON:', err);
+            if (statusEl) {
+                statusEl.textContent = `✗ ${err.message}`;
+                statusEl.className = 'tc6-json-status tc6-json-invalid';
+            }
+        }
+    },
+    
+    /**
+     * Re-render controls without affecting JSON editor
+     */
+    _renderControlsWithoutJson() {
+        // Store current active panel
+        const activePanel = this.popup?.querySelector('.tc6-category-panel.active')?.dataset.panel;
+        
+        // Re-render controls
+        this._renderControls();
+        
+        // Don't rebind JSON editor since we want to keep current editor state
+        // Just restore the active panel if it was JSON
+        if (activePanel === 'json') {
+            const jsonPanel = this.popup?.querySelector('[data-panel="json"]');
+            const allPanels = this.popup?.querySelectorAll('.tc6-category-panel');
+            allPanels?.forEach(p => p.classList.remove('active'));
+            jsonPanel?.classList.add('active');
+            
+            // Re-activate JSON tab
+            const allTabs = this.popup?.querySelectorAll('.tc6-toolbar-btn');
+            allTabs?.forEach(t => t.classList.remove('active'));
+            this.popup?.querySelector('[data-category="json"]')?.classList.add('active');
+        }
     },
 
     /**
@@ -2614,7 +3072,8 @@ const ThemeCustomizer = {
 
 
     /**
-     * Setup background drag
+     * Setup background drag handlers
+     * Simplified: only handles actual dragging, mode is controlled by _enterDragMode
      */
     _setupBgDrag() {
         const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
@@ -2626,118 +3085,81 @@ const ThemeCustomizer = {
         }
 
         let isDragging = false;
-        let isDraggingEditor = false;
         let startX = 0, startY = 0;
         let startPosX = 50, startPosY = 50;
 
-        // Double-click handler
+        // Double-click handler - detect which background to drag
         const dblClickHandler = (e) => {
-            const editorBg = wrapper.querySelector('.tc6-editor-bg');
-            const appBg = wrapper.querySelector('.tc6-ide-bg');
-            const clickedEditor = editorBg && e.target.closest('.tc6-editor-wrapper');
-
             // If already in drag mode, toggle it off
             if (this.bgDragMode) {
                 this._exitDragMode();
                 return;
             }
 
-            if (clickedEditor && this.workingTheme?.colors?.editorBackground) {
-                // Drag editor background
-                this.bgDragMode = true;
-                isDraggingEditor = true;
-            } else if (appBg && this.workingTheme?.colors?.appBackground) {
-                // Drag app background
-                this.bgDragMode = true;
-                isDraggingEditor = false;
-            } else {
-                return;
+            const editorBgEl = wrapper.querySelector('.tc6-editor-bg');
+            const appBgEl = wrapper.querySelector('.tc6-ide-bg');
+            const clickedOnEditor = e.target.closest('.tc6-editor-bg-container');
+
+            // Determine which background to drag based on click location
+            if (clickedOnEditor && this.workingTheme?.colors?.editorBackground) {
+                this._enterDragMode('editor');
+            } else if (appBgEl && this.workingTheme?.colors?.appBackground) {
+                this._enterDragMode('app');
             }
-
-            wrapper.style.cursor = this.bgDragMode ? 'grab' : 'default';
-
-            // Update UI to show drag mode state - dim other elements
-            const ide = wrapper.querySelector('.tc6-ide');
-            const content = wrapper.querySelector('.tc6-ide-content');
-            if (ide) ide.classList.toggle('tc6-drag-mode', this.bgDragMode);
-            if (content) content.classList.toggle('tc6-dimmed', this.bgDragMode);
-
-            // Show/hide drag mode indicator
-            this._updateDragModeHint();
         };
 
-        // Mouse down handler
+        // Mouse down handler - start dragging
         const mouseDownHandler = (e) => {
-            if (!this.bgDragMode) return;
+            if (!this.bgDragMode || !this.bgDragTarget) return;
 
-            const editorBg = wrapper.querySelector('.tc6-editor-bg');
-            const appBg = wrapper.querySelector('.tc6-ide-bg');
-            const clickedEditor = editorBg && e.target.closest('.tc6-editor-wrapper');
+            e.preventDefault();
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
 
-            if (clickedEditor && this.workingTheme?.colors?.editorBackground) {
-                isDraggingEditor = true;
-                e.preventDefault();
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-
-                const pos = this.workingTheme.colors.editorBgPosition || 'center center';
-                const [h, v] = pos.split(' ').map(p => {
-                    if (p === 'center') return 50;
-                    if (p === 'left' || p === 'top') return 0;
-                    if (p === 'right' || p === 'bottom') return 100;
-                    return parseInt(p) || 50;
-                });
-                startPosX = h;
-                startPosY = v || 50;
-            } else if (appBg && this.workingTheme?.colors?.appBackground) {
-                isDraggingEditor = false;
-                e.preventDefault();
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-
-                const pos = this.workingTheme.colors.bgPosition || 'center center';
-                const [h, v] = pos.split(' ').map(p => {
-                    if (p === 'center') return 50;
-                    if (p === 'left' || p === 'top') return 0;
-                    if (p === 'right' || p === 'bottom') return 100;
-                    return parseInt(p) || 50;
-                });
-                startPosX = h;
-                startPosY = v || 50;
-            } else {
-                return;
-            }
+            // Get current position based on which background we're dragging
+            const posKey = this.bgDragTarget === 'editor' ? 'editorBgPosition' : 'bgPosition';
+            const pos = this.workingTheme?.colors?.[posKey] || 'center center';
+            
+            const [h, v] = pos.split(' ').map(p => {
+                if (p === 'center') return 50;
+                if (p === 'left' || p === 'top') return 0;
+                if (p === 'right' || p === 'bottom') return 100;
+                return parseInt(p) || 50;
+            });
+            startPosX = h;
+            startPosY = v || 50;
 
             wrapper.style.cursor = 'grabbing';
         };
 
-        // Mouse move handler
+        // Mouse move handler - update position
         const mouseMoveHandler = (e) => {
-            if (!isDragging) return;
+            if (!isDragging || !this.bgDragTarget) return;
 
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
             const rect = wrapper.getBoundingClientRect();
 
-            // Calculate position even if mouse is outside wrapper
+            // Calculate new position (inverted because we're moving the background)
             const newX = Math.max(0, Math.min(100, startPosX - (dx / rect.width) * 100));
             const newY = Math.max(0, Math.min(100, startPosY - (dy / rect.height) * 100));
+            const posValue = `${Math.round(newX)}% ${Math.round(newY)}%`;
 
-            if (isDraggingEditor) {
-                this.workingTheme.colors.editorBgPosition = `${Math.round(newX)}% ${Math.round(newY)}%`;
+            // Update the correct position property
+            if (this.bgDragTarget === 'editor') {
+                this.workingTheme.colors.editorBgPosition = posValue;
             } else {
-                this.workingTheme.colors.bgPosition = `${Math.round(newX)}% ${Math.round(newY)}%`;
+                this.workingTheme.colors.bgPosition = posValue;
             }
+            
             this._updateBgStyles();
         };
 
-        // Mouse up handler
+        // Mouse up handler - stop dragging but stay in drag mode
         const mouseUpHandler = () => {
             if (isDragging) {
                 isDragging = false;
-                // Don't exit drag mode automatically - user must click confirm button
                 if (wrapper) wrapper.style.cursor = this.bgDragMode ? 'grab' : 'default';
             }
         };
@@ -2754,6 +3176,27 @@ const ThemeCustomizer = {
         wrapper.addEventListener('mousedown', mouseDownHandler);
         document.addEventListener('mousemove', mouseMoveHandler);
         document.addEventListener('mouseup', mouseUpHandler);
+    },
+    
+    /**
+     * Enter drag mode for a specific background
+     * @param {'app'|'editor'} target - Which background to drag
+     */
+    _enterDragMode(target) {
+        this.bgDragMode = true;
+        this.bgDragTarget = target;
+        
+        // Update UI
+        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+        if (wrapper) wrapper.style.cursor = 'grab';
+        
+        const ide = this.popup?.querySelector('.tc6-ide');
+        const content = this.popup?.querySelector('.tc6-ide-content');
+        if (ide) ide.classList.add('tc6-drag-mode');
+        if (content) content.classList.add('tc6-dimmed');
+        
+        // Update edit bar to show drag mode hint
+        this._updateDragModeHint();
     },
 
     /**
@@ -2779,9 +3222,8 @@ const ThemeCustomizer = {
         const editBar = this.popup?.querySelector('#tc6-edit-bar');
         if (!editBar) return;
 
-        if (this.bgDragMode) {
-            const editorBg = this.popup?.querySelector('.tc6-editor-bg');
-            const isEditor = editorBg && this.workingTheme?.colors?.editorBackground;
+        if (this.bgDragMode && this.bgDragTarget) {
+            const targetLabel = this.bgDragTarget === 'editor' ? 'editor' : 'app';
 
             // Replace edit bar content with drag mode notification
             editBar.innerHTML = `
@@ -2791,7 +3233,7 @@ const ThemeCustomizer = {
                             <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
                         </svg>
                         <span style="font-weight: 700; color: #2a5a75; font-size: 13px; font-family: 'Fredoka', sans-serif;">Drag Mode Active</span>
-                        <span style="color: #5a8a95; font-size: 12px;">Drag to reposition ${isEditor ? 'editor' : 'app'} background</span>
+                        <span style="color: #5a8a95; font-size: 12px;">Drag to reposition <strong>${targetLabel}</strong> background</span>
                     </div>
                     <button class="tc6-drag-confirm-btn" id="tc6-drag-confirm">
                         <svg viewBox="0 0 24 24" width="14" height="14">
@@ -2871,6 +3313,7 @@ const ThemeCustomizer = {
      */
     _exitDragMode() {
         this.bgDragMode = false;
+        this.bgDragTarget = null;
         const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
         if (wrapper) {
             wrapper.style.cursor = 'default';
@@ -2902,7 +3345,16 @@ const ThemeCustomizer = {
             bgEl.style.backgroundPosition = c.bgPosition || 'center center';
             bgEl.style.opacity = (c.bgOpacity ?? 50) / 100;
             const appBlur = c.bgBlur ?? 0;
-            bgEl.style.filter = appBlur > 0 ? `blur(${appBlur}px)` : 'none';
+            // Expand background when blur to prevent edge artifacts, container clips it
+            if (appBlur > 0) {
+                bgEl.style.filter = `blur(${appBlur}px)`;
+                bgEl.style.inset = `-${appBlur}px`;
+                bgEl.classList.add('tc6-bg-blurred');
+            } else {
+                bgEl.style.filter = 'none';
+                bgEl.style.inset = '0';
+                bgEl.classList.remove('tc6-bg-blurred');
+            }
         }
 
         if (editorBgEl && c.editorBackground) {
@@ -2914,9 +3366,14 @@ const ThemeCustomizer = {
             editorBgEl.style.backgroundPosition = c.editorBgPosition || 'center center';
             const blur = c.editorBgBlur ?? 0;
             editorBgEl.style.opacity = (c.editorBgOpacity ?? 15) / 100;
-            editorBgEl.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
-            // Extend inset to prevent blur edge artifacts
-            editorBgEl.style.inset = blur > 0 ? `-${blur}px` : '0';
+            // Expand background when blur to prevent edge artifacts
+            if (blur > 0) {
+                editorBgEl.style.filter = `blur(${blur}px)`;
+                editorBgEl.style.inset = `-${blur}px`;
+            } else {
+                editorBgEl.style.filter = 'none';
+                editorBgEl.style.inset = '0';
+            }
         }
     },
 
@@ -2943,7 +3400,7 @@ const ThemeCustomizer = {
 
         wrapper.innerHTML = `
             <div class="tc6-ide ${this.bgDragMode ? 'tc6-drag-mode' : ''}">
-                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${bgBlur > 0 ? 'blur(' + bgBlur + 'px)' : 'none'};"></div>` : ''}
+                ${appBg ? `<div class="tc6-ide-bg${bgBlur > 0 ? ' tc6-bg-blurred' : ''}" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; ${bgBlur > 0 ? `filter: blur(${bgBlur}px); inset: -${bgBlur}px;` : ''}"></div>` : ''}
                 
                 <div class="tc6-ide-content ${this.bgDragMode ? 'tc6-dimmed' : ''}">
                     <!-- Header - Uses CSS variable via tc6-header-main class -->
@@ -2958,10 +3415,8 @@ const ThemeCustomizer = {
                             <span>View</span>
                         </div>
                         <div class="tc6-header-indicators">
-                            <div class="tc6-clickable tc6-indicator-success" 
-                                 data-key="success" data-label="Success"></div>
-                            <div class="tc6-clickable tc6-indicator-error" 
-                                 data-key="error" data-label="Error"></div>
+                            <div class="tc6-indicator-success"></div>
+                            <div class="tc6-indicator-error"></div>
                         </div>
                     </div>
                     
@@ -3031,8 +3486,7 @@ const ThemeCustomizer = {
                             <div class="tc6-clickable tc6-ui-element tc6-panel-input" 
                                  data-key="bgPanel-input" data-label="Input Panel">
                                 <div class="tc6-panel-title tc6-accent-text">INPUT</div>
-                                <div class="tc6-clickable tc6-input-area" 
-                                     data-key="bgInput" data-label="Input Background">
+                                <div class="tc6-input-area">
                                     Nhập dữ liệu test...
                                 </div>
                             </div>
@@ -3885,6 +4339,13 @@ const ThemeCustomizer = {
 
             // Show success notification
             this._showSaveNotification(`Theme "${name}" đã được lưu thành công!`);
+
+            // CRITICAL: Clear saved values so close() won't restore old values
+            // The new theme was just applied by ThemeManager.setTheme() above
+            this._savedAppBgOpacity = null;
+            this._savedEditorBgOpacity = null;
+            this._savedAppBgImage = null;
+            this._savedEditorBgImage = null;
 
             // Update sourceThemeId to the new theme and refresh header buttons
             this.sourceThemeId = id;

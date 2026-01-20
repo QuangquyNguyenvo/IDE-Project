@@ -13,6 +13,9 @@ const ThemeManager = {
 
     // Current active theme ID
     activeThemeId: null,
+    
+    // Initialization flag
+    _isInitialized: false,
 
     // User customization overrides
     userOverrides: {},
@@ -33,15 +36,32 @@ const ThemeManager = {
      * Initialize Theme Manager
      */
     async init() {
+        if (this._isInitialized) return;
+        
         console.log('[ThemeManager] Initializing v2.0...');
 
         // Load hardcoded themes IMMEDIATELY (no lag)
         this._loadAllHardcodedThemes();
         this.loadUserThemes();
+        this._isInitialized = true;
         console.log(`[ThemeManager] Loaded ${this.themes.size} themes (hardcoded)`);
 
         // Then async load JSON versions in background (optional enhancement)
         this._loadJSONThemesInBackground();
+    },
+    
+    /**
+     * Synchronous initialization for early access
+     * Called automatically when setTheme is invoked before init()
+     */
+    _ensureInitialized() {
+        if (this._isInitialized) return;
+        
+        console.log('[ThemeManager] Auto-initializing (early access)...');
+        this._loadAllHardcodedThemes();
+        this.loadUserThemes();
+        this._isInitialized = true;
+        console.log(`[ThemeManager] Loaded ${this.themes.size} themes`);
     },
 
     /**
@@ -575,6 +595,9 @@ const ThemeManager = {
      * @param {string} themeId 
      */
     setTheme(themeId) {
+        // Auto-initialize if not yet initialized
+        this._ensureInitialized();
+        
         let theme = this.themes.get(themeId);
 
         if (!theme) {
@@ -658,6 +681,7 @@ const ThemeManager = {
      * @returns {Array} List of theme info objects
      */
     getThemeList() {
+        this._ensureInitialized();
         const list = [];
         this.themes.forEach((theme, id) => {
             list.push({
