@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Theme Customizer v6.1
  * Click-to-edit live preview with background support
  * 
@@ -233,7 +233,7 @@ const ThemeCustomizer = {
                         </svg>
                         <span>Theme Customizer</span>
                     </h2>
-                    <button class="tc6-close" id="tc6-close">×</button>
+                    <button class="tc6-close" id="tc6-close">Ã—</button>
                 </div>
                 
                 <div class="tc6-body">
@@ -625,26 +625,71 @@ const ThemeCustomizer = {
                 border: 2px solid var(--border, #e0f0ff);
                 border-radius: 10px 12px 11px 13px;
                 cursor: pointer;
-                transition: all 0.2s ease;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+            }
+            .tc6-color-item::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 4px;
+                height: 100%;
+                background: var(--accent, #88c9ea);
+                transform: scaleY(0);
+                transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             }
             .tc6-color-item:hover {
                 background: var(--bg-ocean-light, #eff8fe);
                 border-color: var(--border-strong, #b3e2fa);
-                transform: translateX(3px);
+                transform: translateX(4px);
+                box-shadow: -4px 0 12px rgba(136, 201, 234, 0.15);
+            }
+            .tc6-color-item:hover::before {
+                transform: scaleY(1);
+            }
+            .tc6-color-item:active {
+                transform: translateX(2px) scale(0.98);
+            }
+            .tc6-color-item.tc6-color-active {
+                border-color: var(--accent, #88c9ea);
+                background: var(--bg-ocean-light, #eff8fe);
+                box-shadow: 0 0 0 3px rgba(136, 201, 234, 0.2);
+            }
+            .tc6-color-item.tc6-color-active::before {
+                transform: scaleY(1);
             }
             .tc6-color-item label {
                 font-size: 11px;
                 font-weight: 600;
                 color: var(--settings-label-color, #5a8a95);
                 cursor: pointer;
+                transition: color 0.2s ease;
+            }
+            .tc6-color-item:hover label {
+                color: var(--text-primary, #2a5a75);
             }
             .tc6-color-item .tc6-color-swatch {
-                width: 26px;
-                height: 26px;
-                border-radius: 6px;
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
                 border: 2px solid var(--border, #e0f0ff);
                 flex-shrink: 0;
-                box-shadow: 0 2px 4px rgba(136, 201, 234, 0.1);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .tc6-color-item:hover .tc6-color-swatch {
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            }
+            .tc6-color-item .tc6-color-swatch.tc6-swatch-pulse {
+                animation: tc6-swatch-pulse 0.4s ease;
+            }
+            @keyframes tc6-swatch-pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.2); box-shadow: 0 0 20px currentColor; }
+                100% { transform: scale(1); }
             }
             
             .tc6-field {
@@ -994,7 +1039,14 @@ const ThemeCustomizer = {
                 display: flex;
                 flex-direction: column;
                 position: relative;
-                background: var(--editor-bg, #1e1e1e);
+                background: var(--bg-ocean-dark, #1e1e1e); /* Use base app color, not editor color */
+            }
+
+            .tc6-editor-bg-container {
+                position: relative;
+                flex: 1;
+                background: var(--editor-bg, rgba(0,0,0,0.2)); /* This handles the solid editor color */
+                overflow: hidden;
             }
             
             .tc6-ide-bg {
@@ -1385,6 +1437,39 @@ const ThemeCustomizer = {
             }
             
             /* ===== DRAG MODE NOTIFICATION ===== */
+            .tc6-bg-drag-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 2px solid var(--border, #e0f0ff);
+                background: var(--bg-input, #ffffff);
+                color: var(--text-secondary, #7eb8c5);
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .tc6-bg-drag-btn:hover {
+                background: var(--bg-ocean-light, #eff8fe);
+                border-color: var(--accent, #88c9ea);
+                color: var(--accent, #88c9ea);
+                transform: translateY(-1px);
+                box-shadow: 2px 2px 0 rgba(136, 201, 234, 0.15);
+            }
+            
+            /* Fix sidebar item active state */
+            /* Fix sidebar item active state */
+            .tc6-color-item.tc6-color-active {
+                background-color: transparent !important; /* Force transparent background */
+                box-shadow: none !important;
+            }
+            .tc6-color-item.tc6-color-active .tc6-color-swatch {
+                border-color: var(--accent, #88c9ea) !important;
+                box-shadow: 0 0 0 2px var(--bg-panel, #e8f4fc), 0 0 0 4px var(--accent, #88c9ea) !important;
+                transform: scale(1.1);
+            }
+
             .tc6-drag-confirm-btn {
                 padding: 6px 14px;
                 background: var(--bg-input, #ffffff);
@@ -1868,7 +1953,6 @@ const ThemeCustomizer = {
             .tc6-syntax-type { color: var(--syntax-type, #4ec9b0); }
             .tc6-syntax-function { color: var(--syntax-function, #dcdcaa); }
             .tc6-syntax-number { color: var(--syntax-number, #b5cea8); }
-            .tc6-syntax-variable { color: var(--syntax-variable, #9cdcfe); }
             .tc6-line-number { 
                 color: var(--text-muted, #666); 
                 margin-right: 12px; 
@@ -1948,6 +2032,7 @@ const ThemeCustomizer = {
                 overflow: hidden;
                 padding: 8px;
                 gap: 8px;
+                background: var(--bg-ocean-medium, #bce2f5); /* Use lighter main color behind content */
             }
             
             /* Editor Column */
@@ -1964,6 +2049,8 @@ const ThemeCustomizer = {
                 display: flex;
                 flex-direction: column;
                 gap: 6px;
+                background: var(--bg-ocean-dark, #3a7ca5); /* Use darker main color for sidebar */
+                padding: 6px; /* Add padding to match visual style */
             }
         `;
         document.head.appendChild(style);
@@ -1983,6 +2070,54 @@ const ThemeCustomizer = {
         container.innerHTML = `
             <!-- UI Colors Panel - Simplified Groups -->
             <div class="tc6-category-panel active" data-panel="ui">
+                
+                <!-- Smart Theme Generator -->
+                <!-- Smart Theme Generator -->
+                <!-- Smart Theme Generator -->
+                <div class="tc6-section" style="background: var(--bg-panel); border-radius: 12px; padding: 16px;">
+                    <div class="tc6-section-title" style="color: var(--accent); display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>
+                        <span style="font-weight: 700; letter-spacing: 0.5px;">SMART THEME MAGIC</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 16px; opacity: 0.8;">Pick ONE color, we'll calculate the rest! âœ¨</p>
+                    
+                    <div class="tc6-field">
+                        <label class="tc6-field-label" style="display:none">Master Color</label>
+                        <div style="display: flex; gap: 12px; align-items: stretch;">
+                            <div style="position: relative; width: 50px; height: 44px; flex-shrink: 0;">
+                                <input type="color" id="tc6-master-color" value="${c.accent || '#88c9ea'}" style="position: absolute; top:0; left:0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                                <div style="width: 100%; height: 100%; background: ${c.accent || '#88c9ea'}; border-radius: 10px; border: 2px solid var(--bg-base); box-shadow: 0 2px 8px rgba(0,0,0,0.15); pointer-events: none;"></div>
+                            </div>
+                            
+                            <button id="tc6-generate-btn" style="
+                                flex: 1; 
+                                border-radius: 12px; 
+                                border: none; 
+                                background: linear-gradient(135deg, var(--accent), var(--accent) 80%); 
+                                color: #fff; 
+                                font-weight: 800; 
+                                font-size: 13px;
+                                cursor: pointer; 
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                                transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 6px;
+                            " 
+                            onmouseover="this.style.transform='translateY(-2px) scale(1.02)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.2)'"
+                            onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                            onmousedown="this.style.transform='translateY(1px) scale(0.98)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
+                            >
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                                Auto-Generate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="tc6-section">
                     <div class="tc6-section-title">Theme Info</div>
                     <div class="tc6-field">
@@ -1991,40 +2126,49 @@ const ThemeCustomizer = {
                     </div>
                 </div>
 
+                <!-- Panel Variants (Moved to UI) -->
                 <div class="tc6-section">
                     <div class="tc6-section-title">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18"/></svg>
                         Panel Variants
                     </div>
-                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Tune Input / Expected panels separately</p>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Customize specific panel backgrounds</p>
                     <div class="tc6-color-grid">
                         ${this._renderColorItem('bgPanel-input', 'Input Panel')}
                         ${this._renderColorItem('bgPanel-expected', 'Expected Panel')}
                     </div>
                 </div>
-                
+
+                <!-- Editor & Terminal (Moved to UI) -->
                 <div class="tc6-section">
-                    <div class="tc6-section-title">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
-                        Editor & Terminal
-                    </div>
+                    <div class="tc6-section-title">Editor & Terminal</div>
                     <div class="tc6-color-grid">
                         ${this._renderColorItem('editorBg', 'Editor Background')}
                         ${this._renderColorItem('terminalBg', 'Terminal Background')}
                     </div>
                 </div>
                 
-                <div class="tc6-divider" style="opacity: 0.5; pointer-events: none; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
-                    <div class="tc6-section-title" style="color: var(--text-muted);">
+                <div class="tc6-section" style="opacity: 0.5; pointer-events: none;">
+                    <div class="tc6-section-title">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-                        Color Groups <span style="font-size: 10px; background: var(--bg-panel); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Coming Soon</span>
+                        Fine Tuning (Manual) <span style="font-size: 10px; background: var(--bg-panel); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Coming Soon</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Manual color tuning is temporarily disabled while we improve it.</p>
+                    <div class="tc6-color-grid">
+                        ${this._renderGroupColor('main', 'Main Colors', c.bgOceanDark || '#1a2530', 'sliders')}
+                        ${this._renderGroupColor('background', 'Background', c.editorBg || '#1e1e1e', 'moon')}
                     </div>
                 </div>
                 
-                <div class="tc6-divider" style="opacity: 0.5; pointer-events: none; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
-                    <div class="tc6-section-title" style="color: var(--text-muted);">
+                <div class="tc6-section" style="opacity: 0.5; pointer-events: none;">
+                    <div class="tc6-section-title">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                         Status Colors <span style="font-size: 10px; background: var(--bg-panel); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Coming Soon</span>
+                    </div>
+                    <div class="tc6-color-grid">
+                        ${this._renderColorItem('success', 'Success')}
+                        ${this._renderColorItem('error', 'Error')}
+                        ${this._renderColorItem('warning', 'Warning')}
                     </div>
                 </div>
             </div>
@@ -2040,10 +2184,10 @@ const ThemeCustomizer = {
                         ${this._renderColorItem('syntaxKeyword', 'Keywords')}
                         ${this._renderColorItem('syntaxString', 'Strings')}
                         ${this._renderColorItem('syntaxFunction', 'Functions')}
+                        ${this._renderColorItem('syntaxVariable', 'Output Streams (cout)')}
                         ${this._renderColorItem('syntaxType', 'Types')}
                         ${this._renderColorItem('syntaxNumber', 'Numbers')}
                         ${this._renderColorItem('syntaxComment', 'Comments')}
-                        ${this._renderColorItem('syntaxVariable', 'Variables')}
                     </div>
                 </div>
             </div>
@@ -2062,7 +2206,7 @@ const ThemeCustomizer = {
                                 </svg>
                             </button>
                             <button class="tc6-upload-btn" id="tc6-app-bg-btn">Upload</button>
-                            <button class="tc6-clear-btn" id="tc6-app-bg-clear">✕</button>
+                            <button class="tc6-clear-btn" id="tc6-app-bg-clear">âœ•</button>
                             <input type="file" id="tc6-app-bg-file" accept="image/*" style="display:none">
                         </div>
                     </div>
@@ -2094,7 +2238,7 @@ const ThemeCustomizer = {
                                 </svg>
                             </button>
                             <button class="tc6-upload-btn" id="tc6-editor-bg-btn">Upload</button>
-                            <button class="tc6-clear-btn" id="tc6-editor-bg-clear">✕</button>
+                            <button class="tc6-clear-btn" id="tc6-editor-bg-clear">âœ•</button>
                             <input type="file" id="tc6-editor-bg-file" accept="image/*" style="display:none">
                         </div>
                     </div>
@@ -2153,6 +2297,39 @@ const ThemeCustomizer = {
                         <input type="file" id="tc6-import-json-file" accept=".json" style="display:none">
                     </div>
                 </div>
+
+                <!-- JSON Editor Section (Merged into Advanced) -->
+                <div class="tc6-section" style="margin-top: 16px;">
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        Raw JSON Editor
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px;">Directly edit the theme source configuration.</p>
+                    
+                    <div style="position: relative;">
+                        <textarea id="tc6-json-editor" style="
+                            width: 100%; 
+                            height: 300px; 
+                            background: var(--bg-ocean-dark, #0f111a); 
+                            color: var(--text-primary, #e0f0ff); 
+                            border: 1px solid var(--border); 
+                            border-radius: 8px; 
+                            padding: 12px; 
+                            font-family: 'Fira Code', monospace; 
+                            font-size: 11px; 
+                            line-height: 1.5;
+                            resize: vertical;
+                            outline: none;
+                        " spellcheck="false">${JSON.stringify(this.workingTheme, null, 2)}</textarea>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 12px; justify-content: flex-end;">
+                            <button id="tc6-json-copy" class="tc6-btn-secondary" style="padding: 6px 12px; font-size: 11px;">Copy</button>
+                            <button id="tc6-json-apply" class="tc6-btn-primary" style="padding: 6px 16px; font-size: 11px;">
+                                Apply Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -2169,9 +2346,9 @@ const ThemeCustomizer = {
      */
     _renderGroupColor(groupId, label, currentColor, icon = '') {
         const icons = {
-            moon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+            moon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
             layers: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
-            star: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+            star: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
             type: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
             square: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>'
         };
@@ -2214,6 +2391,56 @@ const ThemeCustomizer = {
         if (editorBgUrl) {
             editorBgUrl.value = editorBg ? (editorBg.startsWith('data:') ? 'Image uploaded' : editorBg.substring(0, 40)) : '';
         }
+    },
+
+    /**
+     * Sync all color swatches in left panel with current workingTheme colors
+     * Called after color changes to keep UI in sync
+     */
+    _syncLeftPanelSwatches() {
+        if (!this.popup) return;
+        const c = this.workingTheme?.colors || {};
+
+        // Update group swatches (data-group attribute)
+        this.popup.querySelectorAll('.tc6-color-swatch[data-group]').forEach(swatch => {
+            const groupId = swatch.dataset.group;
+            let color = null;
+            switch (groupId) {
+                case 'background':
+                    color = c.editorBg || c.bgOceanDark;
+                    break;
+                case 'surface':
+                    color = c.bgSurface || c.bgPanel;
+                    break;
+                case 'accent':
+                    color = c.accent;
+                    break;
+                case 'text':
+                    color = c.textPrimary;
+                    break;
+                case 'border':
+                    color = c.border;
+                    break;
+                case 'status':
+                    color = c.success;
+                    break;
+                case 'syntax':
+                    color = c.syntaxKeyword;
+                    break;
+            }
+            if (color) {
+                swatch.style.background = color;
+            }
+        });
+
+        // Update individual color swatches (data-key attribute)
+        this.popup.querySelectorAll('.tc6-color-swatch[data-key]').forEach(swatch => {
+            const key = swatch.dataset.key;
+            const color = c[key];
+            if (color) {
+                swatch.style.background = color;
+            }
+        });
     },
 
     /**
@@ -2300,14 +2527,23 @@ const ThemeCustomizer = {
         const container = this.popup?.querySelector('#tc6-controls-content');
         if (!container) return;
 
-        // Color item clicks
         // Color item clicks - only for individual colors, not group colors
         container.querySelectorAll('.tc6-color-item:not(.tc6-group-color)').forEach(item => {
             item.addEventListener('click', () => {
+                // Remove active from all items
+                container.querySelectorAll('.tc6-color-item').forEach(i => i.classList.remove('tc6-color-active'));
+                // Add active to clicked item
+                item.classList.add('tc6-color-active');
+
                 const key = item.dataset.key;
                 const label = item.querySelector('label')?.textContent || key;
-                // Activate edit bar instead of showing old modal picker
+
+                // Feature change: Unify UI by using the Top Edit Bar even for sidebar clicks
+                // This prevents the "detached popup" issue and keeps interaction consistent
                 this._updateEditBar(key, label);
+
+                // Optional: Scroll preview to show the element if possible
+                // this._simulatePreviewClick(key);
             });
         });
 
@@ -2427,6 +2663,24 @@ const ThemeCustomizer = {
         this._bindSlider('#tc6-terminal-opacity', 'terminalOpacity', '%', '#tc6-terminal-opacity-val');
         this._bindSlider('#tc6-terminal-blur', 'terminalBgBlur', 'px', '#tc6-terminal-blur-val');
 
+        // Master Theme Generator Event
+        const generateBtn = container.querySelector('#tc6-generate-btn');
+        const masterInput = container.querySelector('#tc6-master-color');
+
+        if (generateBtn && masterInput) {
+            generateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const color = masterInput.value;
+                this._generateThemeFromMaster(color);
+            });
+
+            // Also update the fake color swatch when input changes
+            masterInput.addEventListener('input', (e) => {
+                const swatch = masterInput.nextElementSibling;
+                if (swatch) swatch.style.background = e.target.value;
+            });
+        }
+
         // Color group clicks - change multiple colors at once
         // Make entire row clickable, not just swatch
         container.querySelectorAll('.tc6-group-color').forEach(item => {
@@ -2434,67 +2688,259 @@ const ThemeCustomizer = {
             const groupId = item.dataset.group;
 
             const openPicker = () => {
-                const group = window.ColorRegistry?.getGroup(groupId);
-                if (!group) {
-                    console.warn('[Customizer] No group found:', groupId);
-                    return;
+                // Feature change: Click on sidebar group simulates clicking the element in preview
+                // This keeps the UI consistent (one way to edit) and syncs the top bar
+
+                // We need to find the "representative" key for this group to activate the edit bar
+                let representativeKey = null;
+                switch (groupId) {
+                    case 'main': representativeKey = 'bgOceanDark'; break;
+                    case 'background': representativeKey = 'editorBg'; break;
+                    case 'surface': representativeKey = 'bgPanel'; break;
+                    case 'accent': representativeKey = 'accent'; break;
+                    case 'text': representativeKey = 'textPrimary'; break;
+                    case 'border': representativeKey = 'border'; break;
+                    case 'status': representativeKey = 'success'; break;
+                    case 'syntax': representativeKey = 'syntaxKeyword'; break;
                 }
-                // Show color picker for group
-                this._showGroupColorPicker(groupId, group.label, swatch);
+
+                if (representativeKey) {
+                    // Highlight the group item
+                    container.querySelectorAll('.tc6-color-item').forEach(i => i.classList.remove('tc6-color-active'));
+                    // Note: Groups don't have .tc6-color-active styles usually, but we could add them if needed
+
+                    // Trigger the edit bar
+                    const groupLabel = item.querySelector('label')?.textContent || groupId;
+                    this._updateEditBar(representativeKey, groupLabel);
+                }
             };
 
             // Click on entire row
             item.addEventListener('click', openPicker);
         });
-    },
 
-    /**
-     * Show color picker for a color group
-     * When color changes, derives and applies all member colors
-     */
-    _showGroupColorPicker(groupId, label, targetEl) {
-        this._hideColorPicker();
 
-        // Get current base color for this group
-        const c = this.workingTheme?.colors || {};
-        let currentColor = '#888888';
 
-        switch (groupId) {
-            case 'background':
-                currentColor = c.editorBg || c.bgOceanDark || '#1a2530';
-                break;
-            case 'surface':
-                currentColor = c.bgPanel?.replace(/rgba?\([^)]+\)/, '') || '#2a3a4a';
-                // Extract hex from rgba if needed
-                if (currentColor.includes('rgba')) {
-                    currentColor = '#2a3a4a';
+        // JSON Editor Events
+        const jsonEditor = container.querySelector('#tc6-json-editor');
+        const jsonApply = container.querySelector('#tc6-json-apply');
+        const jsonCopy = container.querySelector('#tc6-json-copy');
+
+        if (jsonApply && jsonEditor) {
+            jsonApply.addEventListener('click', () => {
+                try {
+                    const newTheme = JSON.parse(jsonEditor.value);
+                    if (!newTheme || typeof newTheme !== 'object') throw new Error('Invalid JSON');
+
+                    // Validate basic structure
+                    if (!newTheme.name) newTheme.name = "Custom Theme";
+                    if (!newTheme.type) newTheme.type = "dark";
+                    if (!newTheme.colors) newTheme.colors = {};
+
+                    this.workingTheme = newTheme;
+                    this._renderControls();
+                    this._renderPreview();
+
+                    // Show success
+                    const originalText = jsonApply.textContent;
+                    jsonApply.textContent = 'Applied!';
+                    jsonApply.style.background = 'var(--success, #10b981)';
+                    setTimeout(() => {
+                        jsonApply.textContent = originalText;
+                        jsonApply.style.background = '';
+                    }, 2000);
+                } catch (e) {
+                    alert('Invalid JSON: ' + e.message);
                 }
-                break;
-            case 'accent':
-                currentColor = c.accent || '#88c9ea';
-                break;
-            case 'text':
-                currentColor = c.textPrimary || '#e0f0ff';
-                break;
-            case 'border':
-                currentColor = c.border || '#3a6075';
-                break;
-            case 'status':
-                currentColor = c.success || '#10b981';
-                break;
-            case 'syntax':
-                currentColor = c.syntaxKeyword || '#88c9ea';
-                break;
+            });
         }
 
-        // Create simple color picker for group
-        const picker = document.createElement('div');
-        picker.className = 'tc6-color-picker';
-        picker.id = 'tc6-active-picker';
-        picker.innerHTML = `
+        if (jsonCopy && jsonEditor) {
+            jsonCopy.addEventListener('click', () => {
+                jsonEditor.select();
+                document.execCommand('copy');
+
+                const originalText = jsonCopy.textContent;
+                jsonCopy.textContent = 'Copied!';
+                setTimeout(() => {
+                    jsonCopy.textContent = originalText;
+                }, 2000);
+            });
+        }
+    },
+_generateThemeFromMaster(masterColor) {
+        if (!masterColor) return;
+
+        console.log('Generating Kawaii theme from:', masterColor);
+        const c = this.workingTheme.colors;
+
+        // Helper: Hex to RGB
+        const hexToRgb = (hex) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : [0, 0, 0];
+        };
+
+        // Helper: RGB to Hex
+        const rgbToHex = (r, g, b) => { // Clamp values
+            r = Math.max(0, Math.min(255, Math.round(r)));
+            g = Math.max(0, Math.min(255, Math.round(g)));
+            b = Math.max(0, Math.min(255, Math.round(b)));
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        };
+
+        // Helper: RGB to HSL
+        const rgbToHsl = (r, g, b) => {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) { h = s = 0; } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [h, s, l];
+        };
+
+        // Helper: HSL to RGB
+        const hslToRgb = (h, s, l) => {
+            let r, g, b;
+            if (s === 0) { r = g = b = l; } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+            return [r * 255, g * 255, b * 255];
+        };
+
+        // "Kawaii" Logic:
+        // 1. Get Hue from master color.
+        // 2. Backgrounds: Deep, desaturated version of that Hue (tinted dark).
+        // 3. Accent: The master color (or slightly saturated).
+        // 4. Syntax: Pastels around the wheel.
+
+        const [r, g, b] = hexToRgb(masterColor);
+        const [h, s, l] = rgbToHsl(r, g, b);
+
+        // -- Backgrounds -- 
+        // Dark theme focus (Kawaii Dark)
+        // Hue: Same as master
+        // Saturation: Low-Medium (15-25%) to keep it tinted but clean
+        // Lightness: Very Low (10-15%) for main bg
+        const bgRgb = hslToRgb(h, 0.25, 0.12); // Main ocean
+        c.bgOceanDark = rgbToHex(...bgRgb);
+
+        c.bgOceanMedium = rgbToHex(...hslToRgb(h, 0.20, 0.16)); // Slightly lighter
+        c.bgPanel = rgbToHex(...hslToRgb(h, 0.20, 0.18));       // Panel
+        c.bgSurface = rgbToHex(...hslToRgb(h, 0.20, 0.22));     // Surface
+        c.editorBg = rgbToHex(...hslToRgb(h, 0.20, 0.10));      // Editor (Darker)
+        c.terminalBg = rgbToHex(...hslToRgb(h, 0.15, 0.08));    // Terminal (Darkest)
+
+        // -- Accent --
+        c.accent = masterColor; // Keep their choice
+
+        // -- Text --
+        // Tinted white (Hue matches master, very low sat, high light)
+        c.textPrimary = rgbToHex(...hslToRgb(h, 0.2, 0.95));
+        c.textSecondary = rgbToHex(...hslToRgb(h, 0.15, 0.70));
+        c.textMuted = rgbToHex(...hslToRgb(h, 0.15, 0.50));
+
+        // -- Border --
+        c.border = rgbToHex(...hslToRgb(h, 0.20, 0.30));
+
+        // -- Syntax (Pastel Rainbow) --
+        // Rotate hue for diversity, keep High Saturation & High Lightness for "Kawaii" pop
+        const pastelS = 0.9;
+        const pastelL = 0.85; // Very bright/pastel
+
+        c.syntaxKeyword = rgbToHex(...hslToRgb((h + 0.5) % 1, pastelS, pastelL)); // Opposite hue
+        c.syntaxString = '#9ef0e0'; // Fixed Mint (Kawaii staple)
+        c.syntaxFunction = rgbToHex(...hslToRgb((h + 0.1) % 1, pastelS, pastelL)); // Analogous
+        c.syntaxVariable = rgbToHex(...hslToRgb((h - 0.1 + 1) % 1, pastelS, pastelL)); // Analogous
+
+        // Fixed cute colors for others
+        c.syntaxNumber = '#ffccaa'; // Peach
+        c.syntaxType = '#ffb3ba';   // Pastel Pink
+        c.syntaxComment = rgbToHex(...hslToRgb(h, 0.1, 0.5)); // Muted base hue
+
+        // Status
+        c.success = '#a7f3d0'; // Pastel Green
+        c.error = '#fca5a5';   // Pastel Red
+        c.warning = '#fde68a'; // Pastel Yellow
+
+        // Apply
+        this._renderControls();
+        this._renderPreview();
+        this._renderPreview(); // Double render sometimes triggers reflow fix
+
+        // Notify
+        const terminal = this.popup.querySelector('.tc6-terminal-body');
+        if (terminal) {
+            terminal.innerHTML += `<div class="tc6-text-success">âœ¨ Kawaii Theme Generated! âœ¨</div>`;
+        }
+
+
+        /**
+         * Show color picker for a color group
+         * When color changes, derives and applies all member colors
+         */
+        _showGroupColorPicker(groupId, label, targetEl) {
+            this._hideColorPicker();
+
+            // Get current base color for this group
+            const c = this.workingTheme?.colors || {};
+            let currentColor = '#888888';
+
+            switch (groupId) {
+                case 'background':
+                    currentColor = c.editorBg || c.bgOceanDark || '#1a2530';
+                    break;
+                case 'surface':
+                    currentColor = c.bgPanel?.replace(/rgba?\([^)]+\)/, '') || '#2a3a4a';
+                    // Extract hex from rgba if needed
+                    if (currentColor.includes('rgba')) {
+                        currentColor = '#2a3a4a';
+                    }
+                    break;
+                case 'accent':
+                    currentColor = c.accent || '#88c9ea';
+                    break;
+                case 'text':
+                    currentColor = c.textPrimary || '#e0f0ff';
+                    break;
+                case 'border':
+                    currentColor = c.border || '#3a6075';
+                    break;
+                case 'status':
+                    currentColor = c.success || '#10b981';
+                    break;
+                case 'syntax':
+                    currentColor = c.syntaxKeyword || '#88c9ea';
+                    break;
+            }
+
+            // Create simple color picker for group
+            const picker = document.createElement('div');
+            picker.className = 'tc6-color-picker';
+            picker.id = 'tc6-active-picker';
+            picker.innerHTML = `
             <div class="tc6-picker-header">
                 <span class="tc6-picker-title">${label}</span>
-                <button class="tc6-picker-close">✕</button>
+                <button class="tc6-picker-close">âœ•</button>
             </div>
             <div class="tc6-picker-content">
                 <div class="tc6-picker-row">
@@ -2504,294 +2950,310 @@ const ThemeCustomizer = {
                         style="width: 80px; padding: 8px; font-family: monospace; text-transform: uppercase;">
                 </div>
                 <p style="font-size: 10px; color: var(--text-muted); margin: 8px 0 0;">
-                    Changes ${window.ColorRegistry?.getGroupMembers?.(groupId)?.length || 'multiple'} colors at once
+                    Changes ${ColorRegistry.getGroupMembers(groupId).length} colors at once
                 </p>
             </div>
         `;
 
-        // Position picker
-        const rect = targetEl.getBoundingClientRect();
-        const popupRect = this.popup?.getBoundingClientRect() || { left: 0, top: 0 };
-        picker.style.position = 'absolute';
-        picker.style.left = `${rect.left - popupRect.left}px`;
-        picker.style.top = `${rect.bottom - popupRect.top + 5}px`;
-        picker.style.zIndex = '10001';
+            // Position picker
+            const rect = targetEl.getBoundingClientRect();
+            const popupRect = this.popup?.getBoundingClientRect() || { left: 0, top: 0 };
+            picker.style.position = 'absolute';
+            picker.style.left = `${rect.left - popupRect.left}px`;
+            picker.style.top = `${rect.bottom - popupRect.top + 5}px`;
+            picker.style.zIndex = '10001';
 
-        this.popup?.appendChild(picker);
-        this.currentColorPicker = picker;
-        requestAnimationFrame(() => picker.classList.add('visible'));
+            this.popup?.appendChild(picker);
+            this.currentColorPicker = picker;
+            requestAnimationFrame(() => picker.classList.add('visible'));
 
-        // Event handlers
-        const colorInput = picker.querySelector('input[type="color"]');
-        const hexInput = picker.querySelector('#tc6-hex-input');
-        const swatch = picker.querySelector('.tc6-color-swatch');
-        const closeBtn = picker.querySelector('.tc6-picker-close');
+            // Event handlers
+            const colorInput = picker.querySelector('input[type="color"]');
+            const hexInput = picker.querySelector('#tc6-hex-input');
+            const swatch = picker.querySelector('.tc6-color-swatch');
+            const closeBtn = picker.querySelector('.tc6-picker-close');
 
-        const updateGroupColor = (newColor) => {
-            swatch.style.background = newColor;
-            hexInput.value = newColor.toUpperCase();
-            targetEl.style.background = newColor;
+            const updateGroupColor = (newColor) => {
+                // Update picker UI
+                swatch.style.background = newColor;
+                hexInput.value = newColor.toUpperCase();
+                targetEl.style.background = newColor;
 
-            // Derive all member colors using ColorRegistry
-            const derivedColors = window.ColorRegistry?.deriveGroupColors?.(groupId, newColor) || {};
+                // Pulse animation on swatch
+                targetEl.classList.remove('tc6-swatch-pulse');
+                void targetEl.offsetWidth; // Force reflow
+                targetEl.classList.add('tc6-swatch-pulse');
 
-            // Apply all derived colors to workingTheme
-            for (const [key, value] of Object.entries(derivedColors)) {
-                this._setColor(key, value);
+                // Derive all member colors using ColorRegistry
+                const derivedColors = ColorRegistry.deriveGroupColors(groupId, newColor);
+
+                // Apply all derived colors to workingTheme and inject to preview
+                if (!this.workingTheme.colors) this.workingTheme.colors = {};
+                for (const [key, value] of Object.entries(derivedColors)) {
+                    // Update workingTheme
+                    this.workingTheme.colors[key] = value;
+                    // Inject to preview immediately using ThemeTokens
+                    this._injectPreviewVariable(key, value);
+                }
+
+                // Update all related swatches in the left panel
+                this._syncLeftPanelSwatches();
+            };
+
+
+            colorInput.addEventListener('input', (e) => updateGroupColor(e.target.value));
+
+            hexInput.addEventListener('input', (e) => {
+                const val = e.target.value.replace(/[^0-9A-Fa-f#]/g, '');
+                if (val.length === 7 && val.startsWith('#')) {
+                    colorInput.value = val;
+                    updateGroupColor(val);
+                } else if (val.length === 6 && !val.startsWith('#')) {
+                    const color = '#' + val;
+                    colorInput.value = color;
+                    updateGroupColor(color);
+                }
+            });
+
+            closeBtn.addEventListener('click', () => this._hideColorPicker());
+        },
+
+        /**
+         * Bind slider
+         */
+        _bindSlider(inputSel, key, suffix, valSel) {
+            const input = this.popup?.querySelector(inputSel);
+            const valEl = this.popup?.querySelector(valSel);
+
+            input?.addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                if (valEl) valEl.textContent = val + suffix;
+                if (!this.workingTheme.colors) this.workingTheme.colors = {};
+                this.workingTheme.colors[key] = val;
+                this._updateBgStyles();
+            });
+        },
+
+        /**
+         * Handle file upload
+         */
+        _handleFileUpload(e, key) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (!this.workingTheme.colors) this.workingTheme.colors = {};
+
+                // Remove old background element to prevent overlap issues
+                if (key === 'appBackground') {
+                    const oldBg = this.popup?.querySelector('.tc6-ide-bg');
+                    if (oldBg) oldBg.remove();
+                } else if (key === 'editorBackground') {
+                    const oldEditorBg = this.popup?.querySelector('.tc6-editor-bg');
+                    if (oldEditorBg) oldEditorBg.remove();
+                }
+
+                // Set new background
+                this.workingTheme.colors[key] = ev.target.result;
+                this._updateBgHints();
+
+                // Force immediate re-render to show new background
+                this._renderPreview();
+
+                // Re-setup drag handlers since DOM was replaced
+                this._setupBgDrag();
+
+                // Reset file input to allow re-uploading the same file
+                e.target.value = '';
+            };
+            reader.readAsDataURL(file);
+        },
+
+
+        /**
+         * Setup background drag
+         */
+        _setupBgDrag() {
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (!wrapper) return;
+
+            // Cleanup old handlers if exist
+            if (wrapper._dragHandlers) {
+                this._cleanupBgDrag();
             }
 
-            this._renderPreview();
-        };
+            let isDragging = false;
+            let isDraggingEditor = false;
+            let startX = 0, startY = 0;
+            let startPosX = 50, startPosY = 50;
 
-        colorInput.addEventListener('input', (e) => updateGroupColor(e.target.value));
+            // Double-click handler
+            const dblClickHandler = (e) => {
+                const editorBg = wrapper.querySelector('.tc6-editor-bg');
+                const appBg = wrapper.querySelector('.tc6-ide-bg');
+                const clickedEditor = editorBg && e.target.closest('.tc6-editor-wrapper');
 
-        hexInput.addEventListener('input', (e) => {
-            const val = e.target.value.replace(/[^0-9A-Fa-f#]/g, '');
-            if (val.length === 7 && val.startsWith('#')) {
-                colorInput.value = val;
-                updateGroupColor(val);
-            } else if (val.length === 6 && !val.startsWith('#')) {
-                const color = '#' + val;
-                colorInput.value = color;
-                updateGroupColor(color);
-            }
-        });
+                // If already in drag mode, toggle it off
+                if (this.bgDragMode) {
+                    this._exitDragMode();
+                    return;
+                }
 
-        closeBtn.addEventListener('click', () => this._hideColorPicker());
-    },
+                if (clickedEditor && this.workingTheme?.colors?.editorBackground) {
+                    // Drag editor background
+                    this.bgDragMode = true;
+                    isDraggingEditor = true;
+                } else if (appBg && this.workingTheme?.colors?.appBackground) {
+                    // Drag app background
+                    this.bgDragMode = true;
+                    isDraggingEditor = false;
+                } else {
+                    return;
+                }
 
-    /**
-     * Bind slider
-     */
-    _bindSlider(inputSel, key, suffix, valSel) {
-        const input = this.popup?.querySelector(inputSel);
-        const valEl = this.popup?.querySelector(valSel);
+                wrapper.style.cursor = this.bgDragMode ? 'grab' : 'default';
 
-        input?.addEventListener('input', (e) => {
-            const val = parseInt(e.target.value);
-            if (valEl) valEl.textContent = val + suffix;
-            if (!this.workingTheme.colors) this.workingTheme.colors = {};
-            this.workingTheme.colors[key] = val;
-            this._updateBgStyles();
-        });
-    },
+                // Update UI to show drag mode state - dim other elements
+                const ide = wrapper.querySelector('.tc6-ide');
+                const content = wrapper.querySelector('.tc6-ide-content');
+                if (ide) ide.classList.toggle('tc6-drag-mode', this.bgDragMode);
+                if (content) content.classList.toggle('tc6-dimmed', this.bgDragMode);
 
-    /**
-     * Handle file upload
-     */
-    _handleFileUpload(e, key) {
-        const file = e.target.files?.[0];
-        if (!file) return;
+                // Show/hide drag mode indicator
+                this._updateDragModeHint();
+            };
 
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            if (!this.workingTheme.colors) this.workingTheme.colors = {};
+            // Mouse down handler
+            const mouseDownHandler = (e) => {
+                if (!this.bgDragMode) return;
 
-            // Remove old background element to prevent overlap issues
-            if (key === 'appBackground') {
-                const oldBg = this.popup?.querySelector('.tc6-ide-bg');
-                if (oldBg) oldBg.remove();
-            } else if (key === 'editorBackground') {
-                const oldEditorBg = this.popup?.querySelector('.tc6-editor-bg');
-                if (oldEditorBg) oldEditorBg.remove();
-            }
+                const editorBg = wrapper.querySelector('.tc6-editor-bg');
+                const appBg = wrapper.querySelector('.tc6-ide-bg');
+                const clickedEditor = editorBg && e.target.closest('.tc6-editor-wrapper');
 
-            // Set new background
-            this.workingTheme.colors[key] = ev.target.result;
-            this._updateBgHints();
+                if (clickedEditor && this.workingTheme?.colors?.editorBackground) {
+                    isDraggingEditor = true;
+                    e.preventDefault();
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
 
-            // Force immediate re-render to show new background
-            this._renderPreview();
+                    const pos = this.workingTheme.colors.editorBgPosition || 'center center';
+                    const [h, v] = pos.split(' ').map(p => {
+                        if (p === 'center') return 50;
+                        if (p === 'left' || p === 'top') return 0;
+                        if (p === 'right' || p === 'bottom') return 100;
+                        return parseInt(p) || 50;
+                    });
+                    startPosX = h;
+                    startPosY = v || 50;
+                } else if (appBg && this.workingTheme?.colors?.appBackground) {
+                    isDraggingEditor = false;
+                    e.preventDefault();
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
 
-            // Re-setup drag handlers since DOM was replaced
-            this._setupBgDrag();
+                    const pos = this.workingTheme.colors.bgPosition || 'center center';
+                    const [h, v] = pos.split(' ').map(p => {
+                        if (p === 'center') return 50;
+                        if (p === 'left' || p === 'top') return 0;
+                        if (p === 'right' || p === 'bottom') return 100;
+                        return parseInt(p) || 50;
+                    });
+                    startPosX = h;
+                    startPosY = v || 50;
+                } else {
+                    return;
+                }
 
-            // Reset file input to allow re-uploading the same file
-            e.target.value = '';
-        };
-        reader.readAsDataURL(file);
-    },
+                wrapper.style.cursor = 'grabbing';
+            };
 
+            // Mouse move handler
+            const mouseMoveHandler = (e) => {
+                if (!isDragging) return;
 
-    /**
-     * Setup background drag
-     */
-    _setupBgDrag() {
-        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-        if (!wrapper) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                const rect = wrapper.getBoundingClientRect();
 
-        // Cleanup old handlers if exist
-        if (wrapper._dragHandlers) {
-            this._cleanupBgDrag();
-        }
+                // Calculate position even if mouse is outside wrapper
+                const newX = Math.max(0, Math.min(100, startPosX - (dx / rect.width) * 100));
+                const newY = Math.max(0, Math.min(100, startPosY - (dy / rect.height) * 100));
 
-        let isDragging = false;
-        let isDraggingEditor = false;
-        let startX = 0, startY = 0;
-        let startPosX = 50, startPosY = 50;
+                if (isDraggingEditor) {
+                    this.workingTheme.colors.editorBgPosition = `${Math.round(newX)}% ${Math.round(newY)}%`;
+                } else {
+                    this.workingTheme.colors.bgPosition = `${Math.round(newX)}% ${Math.round(newY)}%`;
+                }
+                this._updateBgStyles();
+            };
 
-        // Double-click handler
-        const dblClickHandler = (e) => {
-            const editorBg = wrapper.querySelector('.tc6-editor-bg');
-            const appBg = wrapper.querySelector('.tc6-ide-bg');
-            const clickedEditor = editorBg && e.target.closest('.tc6-editor-wrapper');
+            // Mouse up handler
+            const mouseUpHandler = () => {
+                if (isDragging) {
+                    isDragging = false;
+                    // Don't exit drag mode automatically - user must click confirm button
+                    if (wrapper) wrapper.style.cursor = this.bgDragMode ? 'grab' : 'default';
+                }
+            };
 
-            // If already in drag mode, toggle it off
+            // Store handlers for cleanup
+            wrapper._dragHandlers = {
+                dblclick: dblClickHandler,
+                mousedown: mouseDownHandler,
+                mousemove: mouseMoveHandler,
+                mouseup: mouseUpHandler
+            };
+
+            wrapper.addEventListener('dblclick', dblClickHandler);
+            wrapper.addEventListener('mousedown', mouseDownHandler);
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        },
+
+        /**
+         * Cleanup drag handlers
+         */
+        _cleanupBgDrag() {
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (!wrapper || !wrapper._dragHandlers) return;
+
+            const handlers = wrapper._dragHandlers;
+            wrapper.removeEventListener('dblclick', handlers.dblclick);
+            wrapper.removeEventListener('mousedown', handlers.mousedown);
+            document.removeEventListener('mousemove', handlers.mousemove);
+            document.removeEventListener('mouseup', handlers.mouseup);
+
+            wrapper._dragHandlers = null;
+        },
+
+        /**
+         * Update drag mode hint
+         */
+        _updateDragModeHint() {
+            const editBar = this.popup?.querySelector('#tc6-edit-bar');
+            if (!editBar) return;
+
             if (this.bgDragMode) {
-                this._exitDragMode();
-                return;
-            }
+                const editorBg = this.popup?.querySelector('.tc6-editor-bg');
+                const isEditor = editorBg && this.workingTheme?.colors?.editorBackground;
 
-            if (clickedEditor && this.workingTheme?.colors?.editorBackground) {
-                // Drag editor background
-                this.bgDragMode = true;
-                isDraggingEditor = true;
-            } else if (appBg && this.workingTheme?.colors?.appBackground) {
-                // Drag app background
-                this.bgDragMode = true;
-                isDraggingEditor = false;
-            } else {
-                return;
-            }
-
-            wrapper.style.cursor = this.bgDragMode ? 'grab' : 'default';
-
-            // Update UI to show drag mode state - dim other elements
-            const ide = wrapper.querySelector('.tc6-ide');
-            const content = wrapper.querySelector('.tc6-ide-content');
-            if (ide) ide.classList.toggle('tc6-drag-mode', this.bgDragMode);
-            if (content) content.classList.toggle('tc6-dimmed', this.bgDragMode);
-
-            // Show/hide drag mode indicator
-            this._updateDragModeHint();
-        };
-
-        // Mouse down handler
-        const mouseDownHandler = (e) => {
-            if (!this.bgDragMode) return;
-
-            const editorBg = wrapper.querySelector('.tc6-editor-bg');
-            const appBg = wrapper.querySelector('.tc6-ide-bg');
-            const clickedEditor = editorBg && e.target.closest('.tc6-editor-wrapper');
-
-            if (clickedEditor && this.workingTheme?.colors?.editorBackground) {
-                isDraggingEditor = true;
-                e.preventDefault();
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-
-                const pos = this.workingTheme.colors.editorBgPosition || 'center center';
-                const [h, v] = pos.split(' ').map(p => {
-                    if (p === 'center') return 50;
-                    if (p === 'left' || p === 'top') return 0;
-                    if (p === 'right' || p === 'bottom') return 100;
-                    return parseInt(p) || 50;
-                });
-                startPosX = h;
-                startPosY = v || 50;
-            } else if (appBg && this.workingTheme?.colors?.appBackground) {
-                isDraggingEditor = false;
-                e.preventDefault();
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-
-                const pos = this.workingTheme.colors.bgPosition || 'center center';
-                const [h, v] = pos.split(' ').map(p => {
-                    if (p === 'center') return 50;
-                    if (p === 'left' || p === 'top') return 0;
-                    if (p === 'right' || p === 'bottom') return 100;
-                    return parseInt(p) || 50;
-                });
-                startPosX = h;
-                startPosY = v || 50;
-            } else {
-                return;
-            }
-
-            wrapper.style.cursor = 'grabbing';
-        };
-
-        // Mouse move handler
-        const mouseMoveHandler = (e) => {
-            if (!isDragging) return;
-
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            const rect = wrapper.getBoundingClientRect();
-
-            // Calculate position even if mouse is outside wrapper
-            const newX = Math.max(0, Math.min(100, startPosX - (dx / rect.width) * 100));
-            const newY = Math.max(0, Math.min(100, startPosY - (dy / rect.height) * 100));
-
-            if (isDraggingEditor) {
-                this.workingTheme.colors.editorBgPosition = `${Math.round(newX)}% ${Math.round(newY)}%`;
-            } else {
-                this.workingTheme.colors.bgPosition = `${Math.round(newX)}% ${Math.round(newY)}%`;
-            }
-            this._updateBgStyles();
-        };
-
-        // Mouse up handler
-        const mouseUpHandler = () => {
-            if (isDragging) {
-                isDragging = false;
-                // Don't exit drag mode automatically - user must click confirm button
-                if (wrapper) wrapper.style.cursor = this.bgDragMode ? 'grab' : 'default';
-            }
-        };
-
-        // Store handlers for cleanup
-        wrapper._dragHandlers = {
-            dblclick: dblClickHandler,
-            mousedown: mouseDownHandler,
-            mousemove: mouseMoveHandler,
-            mouseup: mouseUpHandler
-        };
-
-        wrapper.addEventListener('dblclick', dblClickHandler);
-        wrapper.addEventListener('mousedown', mouseDownHandler);
-        document.addEventListener('mousemove', mouseMoveHandler);
-        document.addEventListener('mouseup', mouseUpHandler);
-    },
-
-    /**
-     * Cleanup drag handlers
-     */
-    _cleanupBgDrag() {
-        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-        if (!wrapper || !wrapper._dragHandlers) return;
-
-        const handlers = wrapper._dragHandlers;
-        wrapper.removeEventListener('dblclick', handlers.dblclick);
-        wrapper.removeEventListener('mousedown', handlers.mousedown);
-        document.removeEventListener('mousemove', handlers.mousemove);
-        document.removeEventListener('mouseup', handlers.mouseup);
-
-        wrapper._dragHandlers = null;
-    },
-
-    /**
-     * Update drag mode hint
-     */
-    _updateDragModeHint() {
-        const editBar = this.popup?.querySelector('#tc6-edit-bar');
-        if (!editBar) return;
-
-        if (this.bgDragMode) {
-            const editorBg = this.popup?.querySelector('.tc6-editor-bg');
-            const isEditor = editorBg && this.workingTheme?.colors?.editorBackground;
-
-            // Replace edit bar content with drag mode notification
-            editBar.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px;">
+                // Replace edit bar content with drag mode notification
+                editBar.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
-                        </svg>
-                        <span style="font-weight: 700; color: #2a5a75; font-size: 13px; font-family: 'Fredoka', sans-serif;">Drag Mode Active</span>
-                        <span style="color: #5a8a95; font-size: 12px;">Drag to reposition ${isEditor ? 'editor' : 'app'} background</span>
+                        <div style="background: var(--bg-ocean-medium); color: #fff; padding: 6px; border-radius: 8px;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+                            </svg>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 700; color: var(--text-primary); font-size: 13px; font-family: 'Fredoka', sans-serif;">Drag Mode Active</span>
+                            <span style="color: var(--text-secondary); font-size: 11px;">Drag to reposition ${isEditor ? 'editor' : 'app'} background</span>
+                        </div>
                     </div>
                     <button class="tc6-drag-confirm-btn" id="tc6-drag-confirm">
                         <svg viewBox="0 0 24 24" width="14" height="14">
@@ -2802,21 +3264,21 @@ const ThemeCustomizer = {
                 </div>
             `;
 
-            // Apply kawaii gradient styling
-            editBar.style.background = 'linear-gradient(135deg, #FFD93D 0%, #FFA96C 100%)';
-            editBar.style.border = '3px solid #FFB84D';
-            editBar.style.boxShadow = '4px 4px 0 rgba(255, 184, 77, 0.3)';
+                // Apply standard clean styling
+                editBar.style.background = 'var(--bg-input, #ffffff)';
+                editBar.style.borderBottom = '2px solid var(--accent, #88c9ea)';
+                editBar.style.boxShadow = '0 4px 12px rgba(136, 201, 234, 0.15)';
 
-            // Bind confirm button
-            const confirmBtn = editBar.querySelector('#tc6-drag-confirm');
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', () => {
-                    this._exitDragMode();
-                });
-            }
-        } else {
-            // Restore original edit bar (new structure with always visible undo/redo)
-            editBar.innerHTML = `
+                // Bind confirm button
+                const confirmBtn = editBar.querySelector('#tc6-drag-confirm');
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', () => {
+                        this._exitDragMode();
+                    });
+                }
+            } else {
+                // Restore original edit bar (new structure with always visible undo/redo)
+                editBar.innerHTML = `
                 <!-- Undo/Redo - Always visible -->
                 <div class="tc6-edit-actions">
                     <button class="tc6-edit-action" id="tc6-undo" disabled title="Undo (Ctrl+Z)">
@@ -2835,7 +3297,7 @@ const ThemeCustomizer = {
                 <div class="tc6-edit-divider"></div>
                 
                 <!-- Idle hint -->
-                <span class="tc6-edit-hint" id="tc6-edit-hint">Click any element to edit • Double-click background to drag</span>
+                <span class="tc6-edit-hint" id="tc6-edit-hint">Click any element to edit â€¢ Double-click background to drag</span>
                 
                 <!-- Active element info (hidden initially) -->
                 <div class="tc6-edit-element" id="tc6-edit-element" style="display: none;">
@@ -2854,96 +3316,166 @@ const ThemeCustomizer = {
                 </div>
             `;
 
-            // Reset styles
-            editBar.style.background = '';
-            editBar.style.border = '';
-            editBar.style.boxShadow = '';
+                // Reset styles
+                editBar.style.background = '';
+                editBar.style.border = '';
+                editBar.style.boxShadow = '';
 
-            // Re-bind undo/redo handlers
-            this.popup.querySelector('#tc6-undo')?.addEventListener('click', () => this._undo());
-            this.popup.querySelector('#tc6-redo')?.addEventListener('click', () => this._redo());
-            this._updateHistoryButtons();
-        }
-    },
+                // Re-bind undo/redo handlers
+                this.popup.querySelector('#tc6-undo')?.addEventListener('click', () => this._undo());
+                this.popup.querySelector('#tc6-redo')?.addEventListener('click', () => this._redo());
+                this._updateHistoryButtons();
+            }
+        },
 
-    /**
-     * Exit drag mode
-     */
-    _exitDragMode() {
-        this.bgDragMode = false;
-        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-        if (wrapper) {
-            wrapper.style.cursor = 'default';
-        }
+        /**
+         * Exit drag mode
+         */
+        _exitDragMode() {
+            this.bgDragMode = false;
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (wrapper) {
+                wrapper.style.cursor = 'default';
+            }
 
-        const ide = this.popup?.querySelector('.tc6-ide');
-        const content = this.popup?.querySelector('.tc6-ide-content');
-        if (ide) ide.classList.remove('tc6-drag-mode');
-        if (content) content.classList.remove('tc6-dimmed');
+            const ide = this.popup?.querySelector('.tc6-ide');
+            const content = this.popup?.querySelector('.tc6-ide-content');
+            if (ide) ide.classList.remove('tc6-drag-mode');
+            if (content) content.classList.remove('tc6-dimmed');
 
-        this._updateDragModeHint();
-    },
+            this._updateDragModeHint();
+        },
 
-    /**
-     * Lightweight update for background styles only
-     */
-    _updateBgStyles() {
-        const bgEl = this.popup?.querySelector('.tc6-ide-bg');
-        const editorBgEl = this.popup?.querySelector('.tc6-editor-bg');
+        /**
+         * Lightweight update for background styles only
+         */
+        _updateBgStyles() {
+            const bgEl = this.popup?.querySelector('.tc6-ide-bg');
+            const editorBgEl = this.popup?.querySelector('.tc6-editor-bg');
 
-        const c = this.workingTheme?.colors || {};
+            const c = this.workingTheme?.colors || {};
 
-        if (bgEl && c.appBackground) {
-            // Use double quotes for data URLs to avoid escaping issues
-            const bgUrl = c.appBackground.startsWith('data:')
-                ? `url("${c.appBackground}")`
-                : `url('${c.appBackground.replace(/'/g, "\\'")}')`;
-            bgEl.style.backgroundImage = bgUrl;
-            bgEl.style.backgroundPosition = c.bgPosition || 'center center';
-            bgEl.style.opacity = (c.bgOpacity ?? 50) / 100;
-            const appBlur = c.bgBlur ?? 0;
-            bgEl.style.filter = appBlur > 0 ? `blur(${appBlur}px)` : 'none';
-        }
+            if (bgEl && c.appBackground) {
+                // Use double quotes for data URLs to avoid escaping issues
+                const bgUrl = c.appBackground.startsWith('data:')
+                    ? `url("${c.appBackground}")`
+                    : `url('${c.appBackground.replace(/'/g, "\\'")}')`;
+                bgEl.style.backgroundImage = bgUrl;
+                bgEl.style.backgroundPosition = c.bgPosition || 'center center';
+                bgEl.style.opacity = (c.bgOpacity ?? 50) / 100;
+                const appBlur = c.bgBlur ?? 0;
+                bgEl.style.filter = appBlur > 0 ? `blur(${appBlur}px)` : 'none';
+            }
 
-        if (editorBgEl && c.editorBackground) {
-            // Use double quotes for data URLs to avoid escaping issues
-            const bgUrl = c.editorBackground.startsWith('data:')
-                ? `url("${c.editorBackground}")`
-                : `url('${c.editorBackground.replace(/'/g, "\\'")}')`;
-            editorBgEl.style.backgroundImage = bgUrl;
-            editorBgEl.style.backgroundPosition = c.editorBgPosition || 'center center';
-            const blur = c.editorBgBlur ?? 0;
-            editorBgEl.style.opacity = (c.editorBgOpacity ?? 15) / 100;
-            editorBgEl.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
-            // Extend inset to prevent blur edge artifacts
-            editorBgEl.style.inset = blur > 0 ? `-${blur}px` : '0';
-        }
-    },
+            if (editorBgEl && c.editorBackground) {
+                // Use double quotes for data URLs to avoid escaping issues
+                const bgUrl = c.editorBackground.startsWith('data:')
+                    ? `url("${c.editorBackground}")`
+                    : `url('${c.editorBackground.replace(/'/g, "\\'")}')`;
+                editorBgEl.style.backgroundImage = bgUrl;
+                editorBgEl.style.backgroundPosition = c.editorBgPosition || 'center center';
+                const blur = c.editorBgBlur ?? 0;
+                editorBgEl.style.opacity = (c.editorBgOpacity ?? 15) / 100;
+                editorBgEl.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
+                // Extend inset to prevent blur edge artifacts
+                editorBgEl.style.inset = blur > 0 ? `-${blur}px` : '0';
+            }
 
-    /**
-     * Render live preview
-     */
-    _renderPreview() {
-        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-        if (!wrapper) return;
+            // Terminal Effects
+            const terminalEl = this.popup?.querySelector('.tc6-terminal');
+            if (terminalEl) {
+                // Update opacity
+                const termOpacity = (c.terminalOpacity ?? 100) / 100;
+                // We need to apply this to the background color's alpha channel if possible,
+                // or use opacity property (but that affects text).
+                // Better approach: Update the background color variable or style to include alpha.
+                // Since .tc6-terminal uses var(--terminal-bg), we might need to manipulate the element's style directly
+                // if we want to change opacity independently of the color definition.
 
-        const c = this.workingTheme?.colors || {};
-        const syn = this._getSyntaxColors();
+                // However, typical implementation for "Terminal Opacity" often means the background layer opacity.
+                // Let's assume we update the rgba value of the background.
+                // But here, for simplicity and performance in preview, let's use direct style manipulation
+                // assuming the element has a background color set.
 
-        const appBg = c.appBackground || '';
-        const editorBg = c.editorBackground || '';
-        const bgOpacity = (c.bgOpacity ?? 50) / 100;
-        const bgBlur = c.bgBlur ?? 0;
-        const bgPos = c.bgPosition || 'center center';
-        const editorOpacity = (c.editorBgOpacity ?? 15) / 100;
-        const editorBlur = c.editorBgBlur ?? 0;
+                // Actually, we should check if there's a blur filter to apply to the backdrop or element
+                const termBlur = c.terminalBgBlur ?? 0;
+                if (termBlur > 0) {
+                    terminalEl.style.backdropFilter = `blur(${termBlur}px)`;
+                    terminalEl.style.webkitBackdropFilter = `blur(${termBlur}px)`;
+                } else {
+                    terminalEl.style.backdropFilter = 'none';
+                    terminalEl.style.webkitBackdropFilter = 'none';
+                }
 
-        // Get editor background position
-        const editorBgPos = c.editorBgPosition || 'center center';
+                // For opacity, if we want to affect background only, we need to ensure the color has alpha.
+                // Here we'll rely on the fact that if user changes opacity, they might be expecting 
+                // the whole container or just bg. Let's try to update the backgroundColor with alpha.
+                const termBg = this._getColor('terminalBg');
+                if (termBg) {
+                    const rgb = this._hexToRgb(termBg);
+                    if (rgb) {
+                        terminalEl.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${termOpacity})`;
+                    }
+                }
+            }
+        },
 
-        wrapper.innerHTML = `
+        /**
+         * Simulate clicking an element in the preview
+         * Used to sync sidebar selection with preview edit bar
+         */
+        _simulatePreviewClick(groupId) {
+            // Map groups to representative elements in the preview
+            const groupMap = {
+                'background': 'editorBg', // Editor background
+                'surface': 'bgPanel-input', // Input Panel
+                'accent': 'accent', // Accent badge
+                'text': 'textPrimary', // File menu item
+                'border': 'bgPanel-input', // Input Panel (has border)
+                'status': 'success', // Success indicator
+                'syntax': 'syntaxKeyword' // Keyword
+            };
+
+            const key = groupMap[groupId];
+            if (!key) return;
+
+            // Find the element
+            const el = this.popup?.querySelector(`.tc6-clickable[data-key="${key}"]`);
+            if (el) {
+                // Trigger the click handler
+                // We can't just use el.click() because we want to trigger our internal logic
+                // defined in _renderPreview listeners.
+                // So we manually dispatch a click event.
+                el.click();
+
+                // Scroll to element if needed? (Optional)
+            }
+        },
+
+        /**
+         * Render live preview
+         */
+        _renderPreview() {
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (!wrapper) return;
+
+            const c = this.workingTheme?.colors || {};
+            const syn = this._getSyntaxColors();
+
+            const appBg = c.appBackground || '';
+            const editorBg = c.editorBackground || '';
+            const bgOpacity = (c.bgOpacity ?? 50) / 100;
+            const bgBlur = c.bgBlur ?? 0;
+            const bgPos = c.bgPosition || 'center center';
+            const editorOpacity = (c.editorBgOpacity ?? 15) / 100;
+            const editorBlur = c.editorBgBlur ?? 0;
+
+            // Get editor background position
+            const editorBgPos = c.editorBgPosition || 'center center';
+
+            wrapper.innerHTML = `
             <div class="tc6-ide ${this.bgDragMode ? 'tc6-drag-mode' : ''}">
-                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${bgBlur > 0 ? 'blur(' + bgBlur + 'px)' : 'none'};"></div>` : ''}
+                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${bgBlur > 0 ? 'blur(' + bgBlur + 'px)' : 'none'}; pointer-events: none;"></div>` : ''}
                 
                 <div class="tc6-ide-content ${this.bgDragMode ? 'tc6-dimmed' : ''}">
                     <!-- Header - Uses CSS variable via tc6-header-main class -->
@@ -2994,9 +3526,7 @@ const ThemeCustomizer = {
                                     </div>
                                     <div class="tc6-code-line">
                                         <span class="tc6-line-number">5</span>
-                                        <span>    </span>
-                                        <span class="tc6-clickable tc6-syntax-variable" data-key="syntaxVariable" data-label="Variables">cout</span>
-                                        <span> &lt;&lt; </span>
+                                        <span>    cout &lt;&lt; </span>
                                         <span class="tc6-syntax-string">"hello"</span>;
                                     </div>
                                     <div class="tc6-code-line">
@@ -3031,9 +3561,8 @@ const ThemeCustomizer = {
                             <div class="tc6-clickable tc6-ui-element tc6-panel-input" 
                                  data-key="bgPanel-input" data-label="Input Panel">
                                 <div class="tc6-panel-title tc6-accent-text">INPUT</div>
-                                <div class="tc6-clickable tc6-input-area" 
-                                     data-key="bgInput" data-label="Input Background">
-                                    Nhập dữ liệu test...
+                                <div class="tc6-input-area" style="background: transparent;">
+                                    Nháº­p dá»¯ liá»‡u test...
                                 </div>
                             </div>
                             
@@ -3042,7 +3571,7 @@ const ThemeCustomizer = {
                                  data-key="bgPanel-expected" data-label="Expected Panel">
                                 <div class="tc6-panel-title tc6-accent-text">EXPECTED</div>
                                 <div class="tc6-panel-body tc6-text-muted">
-                                    Kết quả mong đợi...
+                                    Káº¿t quáº£ mong Ä‘á»£i...
                                 </div>
                             </div>
                         </div>
@@ -3076,70 +3605,79 @@ const ThemeCustomizer = {
             </div>
         `;
 
-        // Cleanup old drag handlers before re-render
-        this._cleanupBgDrag();
+            // Cleanup old drag handlers before re-render
+            this._cleanupBgDrag();
 
-        // Re-setup drag handlers after re-render (important!)
-        this._setupBgDrag();
+            // Re-setup drag handlers after re-render (important!)
+            this._setupBgDrag();
 
-        // Bind click handlers for color editing
-        wrapper.querySelectorAll('.tc6-clickable[data-key]').forEach(el => {
-            el.addEventListener('click', (e) => {
+            // Bind click handlers for color editing
+            // Bind click handlers for color editing using Event Delegation
+            // This is more robust against DOM updates and ensures clicks are always caught
+            wrapper.onclick = (e) => {
+                const el = e.target.closest('.tc6-clickable[data-key]');
+                if (!el) return;
+
+                e.preventDefault();
                 e.stopPropagation();
                 if (this.bgDragMode) return; // Don't activate edit bar in drag mode
+
+                // Forcefully close any open color picker first (Fixes persistence issue)
+                this._hideColorPicker();
+
                 const key = el.dataset.key;
                 const label = el.dataset.label || key;
+
                 // Activate edit bar (Canva-style floating toolbar)
                 this._updateEditBar(key, label);
-            });
-        });
+            };
 
-        // Inject all CSS variables onto preview wrapper for live preview
-        this._injectAllPreviewVariables();
-    },
+            // Inject all CSS variables onto preview wrapper for live preview
+            this._injectAllPreviewVariables();
+        },
 
-    /**
-     * Color presets for quick selection
-     */
-    _getColorPresets() {
-        return {
-            material: ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'],
-            tailwind: ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899'],
-            pastel: ['#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#D4BAFF', '#FFBAF3', '#FFC9BA', '#FFEEBA', '#C9FFD4', '#BAF3FF', '#E1BAFF', '#FFB3E6', '#FFD4BA', '#FFFABA', '#B3FFD9'],
-            kawaii: ['#FFB6D9', '#FFC9E5', '#FFD4F0', '#E5CCFF', '#D9B3FF', '#C9BAFF', '#B3E5FF', '#BAF3FF', '#B3FFF0', '#C9FFE5', '#FFFABA', '#FFEEBA', '#FFDFBA', '#FFC9D9', '#FFB3CC', '#FFE5F0']
-        };
-    },
+        /**
+         * Color presets for quick selection
+         */
+        _getColorPresets() {
+            return {
+                material: ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'],
+                tailwind: ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899'],
+                pastel: ['#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#D4BAFF', '#FFBAF3', '#FFC9BA', '#FFEEBA', '#C9FFD4', '#BAF3FF', '#E1BAFF', '#FFB3E6', '#FFD4BA', '#FFFABA', '#B3FFD9'],
+                kawaii: ['#FFB6D9', '#FFC9E5', '#FFD4F0', '#E5CCFF', '#D9B3FF', '#C9BAFF', '#B3E5FF', '#BAF3FF', '#B3FFF0', '#C9FFE5', '#FFFABA', '#FFEEBA', '#FFDFBA', '#FFC9D9', '#FFB3CC', '#FFE5F0']
+            };
+        },
 
-    /**
-     * Show advanced color picker with customization options
-     */
-    _showColorPicker(key, label, targetEl) {
-        this._hideColorPicker();
-        this._activeColorKey = key;
+        /**
+         * Show advanced color picker with customization options
+         */
+        _showColorPicker(key, label, targetEl) {
+            this._hideColorPicker();
+            this._activeColorKey = key;
 
-        const currentColor = this._getColor(key);
-        const hexColor = this._toHex(currentColor);
-        const c = this.workingTheme?.colors || {};
+            const currentColor = this._getColor(key);
+            const hexColor = this._toHex(currentColor);
+            const c = this.workingTheme?.colors || {};
 
-        // Get current values
-        const currentOpacity = this._getOpacity(key) ?? 100;
-        const currentBorder = c.border || '#333';
+            // Get current values
+            const currentOpacity = this._getOpacity(key) ?? 100;
+            const currentBorder = c.border || '#333';
 
-        // Highlight the selected element
-        targetEl.classList.add('tc6-color-active');
+            // Highlight the selected element
+            targetEl.classList.add('tc6-color-active');
 
-        // Get presets
-        const presets = this._getColorPresets();
+            // Get presets
+            const presets = this._getColorPresets();
 
-        const picker = document.createElement('div');
-        picker.className = 'tc6-color-picker';
-        picker.innerHTML = `
+            const picker = document.createElement('div');
+            picker.className = 'tc6-color-picker';
+            picker.innerHTML = `
             <div class="tc6-color-picker-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border, #444);">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div class="tc6-color-swatch" style="background: ${hexColor};"></div>
                     <span class="tc6-color-label" style="font-size: 11px; font-weight: 600; color: var(--text-primary, #fff);">${label}</span>
                 </div>
-                <button class="tc6-color-picker-close">✕</button>
+                <button class="tc6-color-picker-close">âœ•</button>
             </div>
             
             <div class="tc6-picker-tabs">
@@ -3191,469 +3729,624 @@ const ThemeCustomizer = {
                 <!-- Advanced Tab -->
                 <div class="tc6-picker-tab-panel" data-panel="advanced" style="display: none;">
                     <div class="tc6-picker-section">
-                        <div class="tc6-picker-section-title">Opacity</div>
-                        <div class="tc6-picker-row">
-                            <span class="tc6-picker-label">Alpha:</span>
-                            <div class="tc6-picker-control">
-                                <input type="range" min="0" max="100" value="${currentOpacity}" id="tc6-opacity-slider" style="flex: 1;">
-                                <span class="tc6-picker-value" id="tc6-opacity-value">${currentOpacity}%</span>
-                            </div>
-                        </div>
+                         <p style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px 0;">
+                            No advanced options available for this element.
+                        </p>
                     </div>
-                    ${this._supportsBorder(key) ? `
-                    <div class="tc6-picker-section">
-                        <div class="tc6-picker-section-title">Border</div>
-                        <div class="tc6-picker-row">
-                            <span class="tc6-picker-label">Color:</span>
-                            <input type="color" id="tc6-border-color" value="${this._toHex(currentBorder)}" style="width: 40px; height: 28px; border: none; border-radius: 4px; cursor: pointer;">
-                            <input type="text" class="tc6-input" id="tc6-border-hex" value="${this._toHex(currentBorder).toUpperCase()}" style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 4px 6px;">
-                        </div>
-                        <div class="tc6-picker-row">
-                            <span class="tc6-picker-label">Width:</span>
-                            <div class="tc6-picker-control">
-                                <input type="range" min="0" max="5" value="${c.borderWidth || 1}" id="tc6-border-width" style="flex: 1;">
-                                <span class="tc6-picker-value" id="tc6-border-width-value">${c.borderWidth || 1}px</span>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
         `;
 
-        document.body.appendChild(picker);
-        this.currentColorPicker = picker;
-        this._activeTargetEl = targetEl;
+            document.body.appendChild(picker);
+            this.currentColorPicker = picker;
+            this._activeTargetEl = targetEl;
 
-        // Position near target element
-        const rect = targetEl.getBoundingClientRect();
-        let left = rect.left + rect.width / 2 - 140;
-        let top = rect.bottom + 8;
+            // Position near target element
+            const rect = targetEl.getBoundingClientRect();
+            let left = rect.left + rect.width / 2 - 140;
+            let top = rect.bottom + 8;
 
-        if (left < 10) left = 10;
-        if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
-        if (top + 200 > window.innerHeight) top = rect.top - 210;
+            if (left < 10) left = 10;
+            if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
+            if (top + 200 > window.innerHeight) top = rect.top - 210;
 
-        picker.style.left = left + 'px';
-        picker.style.top = top + 'px';
+            picker.style.left = left + 'px';
+            picker.style.top = top + 'px';
 
-        requestAnimationFrame(() => picker.classList.add('visible'));
+            requestAnimationFrame(() => picker.classList.add('visible'));
 
-        // Tab switching
-        picker.querySelectorAll('.tc6-picker-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const tabName = tab.dataset.tab;
-                picker.querySelectorAll('.tc6-picker-tab').forEach(t => t.classList.remove('active'));
-                picker.querySelectorAll('.tc6-picker-tab-panel').forEach(p => p.style.display = 'none');
-                tab.classList.add('active');
-                picker.querySelector(`[data-panel="${tabName}"]`).style.display = 'block';
+            // Tab switching
+            picker.querySelectorAll('.tc6-picker-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    picker.querySelectorAll('.tc6-picker-tab').forEach(t => t.classList.remove('active'));
+                    picker.querySelectorAll('.tc6-picker-tab-panel').forEach(p => p.style.display = 'none');
+                    tab.classList.add('active');
+                    picker.querySelector(`[data-panel="${tabName}"]`).style.display = 'block';
+                });
             });
-        });
 
-        // Color input - live update
-        const colorInput = picker.querySelector('input[type="color"]');
-        const hexInput = picker.querySelector('#tc6-hex-input');
-        const swatch = picker.querySelector('.tc6-color-swatch');
+            // Color input - live update
+            const colorInput = picker.querySelector('input[type="color"]');
+            const hexInput = picker.querySelector('#tc6-hex-input');
+            const swatch = picker.querySelector('.tc6-color-swatch');
 
-        const updateColor = (newColor) => {
-            swatch.style.background = newColor;
-            hexInput.value = newColor.toUpperCase();
-            this._setColor(key, newColor);
-            this._updatePreviewWithoutRerender(key);
-        };
+            const updateColor = (newColor) => {
+                swatch.style.background = newColor;
+                hexInput.value = newColor.toUpperCase();
+                // Update workingTheme directly
+                if (!this.workingTheme.colors) this.workingTheme.colors = {};
+                this.workingTheme.colors[key] = newColor;
+                // Inject to preview immediately
+                this._injectPreviewVariable(key, newColor);
+                // Update the swatch in left panel if it exists
+                this._syncLeftPanelSwatches();
+            };
 
-        colorInput.addEventListener('input', (e) => {
-            updateColor(e.target.value);
-        });
 
-        hexInput.addEventListener('input', (e) => {
-            const val = e.target.value.replace(/[^0-9A-Fa-f]/g, '');
-            if (val.length === 6) {
-                const color = '#' + val;
-                colorInput.value = color;
-                updateColor(color);
-            }
-        });
-
-        // Opacity slider
-        const opacitySlider = picker.querySelector('#tc6-opacity-slider');
-        const opacityValue = picker.querySelector('#tc6-opacity-value');
-        if (opacitySlider) {
-            opacitySlider.addEventListener('input', (e) => {
-                const val = parseInt(e.target.value);
-                opacityValue.textContent = val + '%';
-                this._setOpacity(key, val);
-                this._updatePreviewWithoutRerender(key);
+            colorInput.addEventListener('input', (e) => {
+                updateColor(e.target.value);
             });
-        }
 
-        // Border controls
-        if (this._supportsBorder(key)) {
-            const borderColorInput = picker.querySelector('#tc6-border-color');
-            const borderHexInput = picker.querySelector('#tc6-border-hex');
-            const borderWidthSlider = picker.querySelector('#tc6-border-width');
-            const borderWidthValue = picker.querySelector('#tc6-border-width-value');
+            hexInput.addEventListener('input', (e) => {
+                const val = e.target.value.replace(/[^0-9A-Fa-f]/g, '');
+                if (val.length === 6) {
+                    const color = '#' + val;
+                    colorInput.value = color;
+                    updateColor(color);
+                }
+            });
 
-            if (borderColorInput) {
-                borderColorInput.addEventListener('input', (e) => {
-                    const color = e.target.value;
-                    borderHexInput.value = color.toUpperCase();
-                    if (!this.workingTheme.colors) this.workingTheme.colors = {};
-                    this.workingTheme.colors.border = color;
+            // Opacity slider
+            const opacitySlider = picker.querySelector('#tc6-opacity-slider');
+            const opacityValue = picker.querySelector('#tc6-opacity-value');
+            if (opacitySlider) {
+                opacitySlider.addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value);
+                    opacityValue.textContent = val + '%';
+                    this._setOpacity(key, val);
                     this._updatePreviewWithoutRerender(key);
                 });
             }
 
-            if (borderHexInput) {
-                borderHexInput.addEventListener('input', (e) => {
-                    const val = e.target.value.replace(/[^0-9A-Fa-f]/g, '');
-                    if (val.length === 6) {
-                        const color = '#' + val;
-                        borderColorInput.value = color;
+            // Border controls
+            if (this._supportsBorder(key)) {
+                const borderColorInput = picker.querySelector('#tc6-border-color');
+                const borderHexInput = picker.querySelector('#tc6-border-hex');
+                const borderWidthSlider = picker.querySelector('#tc6-border-width');
+                const borderWidthValue = picker.querySelector('#tc6-border-width-value');
+
+                if (borderColorInput) {
+                    borderColorInput.addEventListener('input', (e) => {
+                        const color = e.target.value;
+                        borderHexInput.value = color.toUpperCase();
                         if (!this.workingTheme.colors) this.workingTheme.colors = {};
                         this.workingTheme.colors.border = color;
                         this._updatePreviewWithoutRerender(key);
-                    }
-                });
+                    });
+                }
+
+                if (borderHexInput) {
+                    borderHexInput.addEventListener('input', (e) => {
+                        const val = e.target.value.replace(/[^0-9A-Fa-f]/g, '');
+                        if (val.length === 6) {
+                            const color = '#' + val;
+                            borderColorInput.value = color;
+                            if (!this.workingTheme.colors) this.workingTheme.colors = {};
+                            this.workingTheme.colors.border = color;
+                            this._updatePreviewWithoutRerender(key);
+                        }
+                    });
+                }
+
+                if (borderWidthSlider) {
+                    borderWidthSlider.addEventListener('input', (e) => {
+                        const val = parseInt(e.target.value);
+                        borderWidthValue.textContent = val + 'px';
+                        if (!this.workingTheme.colors) this.workingTheme.colors = {};
+                        this.workingTheme.colors.borderWidth = val;
+                        this._updatePreviewWithoutRerender(key);
+                    });
+                }
             }
 
-            if (borderWidthSlider) {
-                borderWidthSlider.addEventListener('input', (e) => {
-                    const val = parseInt(e.target.value);
-                    borderWidthValue.textContent = val + 'px';
-                    if (!this.workingTheme.colors) this.workingTheme.colors = {};
-                    this.workingTheme.colors.borderWidth = val;
-                    this._updatePreviewWithoutRerender(key);
+            // Preset swatch clicks
+            picker.querySelectorAll('.tc6-preset-swatch').forEach(swatch => {
+                swatch.addEventListener('click', () => {
+                    const color = swatch.dataset.color;
+                    colorInput.value = color;
+                    updateColor(color);
                 });
-            }
-        }
-
-        // Preset swatch clicks
-        picker.querySelectorAll('.tc6-preset-swatch').forEach(swatch => {
-            swatch.addEventListener('click', () => {
-                const color = swatch.dataset.color;
-                colorInput.value = color;
-                updateColor(color);
             });
-        });
 
-        picker.querySelector('.tc6-color-picker-close').addEventListener('click', () => this._hideColorPicker());
+            picker.querySelector('.tc6-color-picker-close').addEventListener('click', () => this._hideColorPicker());
 
-        // Close on outside click
-        this._pickerClickHandler = (e) => {
-            if (!picker.contains(e.target) && !targetEl.contains(e.target)) {
-                this._hideColorPicker();
-            }
-        };
-        setTimeout(() => {
-            document.addEventListener('click', this._pickerClickHandler);
-        }, 100);
-    },
+            // Close on outside click
+            this._pickerClickHandler = (e) => {
+                if (!picker.contains(e.target) && !targetEl.contains(e.target)) {
+                    this._hideColorPicker();
+                }
+            };
+            setTimeout(() => {
+                document.addEventListener('click', this._pickerClickHandler);
+            }, 100);
+        },
 
-    /**
-     * Check if element supports border customization
-     */
-    _supportsBorder(key) {
-        // Elements that can have borders (including variants)
-        const borderableKeys = [
-            'bgPanel', 'bgPanel-problems', 'bgPanel-input', 'bgPanel-expected',
-            'bgInput',
-            'editorBg',
-            'bgHeader', 'bgHeader-main', 'bgHeader-statusbar'
-        ];
-        return borderableKeys.includes(key);
-    },
+        /**
+         * Check if element supports border customization
+         */
+        _supportsBorder(key) {
+            // Elements that can have borders (including variants)
+            const borderableKeys = [
+                'bgPanel', 'bgPanel-problems', 'bgPanel-input', 'bgPanel-expected',
+                'bgInput',
+                'editorBg',
+                'bgHeader', 'bgHeader-main', 'bgHeader-statusbar'
+            ];
+            return borderableKeys.includes(key);
+        },
 
-    /**
-     * Get opacity for a color key
-     * Uses exact key (e.g., 'bgPanel-inputOpacity') not normalized base key
-     */
-    _getOpacity(key) {
-        const c = this.workingTheme?.colors || {};
-        // Use exact key for opacity (e.g., 'bgPanel-input' → 'bgPanel-inputOpacity')
-        const opacityKey = key + 'Opacity';
-        return c[opacityKey];
-    },
+        /**
+         * Get opacity for a color key
+         * Uses exact key (e.g., 'bgPanel-inputOpacity') not normalized base key
+         */
+        _getOpacity(key) {
+            const c = this.workingTheme?.colors || {};
+            // Use exact key for opacity (e.g., 'bgPanel-input' â†’ 'bgPanel-inputOpacity')
+            const opacityKey = key + 'Opacity';
+            return c[opacityKey];
+        },
 
-    /**
-     * Set opacity for a color key
-     * Uses exact key for variant-specific opacity values
-     */
-    _setOpacity(key, value) {
-        if (!this.workingTheme.colors) this.workingTheme.colors = {};
-        // Use exact key (e.g., 'bgPanel-input' → 'bgPanel-inputOpacity')
-        const opacityKey = key + 'Opacity';
-        this.workingTheme.colors[opacityKey] = value;
-    },
+        /**
+         * Set opacity for a color key
+         * Uses exact key for variant-specific opacity values
+         */
+        _setOpacity(key, value) {
+            if (!this.workingTheme.colors) this.workingTheme.colors = {};
+            // Use exact key (e.g., 'bgPanel-input' â†’ 'bgPanel-inputOpacity')
+            const opacityKey = key + 'Opacity';
+            this.workingTheme.colors[opacityKey] = value;
+        },
 
-    /**
-     * Update preview without full re-render (preserves editor background)
-     * Rewrote to avoid fallback which causes visual conflicts
-     */
-    _updatePreviewWithoutRerender(key) {
-        // Map base keys to all their variants
-        const keyVariants = this._getKeyVariants(key);
+        /**
+         * Update preview without full re-render (preserves editor background)
+         * Rewrote to avoid fallback which causes visual conflicts
+         */
+        _updatePreviewWithoutRerender(key) {
+            // Fix for Issue 3: Live Preview CSS Variable Synchronization Errors
+            // Instead of blindly updating all variants, we must respect inheritance rules.
+            // If a child variant (e.g. bgPanel-expected) has its OWN color set,
+            // updating the parent (bgPanel) should NOT overwrite the child in the preview.
 
-        const c = this.workingTheme?.colors || {};
-        const color = this._getColor(key);
+            const c = this.workingTheme?.colors || {};
+            const color = this._getColor(key);
 
-        // Find all elements matching this key or its variants
-        let elements = [];
-        keyVariants.forEach(variantKey => {
-            const found = this.popup?.querySelectorAll(`[data-key="${variantKey}"]`);
-            if (found && found.length > 0) {
-                elements.push(...Array.from(found));
-            }
-        });
+            // 1. Update the main element(s) for this key
+            this._applyColorToElements(key, color);
 
-        // Update all found elements
-        elements.forEach(el => {
-            // Check what type of color property this element uses
-            const computedStyle = el.style;
+            // 2. Check for functionality-based variants (inheritance)
+            // Using ThemeTokens if available to get accurate inheritance map
+            const inheritance = window.ThemeTokens?.inheritance || {
+                'bgHeader-main': 'bgHeader',
+                'bgHeader-statusbar': 'bgHeader',
+                'bgPanel-problems': 'bgPanel',
+                'bgPanel-input': 'bgPanel',
+                'bgPanel-expected': 'bgPanel'
+            };
 
-            // Update colors appropriately based on element type
-            if (key.startsWith('text') || key.startsWith('syntax')) {
-                // Text color keys - update color property
-                el.style.color = color;
-            } else if (key === 'accent' || key === 'success' || key === 'error' || key === 'warning') {
-                // Status/accent colors - update background for indicators, color for text
-                if (el.classList.contains('tc6-clickable') && el.textContent) {
-                    // Text element with accent color
-                    if (el.style.background || el.style.backgroundColor) {
-                        el.style.backgroundColor = color;
+            // Find keys that inherit from the current key and update them IF they don't have their own value
+            Object.entries(inheritance).forEach(([childKey, parentKey]) => {
+                if (parentKey === key) {
+                    // Check if child has explicit value
+                    if (!c[childKey]) {
+                        // No explicit value, so it inherits. Update it with parent's new color.
+                        this._applyColorToElements(childKey, color);
+                    }
+                }
+            });
+
+            // Always update background styles to keep them in sync
+            this._updateBgStyles();
+        },
+
+        /**
+         * Helper to apply color to elements of a specific key
+         */
+        _applyColorToElements(key, color) {
+            const elements = this.popup?.querySelectorAll(`[data-key="${key}"]`);
+            if (!elements) return;
+
+            const c = this.workingTheme?.colors || {};
+
+            elements.forEach(el => {
+                if (key.startsWith('text') || key.startsWith('syntax')) {
+                    el.style.color = color;
+                } else if (key === 'accent' || key === 'success' || key === 'error' || key === 'warning') {
+                    if (el.classList.contains('tc6-clickable') && el.textContent) {
+                        if (el.style.background || el.style.backgroundColor) {
+                            el.style.backgroundColor = color;
+                        } else {
+                            el.style.color = color;
+                        }
                     } else {
-                        el.style.color = color;
+                        el.style.backgroundColor = color;
                     }
                 } else {
-                    el.style.backgroundColor = color;
-                }
-            } else {
-                // Background colors - apply with opacity if needed
-                const opacity = this._getOpacity(key);
-                if (opacity !== undefined && opacity < 100) {
-                    const rgb = this._hexToRgb(color);
-                    if (rgb) {
-                        el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity / 100})`;
+                    // Backgrounds
+                    const opacity = this._getOpacity(key);
+                    if (opacity !== undefined && opacity < 100) {
+                        const rgb = this._hexToRgb(color);
+                        if (rgb) {
+                            el.style.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity / 100})`;
+                        }
+                    } else {
+                        el.style.backgroundColor = color;
                     }
-                } else {
-                    el.style.backgroundColor = color;
-                }
 
-                // Update border if supported
-                if (this._supportsBorder(key) && c.border) {
-                    el.style.borderColor = c.border;
-                    if (c.borderWidth) {
-                        el.style.borderWidth = c.borderWidth + 'px';
+                    if (this._supportsBorder(key) && c.border) {
+                        el.style.borderColor = c.border;
+                        if (c.borderWidth) {
+                            el.style.borderWidth = c.borderWidth + 'px';
+                        }
                     }
                 }
+            });
+        },
+
+        /**
+         * Get all key variants for a given key
+         * Maps base keys like 'bgHeader' to all their variants like ['bgHeader-main', 'bgHeader-statusbar']
+         */
+        _getKeyVariants(key) {
+            const keyMap = {
+                'bgHeader': ['bgHeader-main', 'bgHeader-statusbar'],
+                'bgHeader-main': ['bgHeader-main'],
+                'bgHeader-statusbar': ['bgHeader-statusbar'],
+                'bgPanel': ['bgPanel-problems', 'bgPanel-input', 'bgPanel-expected'],
+                'bgPanel-problems': ['bgPanel-problems'],
+                'bgPanel-input': ['bgPanel-input'],
+                'bgPanel-expected': ['bgPanel-expected']
+            };
+
+            // Return mapped variants or just the key itself if no mapping exists
+            return keyMap[key] || [key];
+        },
+
+        /**
+         * Convert hex to RGB
+         */
+        _hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        },
+
+        /**
+         * Hide color picker
+         */
+        _hideColorPicker() {
+            if (this.currentColorPicker) {
+                this.currentColorPicker.remove();
+                this.currentColorPicker = null;
             }
-        });
-
-        // Always update background styles to keep them in sync
-        this._updateBgStyles();
-    },
-
-    /**
-     * Get all key variants for a given key
-     * Maps base keys like 'bgHeader' to all their variants like ['bgHeader-main', 'bgHeader-statusbar']
-     */
-    _getKeyVariants(key) {
-        const keyMap = {
-            'bgHeader': ['bgHeader-main', 'bgHeader-statusbar'],
-            'bgHeader-main': ['bgHeader-main'],
-            'bgHeader-statusbar': ['bgHeader-statusbar'],
-            'bgPanel': ['bgPanel-problems', 'bgPanel-input', 'bgPanel-expected'],
-            'bgPanel-problems': ['bgPanel-problems'],
-            'bgPanel-input': ['bgPanel-input'],
-            'bgPanel-expected': ['bgPanel-expected']
-        };
-
-        // Return mapped variants or just the key itself if no mapping exists
-        return keyMap[key] || [key];
-    },
-
-    /**
-     * Convert hex to RGB
-     */
-    _hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : null;
-    },
-
-    /**
-     * Hide color picker
-     */
-    _hideColorPicker() {
-        if (this.currentColorPicker) {
-            this.currentColorPicker.remove();
-            this.currentColorPicker = null;
-        }
-        if (this._activeTargetEl) {
-            this._activeTargetEl.classList.remove('tc6-color-active');
-            this._activeTargetEl = null;
-        }
-        if (this._pickerClickHandler) {
-            document.removeEventListener('click', this._pickerClickHandler);
-            this._pickerClickHandler = null;
-        }
-        this._activeColorKey = null;
-    },
-
-    /**
-     * Update edit bar - Switch between idle and active states
-     * @param {string|null} elementKey - Color key (null = idle state)
-     * @param {string} elementLabel - Display label for element
-     */
-    /**
-     * Update edit bar - Switch between idle and active states
-     * @param {string|null} elementKey - Color key (null = idle state)
-     * @param {string} elementLabel - Display label for element
-     */
-    _updateEditBar(elementKey, elementLabel) {
-        const editBar = this.popup?.querySelector('#tc6-edit-bar');
-        if (!editBar) {
-            console.warn('[Customizer] Edit bar not found');
-            return;
-        }
-
-        const hintEl = editBar.querySelector('#tc6-edit-hint');
-        const elementEl = editBar.querySelector('#tc6-edit-element');
-
-        if (!elementKey) {
-            // Switch to idle state - show hint, hide element
-            if (hintEl) hintEl.style.display = 'inline';
-            if (elementEl) elementEl.style.display = 'none';
+            if (this._activeTargetEl) {
+                this._activeTargetEl.classList.remove('tc6-color-active');
+                this._activeTargetEl = null;
+            }
+            if (this._pickerClickHandler) {
+                document.removeEventListener('click', this._pickerClickHandler);
+                this._pickerClickHandler = null;
+            }
             this._activeColorKey = null;
-            return;
-        }
+        },
 
-        // Switch to active state - hide hint, show element
-        this._activeColorKey = elementKey;
-
-        // Check if this key belongs to a group
-        const groupId = window.ColorRegistry?.getGroupForKey(elementKey);
-        const group = groupId ? window.ColorRegistry?.getGroup(groupId) : null;
-
-        const displayLabel = group ? `${group.label} (${elementLabel})` : elementLabel;
-
-        if (hintEl) hintEl.style.display = 'none';
-        if (elementEl) {
-            elementEl.style.display = 'flex';
-
-            // Update element name
-            const nameEl = elementEl.querySelector('#tc6-edit-name');
-            if (nameEl) nameEl.textContent = displayLabel;
-
-            // Update color preview
-            const colorPreview = elementEl.querySelector('#tc6-edit-color');
-            if (colorPreview) {
-                const color = this._getColor(elementKey);
-                colorPreview.style.background = color;
-
-                // Click handler for color dropdown
-                colorPreview.onclick = (e) => {
-                    e.stopPropagation();
-                    // Always use individual color picker (Color Groups feature is Coming Soon)
-                    this._showColorDropdown(elementKey, elementLabel, colorPreview);
-                };
+        /**
+         * Update edit bar - Switch between idle and active states
+         * @param {string|null} elementKey - Color key (null = idle state)
+         * @param {string} elementLabel - Display label for element
+         */
+        /**
+         * Update edit bar - Switch between idle and active states
+         * @param {string|null} elementKey - Color key (null = idle state)
+         * @param {string} elementLabel - Display label for element
+         */
+        _updateEditBar(elementKey, elementLabel) {
+            const editBar = this.popup?.querySelector('#tc6-edit-bar');
+            if (!editBar) {
+                console.warn('[Customizer] Edit bar not found');
+                return;
             }
 
-            // Render property icons
-            const propertiesContainer = elementEl.querySelector('#tc6-edit-properties');
-            if (propertiesContainer) {
-                propertiesContainer.innerHTML = '';
-                const properties = this._renderPropertyIcons(elementKey);
-                properties.forEach(prop => {
-                    const btn = document.createElement('button');
-                    btn.className = 'tc6-edit-prop-btn';
-                    btn.title = prop.label;
-                    btn.innerHTML = prop.icon;
-                    btn.onclick = (e) => {
+            const hintEl = editBar.querySelector('#tc6-edit-hint');
+            const elementEl = editBar.querySelector('#tc6-edit-element');
+
+            if (!elementKey) {
+                // Switch to idle state - show hint, hide element
+                if (hintEl) hintEl.style.display = 'inline';
+                if (elementEl) elementEl.style.display = 'none';
+                this._activeColorKey = null;
+                return;
+            }
+
+            // Switch to active state - hide hint, show element
+            this._activeColorKey = elementKey;
+
+            // Check if this key belongs to a group
+            const groupId = window.ColorRegistry?.getGroupForKey(elementKey);
+            const group = groupId ? window.ColorRegistry?.getGroup(groupId) : null;
+
+            const displayLabel = group ? `${group.label} (${elementLabel})` : elementLabel;
+
+            if (hintEl) hintEl.style.display = 'none';
+            if (elementEl) {
+                elementEl.style.display = 'flex';
+
+                // Update element name
+                const nameEl = elementEl.querySelector('#tc6-edit-name');
+                if (nameEl) nameEl.textContent = displayLabel;
+
+                // Update color preview
+                const colorPreview = elementEl.querySelector('#tc6-edit-color');
+                if (colorPreview) {
+                    const color = this._getColor(elementKey);
+                    colorPreview.style.background = color;
+
+                    // Click handler for color dropdown
+                    colorPreview.onclick = (e) => {
                         e.stopPropagation();
-                        this._showPropertyPopover(prop.property, prop.getValue(), btn);
+                        const useGroupPicker = !!(group && group.baseKey && elementKey === group.baseKey);
+                        if (useGroupPicker) {
+                            // Only use group picker when editing the group's base key
+                            this._showGroupColorPicker(groupId, group.label, colorPreview);
+                        } else {
+                            // Default to individual picker to avoid unintended group-wide changes
+                            this._showColorDropdown(elementKey, elementLabel, colorPreview);
+                        }
                     };
-                    propertiesContainer.appendChild(btn);
-                });
+                }
+
+                // Render property icons
+                const propertiesContainer = elementEl.querySelector('#tc6-edit-properties');
+                if (propertiesContainer) {
+                    propertiesContainer.innerHTML = '';
+                    const properties = this._renderPropertyIcons(elementKey);
+                    properties.forEach(prop => {
+                        const btn = document.createElement('button');
+                        btn.className = 'tc6-edit-prop-btn';
+                        btn.title = prop.label;
+                        btn.innerHTML = prop.icon;
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            this._showPropertyPopover(prop.property, prop.getValue(), btn);
+                        };
+                        propertiesContainer.appendChild(btn);
+                    });
+                }
+
+                // Close button handler
+                const closeBtn = elementEl.querySelector('#tc6-edit-close');
+                if (closeBtn) {
+                    closeBtn.onclick = () => this._updateEditBar(null);
+                }
             }
+        },
 
-            // Close button handler
-            const closeBtn = elementEl.querySelector('#tc6-edit-close');
-            if (closeBtn) {
-                closeBtn.onclick = () => this._updateEditBar(null);
-            }
-        }
-    },
+        /**
+         * Render property icons based on element type
+         * @param {string} elementKey - Color key
+         * @returns {Array} Array of property objects
+         */
+        _renderPropertyIcons(elementKey) {
+            const properties = [];
 
-    /**
-     * Render property icons based on element type
-     * @param {string} elementKey - Color key
-     * @returns {Array} Array of property objects
-     */
-    _renderPropertyIcons(elementKey) {
-        const properties = [];
-
-        // Opacity control (for all elements)
-        properties.push({
-            icon: '<span style="font-size: 16px; font-weight: 700;">α</span>',
-            property: 'opacity',
-            label: 'Opacity',
-            getValue: () => this._getOpacity(elementKey) ?? 100
-        });
-
-        // Blur control (for backgrounds and terminal - acrylic effect)
-        if (elementKey === 'appBackground' || elementKey === 'editorBackground' || elementKey === 'terminalBg') {
+            // Opacity control (for all elements)
             properties.push({
-                icon: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                icon: '<span style="font-size: 16px; font-weight: 700;">Î±</span>',
+                property: 'opacity',
+                label: 'Opacity',
+                getValue: () => this._getOpacity(elementKey) ?? 100
+            });
+
+            // Blur control (for backgrounds and terminal - acrylic effect)
+            if (elementKey === 'appBackground' || elementKey === 'editorBackground' || elementKey === 'terminalBg') {
+                properties.push({
+                    icon: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
                     <circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity="0.3"/>
                 </svg>`,
-                property: 'blur',
-                label: 'Blur (Acrylic)',
-                getValue: () => {
-                    const c = this.workingTheme?.colors || {};
-                    if (elementKey === 'appBackground') return c.bgBlur ?? 0;
-                    if (elementKey === 'editorBackground') return c.editorBgBlur ?? 0;
-                    if (elementKey === 'terminalBg') return c.terminalBgBlur ?? 0;
-                    return 0;
-                }
-            });
-        }
+                    property: 'blur',
+                    label: 'Blur (Acrylic)',
+                    getValue: () => {
+                        const c = this.workingTheme?.colors || {};
+                        if (elementKey === 'appBackground') return c.bgBlur ?? 0;
+                        if (elementKey === 'editorBackground') return c.editorBgBlur ?? 0;
+                        if (elementKey === 'terminalBg') return c.terminalBgBlur ?? 0;
+                        return 0;
+                    }
+                });
+            }
 
-        // Border control (for supported elements)
-        if (this._supportsBorder(elementKey)) {
-            properties.push({
-                icon: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            // Border control (for supported elements)
+            if (this._supportsBorder(elementKey)) {
+                properties.push({
+                    icon: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
                     <rect x="4" y="4" width="16" height="16" rx="2"/>
                 </svg>`,
-                property: 'border',
-                label: 'Border Width',
-                getValue: () => this.workingTheme?.colors?.borderWidth ?? 1
+                    property: 'border',
+                    label: 'Border Width',
+                    getValue: () => this.workingTheme?.colors?.borderWidth ?? 1
+                });
+            }
+
+            return properties;
+        },
+
+        /**
+         * Show individual color picker for a single color key (from left panel)
+         * @param {string} key - Color key
+         * @param {string} label - Display label
+         * @param {HTMLElement} swatchEl - The swatch element in the left panel
+         * @param {HTMLElement} itemEl - The parent color item element
+         */
+        _showIndividualColorPicker(key, label, swatchEl, itemEl) {
+            this._hideColorPicker();
+            this._activeColorKey = key;
+
+            const currentColor = this._getColor(key);
+            const hexColor = this._toHex(currentColor);
+
+            const picker = document.createElement('div');
+            picker.className = 'tc6-color-picker';
+            picker.id = 'tc6-active-picker';
+            picker.innerHTML = `
+            <div class="tc6-picker-header">
+                <span class="tc6-picker-title">${label}</span>
+                <button class="tc6-picker-close">âœ•</button>
+            </div>
+            <div class="tc6-picker-content">
+                <div class="tc6-picker-row">
+                    <div class="tc6-color-swatch" style="background: ${hexColor}; width: 40px; height: 40px;"></div>
+                    <input type="color" value="${hexColor}" style="width: 60px; height: 40px; border: none; cursor: pointer;">
+                    <input type="text" id="tc6-hex-input" value="${hexColor.toUpperCase()}" maxlength="7" 
+                        style="width: 80px; padding: 8px; font-family: monospace; text-transform: uppercase;">
+                </div>
+            </div>
+        `;
+
+            // Position picker next to the item
+            const rect = itemEl.getBoundingClientRect();
+            const popupRect = this.popup?.getBoundingClientRect() || { left: 0, top: 0 };
+            picker.style.position = 'absolute';
+            picker.style.left = `${rect.right - popupRect.left + 10}px`;
+            picker.style.top = `${rect.top - popupRect.top}px`;
+            picker.style.zIndex = '10001';
+
+            this.popup?.appendChild(picker);
+            this.currentColorPicker = picker;
+            requestAnimationFrame(() => picker.classList.add('visible'));
+
+            // Event handlers
+            const colorInput = picker.querySelector('input[type="color"]');
+            const hexInput = picker.querySelector('#tc6-hex-input');
+            const swatch = picker.querySelector('.tc6-color-swatch');
+            const closeBtn = picker.querySelector('.tc6-picker-close');
+
+            const updateColor = (newColor) => {
+                swatch.style.background = newColor;
+                hexInput.value = newColor.toUpperCase();
+
+                // Update left panel swatch
+                swatchEl.style.background = newColor;
+                swatchEl.classList.remove('tc6-swatch-pulse');
+                void swatchEl.offsetWidth;
+                swatchEl.classList.add('tc6-swatch-pulse');
+
+                // Set the color
+                this._setColor(key, newColor);
+
+                // Sync all swatches in left panel
+                this._syncLeftPanelSwatches();
+
+                // Update preview
+                this._renderPreview();
+            };
+
+            colorInput.addEventListener('input', (e) => updateColor(e.target.value));
+
+            hexInput.addEventListener('input', (e) => {
+                const val = e.target.value.replace(/[^0-9A-Fa-f#]/g, '');
+                if (val.length === 7 && val.startsWith('#')) {
+                    colorInput.value = val;
+                    updateColor(val);
+                } else if (val.length === 6 && !val.startsWith('#')) {
+                    const color = '#' + val;
+                    colorInput.value = color;
+                    updateColor(color);
+                }
             });
-        }
 
-        return properties;
-    },
+            closeBtn.addEventListener('click', () => {
+                this._hideColorPicker();
+                itemEl.classList.remove('tc6-color-active');
+            });
 
-    /**
-     * Show color dropdown (Figma-style)
-     * @param {string} key - Color key
-     * @param {string} label - Element label
-     * @param {HTMLElement} targetEl - Target element to position dropdown
-     */
-    _showColorDropdown(key, label, targetEl) {
-        // Remove existing dropdown
-        document.querySelectorAll('.tc6-color-dropdown').forEach(el => el.remove());
+            // Close on outside click
+            this._pickerClickHandler = (e) => {
+                if (!picker.contains(e.target) && !itemEl.contains(e.target)) {
+                    this._hideColorPicker();
+                    itemEl.classList.remove('tc6-color-active');
+                }
+            };
+            setTimeout(() => {
+                document.addEventListener('click', this._pickerClickHandler);
+            }, 100);
+        },
 
-        const currentColor = this._getColor(key);
-        const hexColor = this._toHex(currentColor);
-        const presets = this._getColorPresets();
+        /**
+         * Sync all color swatches in the left panel with current workingTheme colors
+         */
+        _syncLeftPanelSwatches() {
+            const container = this.popup?.querySelector('#tc6-controls-content');
+            if (!container) return;
 
-        const dropdown = document.createElement('div');
-        dropdown.className = 'tc6-color-dropdown';
-        dropdown.innerHTML = `
+            // Update individual color items
+            container.querySelectorAll('.tc6-color-item[data-key]').forEach(item => {
+                const key = item.dataset.key;
+                const swatch = item.querySelector('.tc6-color-swatch');
+                if (swatch && key) {
+                    const color = this._getColor(key);
+                    swatch.style.background = color;
+                }
+            });
+
+            // Update group color items
+            const c = this.workingTheme?.colors || {};
+            container.querySelectorAll('.tc6-group-color[data-group]').forEach(item => {
+                const groupId = item.dataset.group;
+                const swatch = item.querySelector('.tc6-color-swatch');
+                if (swatch && groupId) {
+                    let color = '#888888';
+                    switch (groupId) {
+                        case 'background':
+                            color = c.editorBg || c.bgOceanDark || '#1a2530';
+                            break;
+                        case 'surface':
+                            color = this._toHex(c.bgPanel) || '#2a3a4a';
+                            break;
+                        case 'accent':
+                            color = c.accent || '#88c9ea';
+                            break;
+                        case 'text':
+                            color = c.textPrimary || '#e0f0ff';
+                            break;
+                        case 'border':
+                            color = c.border || '#3a6075';
+                            break;
+                    }
+                    swatch.style.background = color;
+                }
+            });
+        },
+
+        /**
+         * Show color dropdown (Figma-style)
+         * @param {string} key - Color key
+         * @param {string} label - Element label
+         * @param {HTMLElement} targetEl - Target element to position dropdown
+         */
+        _showColorDropdown(key, label, targetEl) {
+            // Remove existing picker cleanly
+            this._hideColorPicker();
+
+            const currentColor = this._getColor(key);
+            const hexColor = this._toHex(currentColor);
+            const presets = this._getColorPresets();
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'tc6-color-dropdown';
+            dropdown.innerHTML = `
             <div class="tc6-dropdown-section">
                 <input type="color" class="tc6-dropdown-color-native" value="${hexColor}">
                 <div class="tc6-dropdown-row">
@@ -3671,79 +4364,79 @@ const ThemeCustomizer = {
             </div>
         `;
 
-        document.body.appendChild(dropdown);
+            document.body.appendChild(dropdown);
+            this.currentColorPicker = dropdown; // Track active picker
 
-        // Position dropdown below color preview
-        const rect = targetEl.getBoundingClientRect();
-        dropdown.style.left = rect.left + 'px';
-        dropdown.style.top = (rect.bottom + 8) + 'px';
+            // Position dropdown below color preview
+            const rect = targetEl.getBoundingClientRect();
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.top = (rect.bottom + 8) + 'px';
 
-        // Show with animation
-        requestAnimationFrame(() => dropdown.classList.add('visible'));
+            // Show with animation
+            requestAnimationFrame(() => dropdown.classList.add('visible'));
 
-        // Bind events
-        const colorInput = dropdown.querySelector('.tc6-dropdown-color-native');
-        const hexInput = dropdown.querySelector('.tc6-dropdown-hex');
+            // Bind events
+            const colorInput = dropdown.querySelector('.tc6-dropdown-color-native');
+            const hexInput = dropdown.querySelector('.tc6-dropdown-hex');
 
-        const updateColor = (newColor) => {
-            this._saveHistorySnapshot();
-            this._setColor(key, newColor);
-            this._updatePreviewWithoutRerender(key);
-            targetEl.style.background = newColor;
-            hexInput.value = newColor.toUpperCase();
-            this._triggerAutoSave();
-        };
+            const updateColor = (newColor) => {
+                this._saveHistorySnapshot();
+                this._setColor(key, newColor);
+                this._updatePreviewWithoutRerender(key);
+                targetEl.style.background = newColor;
+                hexInput.value = newColor.toUpperCase();
+                this._triggerAutoSave();
+            };
 
-        colorInput.addEventListener('input', (e) => updateColor(e.target.value));
-        hexInput.addEventListener('input', (e) => {
-            const val = e.target.value.replace(/[^#0-9A-Fa-f]/g, '');
-            if (val.length === 7 && val.startsWith('#')) {
-                colorInput.value = val;
-                updateColor(val);
-            }
-        });
-
-        dropdown.querySelectorAll('.tc6-dropdown-preset').forEach(preset => {
-            preset.addEventListener('click', () => {
-                const color = preset.dataset.color;
-                colorInput.value = color;
-                updateColor(color);
+            colorInput.addEventListener('input', (e) => updateColor(e.target.value));
+            hexInput.addEventListener('input', (e) => {
+                const val = e.target.value.replace(/[^#0-9A-Fa-f]/g, '');
+                if (val.length === 7 && val.startsWith('#')) {
+                    colorInput.value = val;
+                    updateColor(val);
+                }
             });
-        });
 
-        // Close on outside click
-        setTimeout(() => {
-            const closeHandler = (e) => {
+            dropdown.querySelectorAll('.tc6-dropdown-preset').forEach(preset => {
+                preset.addEventListener('click', () => {
+                    const color = preset.dataset.color;
+                    colorInput.value = color;
+                    updateColor(color);
+                });
+            });
+
+            // Close on outside click
+            this._pickerClickHandler = (e) => {
                 if (!dropdown.contains(e.target) && !targetEl.contains(e.target)) {
-                    dropdown.remove();
-                    document.removeEventListener('click', closeHandler);
+                    this._hideColorPicker();
                 }
             };
-            document.addEventListener('click', closeHandler);
-        }, 100);
-    },
+            setTimeout(() => {
+                document.addEventListener('click', this._pickerClickHandler);
+            }, 100);
+        },
 
-    /**
-     * Show property popover (mini slider)
-     * @param {string} property - Property name (opacity, blur, border)
-     * @param {number} value - Current value
-     * @param {HTMLElement} targetEl - Target button element
-     */
-    _showPropertyPopover(property, value, targetEl) {
-        // Remove existing popovers
-        document.querySelectorAll('.tc6-property-popover').forEach(el => el.remove());
+        /**
+         * Show property popover (mini slider)
+         * @param {string} property - Property name (opacity, blur, border)
+         * @param {number} value - Current value
+         * @param {HTMLElement} targetEl - Target button element
+         */
+        _showPropertyPopover(property, value, targetEl) {
+            // Remove existing popovers
+            document.querySelectorAll('.tc6-property-popover').forEach(el => el.remove());
 
-        const config = {
-            opacity: { min: 0, max: 100, suffix: '%', step: 1 },
-            blur: { min: 0, max: 20, suffix: 'px', step: 1 },
-            border: { min: 0, max: 5, suffix: 'px', step: 1 }
-        }[property];
+            const config = {
+                opacity: { min: 0, max: 100, suffix: '%', step: 1 },
+                blur: { min: 0, max: 20, suffix: 'px', step: 1 },
+                border: { min: 0, max: 5, suffix: 'px', step: 1 }
+            }[property];
 
-        if (!config) return;
+            if (!config) return;
 
-        const popover = document.createElement('div');
-        popover.className = 'tc6-property-popover';
-        popover.innerHTML = `
+            const popover = document.createElement('div');
+            popover.className = 'tc6-property-popover';
+            popover.innerHTML = `
             <div class="tc6-popover-label">${targetEl.title}</div>
             <div class="tc6-popover-slider-row">
                 <input type="range" min="${config.min}" max="${config.max}" step="${config.step}" value="${value}" class="tc6-popover-slider">
@@ -3751,255 +4444,255 @@ const ThemeCustomizer = {
             </div>
         `;
 
-        document.body.appendChild(popover);
+            document.body.appendChild(popover);
 
-        // Position below button
-        const rect = targetEl.getBoundingClientRect();
-        popover.style.left = (rect.left + rect.width / 2 - 100) + 'px';
-        popover.style.top = (rect.bottom + 8) + 'px';
+            // Position below button
+            const rect = targetEl.getBoundingClientRect();
+            popover.style.left = (rect.left + rect.width / 2 - 100) + 'px';
+            popover.style.top = (rect.bottom + 8) + 'px';
 
-        // Show with animation
-        requestAnimationFrame(() => popover.classList.add('visible'));
+            // Show with animation
+            requestAnimationFrame(() => popover.classList.add('visible'));
 
-        // Bind slider
-        const slider = popover.querySelector('.tc6-popover-slider');
-        const valueDisplay = popover.querySelector('.tc6-popover-value');
+            // Bind slider
+            const slider = popover.querySelector('.tc6-popover-slider');
+            const valueDisplay = popover.querySelector('.tc6-popover-value');
 
-        slider.addEventListener('input', (e) => {
-            const val = parseInt(e.target.value);
-            valueDisplay.textContent = val + config.suffix;
+            slider.addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                valueDisplay.textContent = val + config.suffix;
 
-            this._saveHistorySnapshot();
+                this._saveHistorySnapshot();
 
-            // Update based on property type
-            const key = this._activeColorKey;
-            if (property === 'opacity') {
-                this._setOpacity(key, val);
-            } else if (property === 'blur') {
-                const c = this.workingTheme.colors;
-                if (key === 'appBackground') c.bgBlur = val;
-                else if (key === 'editorBackground') c.editorBgBlur = val;
-                else if (key === 'terminalBg') c.terminalBgBlur = val;
-            } else if (property === 'border') {
-                this.workingTheme.colors.borderWidth = val;
+                // Update based on property type
+                const key = this._activeColorKey;
+                if (property === 'opacity') {
+                    this._setOpacity(key, val);
+                } else if (property === 'blur') {
+                    const c = this.workingTheme.colors;
+                    if (key === 'appBackground') c.bgBlur = val;
+                    else if (key === 'editorBackground') c.editorBgBlur = val;
+                    else if (key === 'terminalBg') c.terminalBgBlur = val;
+                } else if (property === 'border') {
+                    this.workingTheme.colors.borderWidth = val;
+                }
+
+                this._updatePreviewWithoutRerender(key);
+                this._updateHistoryButtons();
+                this._triggerAutoSave();
+            });
+
+            // Mark button as active
+            targetEl.classList.add('active');
+
+            // Close on outside click
+            setTimeout(() => {
+                const closeHandler = (e) => {
+                    if (!popover.contains(e.target) && !targetEl.contains(e.target)) {
+                        popover.remove();
+                        targetEl.classList.remove('active');
+                        document.removeEventListener('click', closeHandler);
+                    }
+                };
+                document.addEventListener('click', closeHandler);
+            }, 100);
+        },
+
+        /**
+         * Reset theme
+         */
+        _reset() {
+            if (!confirm('Reset all changes?')) return;
+
+            if (this.sourceThemeId && ThemeManager.themes.has(this.sourceThemeId)) {
+                this.workingTheme = this._deepClone(ThemeManager.themes.get(this.sourceThemeId));
+                this._renderSettings();
+                this._renderPreview();
+            }
+        },
+
+        /**
+         * Save as new theme
+         */
+        _saveAsNew() {
+            const name = this.popup?.querySelector('#tc6-name')?.value?.trim();
+            if (!name) {
+                alert('Please enter a theme name');
+                return;
             }
 
-            this._updatePreviewWithoutRerender(key);
-            this._updateHistoryButtons();
-            this._triggerAutoSave();
-        });
+            this.workingTheme.name = name;
+            this.workingTheme.author = 'User';
 
-        // Mark button as active
-        targetEl.classList.add('active');
+            // Generate unique ID
+            const baseId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            let id = baseId;
+            let counter = 1;
+            while (ThemeManager.themes.has(id) || ThemeManager.builtinThemeIds.includes(id)) {
+                id = `${baseId}-${counter++}`;
+            }
 
-        // Close on outside click
-        setTimeout(() => {
-            const closeHandler = (e) => {
-                if (!popover.contains(e.target) && !targetEl.contains(e.target)) {
-                    popover.remove();
-                    targetEl.classList.remove('active');
-                    document.removeEventListener('click', closeHandler);
-                }
+            // Deep clone all colors including bgPosition and other settings
+            const colorsClone = this._deepClone(this.workingTheme.colors || {});
+            const editorClone = this._deepClone(this.workingTheme.editor || {});
+            const terminalClone = this._deepClone(this.workingTheme.terminal || {});
+
+            const themeData = {
+                meta: {
+                    id: id,
+                    name: name,
+                    author: 'User',
+                    version: '1.0.0',
+                    type: this.workingTheme.type || 'dark',
+                    tags: ['custom']
+                },
+                colors: colorsClone,
+                editor: editorClone,
+                terminal: terminalClone
             };
-            document.addEventListener('click', closeHandler);
-        }, 100);
-    },
 
-    /**
-     * Reset theme
-     */
-    _reset() {
-        if (!confirm('Reset all changes?')) return;
+            if (ThemeManager.registerTheme(themeData)) {
+                ThemeManager._saveUserThemes();
+                ThemeManager.setTheme(id);
 
-        if (this.sourceThemeId && ThemeManager.themes.has(this.sourceThemeId)) {
-            this.workingTheme = this._deepClone(ThemeManager.themes.get(this.sourceThemeId));
-            this._renderSettings();
-            this._renderPreview();
-        }
-    },
-
-    /**
-     * Save as new theme
-     */
-    _saveAsNew() {
-        const name = this.popup?.querySelector('#tc6-name')?.value?.trim();
-        if (!name) {
-            alert('Please enter a theme name');
-            return;
-        }
-
-        this.workingTheme.name = name;
-        this.workingTheme.author = 'User';
-
-        // Generate unique ID
-        const baseId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        let id = baseId;
-        let counter = 1;
-        while (ThemeManager.themes.has(id) || ThemeManager.builtinThemeIds.includes(id)) {
-            id = `${baseId}-${counter++}`;
-        }
-
-        // Deep clone all colors including bgPosition and other settings
-        const colorsClone = this._deepClone(this.workingTheme.colors || {});
-        const editorClone = this._deepClone(this.workingTheme.editor || {});
-        const terminalClone = this._deepClone(this.workingTheme.terminal || {});
-
-        const themeData = {
-            meta: {
-                id: id,
-                name: name,
-                author: 'User',
-                version: '1.0.0',
-                type: this.workingTheme.type || 'dark',
-                tags: ['custom']
-            },
-            colors: colorsClone,
-            editor: editorClone,
-            terminal: terminalClone
-        };
-
-        if (ThemeManager.registerTheme(themeData)) {
-            ThemeManager._saveUserThemes();
-            ThemeManager.setTheme(id);
-
-            if (typeof App !== 'undefined') {
-                App.settings.appearance.theme = id;
-                if (typeof saveSettings === 'function') {
-                    // Await for settings to save
-                    saveSettings().then(() => {
-                        console.log('[Customizer] Settings saved successfully');
-                    }).catch((err) => {
-                        console.error('[Customizer] Failed to save settings:', err);
-                    });
+                if (typeof App !== 'undefined') {
+                    App.settings.appearance.theme = id;
+                    if (typeof saveSettings === 'function') {
+                        // Await for settings to save
+                        saveSettings().then(() => {
+                            console.log('[Customizer] Settings saved successfully');
+                        }).catch((err) => {
+                            console.error('[Customizer] Failed to save settings:', err);
+                        });
+                    }
                 }
-            }
 
-            if (typeof ThemeMarketplace !== 'undefined') {
-                ThemeMarketplace.renderCarousel();
-            }
-
-            console.log(`[Customizer] Created: ${name} (${id})`);
-
-            // Dispatch custom event for IDE integration
-            this._dispatchThemeSaveEvent(themeData);
-
-            // Show success notification
-            this._showSaveNotification(`Theme "${name}" đã được lưu thành công!`);
-
-            // Update sourceThemeId to the new theme and refresh header buttons
-            this.sourceThemeId = id;
-            this._refreshHeaderButtons();
-        } else {
-            alert('Failed to save theme');
-        }
-    },
-
-    /**
-     * Overwrite existing custom theme
-     */
-    _saveOverwrite() {
-        if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
-            alert('Cannot overwrite built-in themes');
-            return;
-        }
-
-        // Exit drag mode if active
-        if (this.bgDragMode) {
-            this._exitDragMode();
-        }
-
-        const name = this.popup?.querySelector('#tc6-name')?.value?.trim() || this.workingTheme.name;
-        this.workingTheme.name = name;
-
-        // Deep clone all colors including bgPosition and other settings
-        const colorsClone = this._deepClone(this.workingTheme.colors || {});
-        const editorClone = this._deepClone(this.workingTheme.editor || {});
-        const terminalClone = this._deepClone(this.workingTheme.terminal || {});
-
-        const themeData = {
-            meta: {
-                id: this.sourceThemeId,
-                name: name,
-                author: this.workingTheme.author || 'User',
-                version: '1.0.0',
-                type: this.workingTheme.type || 'dark',
-                tags: ['custom']
-            },
-            colors: colorsClone,
-            editor: editorClone,
-            terminal: terminalClone
-        };
-
-        if (ThemeManager.registerTheme(themeData)) {
-            ThemeManager._saveUserThemes();
-            ThemeManager.setTheme(this.sourceThemeId);
-
-            if (typeof App !== 'undefined') {
-                App.settings.appearance.theme = this.sourceThemeId;
-                if (typeof saveSettings === 'function') {
-                    // Await for settings to save before closing
-                    saveSettings().then(() => {
-                        console.log('[Customizer] Settings saved successfully');
-                    }).catch((err) => {
-                        console.error('[Customizer] Failed to save settings:', err);
-                    });
+                if (typeof ThemeMarketplace !== 'undefined') {
+                    ThemeMarketplace.renderCarousel();
                 }
+
+                console.log(`[Customizer] Created: ${name} (${id})`);
+
+                // Dispatch custom event for IDE integration
+                this._dispatchThemeSaveEvent(themeData);
+
+                // Show success notification
+                this._showSaveNotification(`Theme "${name}" Ä‘Ã£ Ä‘Æ°á»£c lÆ°u thÃ nh cÃ´ng!`);
+
+                // Update sourceThemeId to the new theme and refresh header buttons
+                this.sourceThemeId = id;
+                this._refreshHeaderButtons();
+            } else {
+                alert('Failed to save theme');
+            }
+        },
+
+        /**
+         * Overwrite existing custom theme
+         */
+        _saveOverwrite() {
+            if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
+                alert('Cannot overwrite built-in themes');
+                return;
             }
 
-            if (typeof ThemeMarketplace !== 'undefined') {
-                ThemeMarketplace.renderCarousel();
+            // Exit drag mode if active
+            if (this.bgDragMode) {
+                this._exitDragMode();
             }
 
-            console.log(`[Customizer] Updated: ${name}`);
+            const name = this.popup?.querySelector('#tc6-name')?.value?.trim() || this.workingTheme.name;
+            this.workingTheme.name = name;
 
-            // Dispatch custom event for IDE integration
-            this._dispatchThemeSaveEvent(themeData);
+            // Deep clone all colors including bgPosition and other settings
+            const colorsClone = this._deepClone(this.workingTheme.colors || {});
+            const editorClone = this._deepClone(this.workingTheme.editor || {});
+            const terminalClone = this._deepClone(this.workingTheme.terminal || {});
 
-            // Show success notification
-            this._showSaveNotification(`Theme "${name}" đã được cập nhật thành công!`);
+            const themeData = {
+                meta: {
+                    id: this.sourceThemeId,
+                    name: name,
+                    author: this.workingTheme.author || 'User',
+                    version: '1.0.0',
+                    type: this.workingTheme.type || 'dark',
+                    tags: ['custom']
+                },
+                colors: colorsClone,
+                editor: editorClone,
+                terminal: terminalClone
+            };
 
-            // CRITICAL: Clear saved values so close() won't restore old values
-            // The new theme was just applied by ThemeManager.setTheme() above
-            this._savedAppBgOpacity = null;
-            this._savedEditorBgOpacity = null;
-            this._savedAppBgImage = null;
-            this._savedEditorBgImage = null;
+            if (ThemeManager.registerTheme(themeData)) {
+                ThemeManager._saveUserThemes();
+                ThemeManager.setTheme(this.sourceThemeId);
 
-            // Close customizer after save (Save & Close behavior)
-            this.close();
-        } else {
-            alert('Failed to save theme');
-        }
-    },
+                if (typeof App !== 'undefined') {
+                    App.settings.appearance.theme = this.sourceThemeId;
+                    if (typeof saveSettings === 'function') {
+                        // Await for settings to save before closing
+                        saveSettings().then(() => {
+                            console.log('[Customizer] Settings saved successfully');
+                        }).catch((err) => {
+                            console.error('[Customizer] Failed to save settings:', err);
+                        });
+                    }
+                }
 
-    /**
-     * Dispatch theme save event for IDE integration
-     */
-    _dispatchThemeSaveEvent(themeData) {
-        const event = new CustomEvent('themeCustomizerSave', {
-            detail: {
-                theme: themeData,
-                timestamp: Date.now()
+                if (typeof ThemeMarketplace !== 'undefined') {
+                    ThemeMarketplace.renderCarousel();
+                }
+
+                console.log(`[Customizer] Updated: ${name}`);
+
+                // Dispatch custom event for IDE integration
+                this._dispatchThemeSaveEvent(themeData);
+
+                // Show success notification
+                this._showSaveNotification(`Theme "${name}" Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t thÃ nh cÃ´ng!`);
+
+                // CRITICAL: Clear saved values so close() won't restore old values
+                // The new theme was just applied by ThemeManager.setTheme() above
+                this._savedAppBgOpacity = null;
+                this._savedEditorBgOpacity = null;
+                this._savedAppBgImage = null;
+                this._savedEditorBgImage = null;
+
+                // Close customizer after save (Save & Close behavior)
+                this.close();
+            } else {
+                alert('Failed to save theme');
             }
-        });
-        window.dispatchEvent(event);
-        console.log('[Customizer] Dispatched themeCustomizerSave event', themeData.meta);
-    },
+        },
 
-    /**
-     * Refresh footer buttons (after save as new to show Save & Close/Delete)
-     */
-    _refreshHeaderButtons() {
-        const footerRight = this.popup?.querySelector('.tc6-footer-right');
-        const footerLeft = this.popup?.querySelector('.tc6-footer-left');
-        if (!footerRight) return;
+        /**
+         * Dispatch theme save event for IDE integration
+         */
+        _dispatchThemeSaveEvent(themeData) {
+            const event = new CustomEvent('themeCustomizerSave', {
+                detail: {
+                    theme: themeData,
+                    timestamp: Date.now()
+                }
+            });
+            window.dispatchEvent(event);
+            console.log('[Customizer] Dispatched themeCustomizerSave event', themeData.meta);
+        },
 
-        const isCustomTheme = this.sourceThemeId &&
-            !ThemeManager.builtinThemeIds.includes(this.sourceThemeId);
+        /**
+         * Refresh footer buttons (after save as new to show Save & Close/Delete)
+         */
+        _refreshHeaderButtons() {
+            const footerRight = this.popup?.querySelector('.tc6-footer-right');
+            const footerLeft = this.popup?.querySelector('.tc6-footer-left');
+            if (!footerRight) return;
 
-        // Rebuild footer-left HTML (Reset + Delete + Auto-save indicator)
-        if (footerLeft) {
-            footerLeft.innerHTML = `
+            const isCustomTheme = this.sourceThemeId &&
+                !ThemeManager.builtinThemeIds.includes(this.sourceThemeId);
+
+            // Rebuild footer-left HTML (Reset + Delete + Auto-save indicator)
+            if (footerLeft) {
+                footerLeft.innerHTML = `
                 <button class="tc6-btn-reset" id="tc6-reset">Reset</button>
                 ${isCustomTheme ? `
                 <button class="tc6-btn-delete" id="tc6-delete">Delete Theme</button>
@@ -4013,13 +4706,13 @@ const ThemeCustomizer = {
                 </span>
             `;
 
-            // Rebind footer-left button events
-            footerLeft.querySelector('#tc6-reset')?.addEventListener('click', () => this._reset());
-            footerLeft.querySelector('#tc6-delete')?.addEventListener('click', () => this._deleteTheme());
-        }
+                // Rebind footer-left button events
+                footerLeft.querySelector('#tc6-reset')?.addEventListener('click', () => this._reset());
+                footerLeft.querySelector('#tc6-delete')?.addEventListener('click', () => this._deleteTheme());
+            }
 
-        // Rebuild footer-right HTML (Create New + Save & Close)
-        footerRight.innerHTML = `
+            // Rebuild footer-right HTML (Create New + Save & Close)
+            footerRight.innerHTML = `
             <!-- Save as New - Secondary -->
             <button class="tc6-btn-secondary" id="tc6-save-new">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -4039,406 +4732,332 @@ const ThemeCustomizer = {
             ` : ''}
         `;
 
-        // Rebind footer-right button events
-        footerRight.querySelector('#tc6-save')?.addEventListener('click', () => this._saveOverwrite());
-        footerRight.querySelector('#tc6-save-new')?.addEventListener('click', () => this._saveAsNew());
-    },
+            // Rebind footer-right button events
+            footerRight.querySelector('#tc6-save')?.addEventListener('click', () => this._saveOverwrite());
+            footerRight.querySelector('#tc6-save-new')?.addEventListener('click', () => this._saveAsNew());
+        },
 
-    /**
-     * Delete current custom theme
-     */
-    _deleteTheme() {
-        if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
-            alert('Cannot delete built-in themes');
-            return;
-        }
-
-        const themeName = this.workingTheme?.name || this.sourceThemeId;
-        if (!confirm(`Delete theme "${themeName}"? This cannot be undone.`)) {
-            return;
-        }
-
-        const result = ThemeManager.deleteTheme(this.sourceThemeId);
-        if (result.success) {
-            console.log(`[Customizer] Deleted: ${themeName}`);
-
-            if (typeof ThemeMarketplace !== 'undefined') {
-                ThemeMarketplace.renderCarousel();
+        /**
+         * Delete current custom theme
+         */
+        _deleteTheme() {
+            if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
+                alert('Cannot delete built-in themes');
+                return;
             }
 
-            this.close();
-        } else {
-            alert(result.message || 'Failed to delete theme');
-        }
-    },
-
-    // ========== HELPER METHODS ==========
-
-    /**
-     * Get base key from a unique key variant
-     * e.g., 'bgHeader-main' -> 'bgHeader', 'bgPanel-input' -> 'bgPanel'
-     */
-    _getBaseKey(key) {
-        // Map unique keys back to their base keys
-        const baseKeyMap = {
-            'bgHeader-main': 'bgHeader',
-            'bgHeader-statusbar': 'bgHeader',
-            'bgPanel-problems': 'bgPanel',
-            'bgPanel-input': 'bgPanel',
-            'bgPanel-expected': 'bgPanel'
-        };
-
-        return baseKeyMap[key] || key;
-    },
-
-    _getColor(key) {
-        const c = this.workingTheme?.colors || {};
-
-        // Prefer exact key for variants, then fall back to base key
-        if (c[key]) return c[key];
-
-        // Normalize unique keys to base keys
-        const baseKey = this._getBaseKey(key);
-
-        if (c[baseKey]) return c[baseKey];
-
-        if (baseKey.startsWith('syntax')) {
-            const syntaxKey = baseKey.replace('syntax', '').toLowerCase();
-            const color = this.workingTheme?.editor?.syntax?.[syntaxKey]?.color;
-            return color ? (color.startsWith('#') ? color : '#' + color) : '#888888';
-        }
-
-        if (baseKey === 'editorBg') {
-            return this.workingTheme?.editor?.background || c.editorBg || '#1e1e1e';
-        }
-
-        return '#888888';
-    },
-
-    /**
-     * Set color value for a key
-     * CRITICAL: Stores EXACT key (e.g., 'bgPanel-input') instead of normalizing to base key.
-     * Also injects CSS variable onto preview wrapper for scoped live preview.
-     * 
-     * @param {string} key - Color key (exact key like 'bgPanel-input')
-     * @param {string} value - Color value (hex)
-     */
-    _setColor(key, value) {
-        if (!this.workingTheme) return;
-        if (!this.workingTheme.colors) this.workingTheme.colors = {};
-
-        // Validate hex color format
-        if (!this._isValidHexColor(value)) {
-            console.warn(`[Customizer] Invalid color format for ${key}: ${value}`);
-            return;
-        }
-
-        // Handle syntax colors specially - they go to editor.syntax
-        if (key.startsWith('syntax')) {
-            const syntaxKey = key.replace('syntax', '').toLowerCase();
-            if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
-            if (!this.workingTheme.editor.syntax) this.workingTheme.editor.syntax = {};
-            if (!this.workingTheme.editor.syntax[syntaxKey]) this.workingTheme.editor.syntax[syntaxKey] = {};
-            this.workingTheme.editor.syntax[syntaxKey].color = value.replace('#', '');
-        } else if (key === 'editorBg') {
-            if (!this.workingTheme.editor) this.workingTheme.editor = {};
-            this.workingTheme.editor.background = value;
-            this.workingTheme.colors.editorBg = value;
-        } else {
-            // CRITICAL: Store EXACT key, do NOT normalize to base key
-            // This fixes scope leakage where bgPanel-input was being stored as bgPanel
-            this.workingTheme.colors[key] = value;
-            // Sync variant colors when base keys change
-            if (key === 'bgHeader') {
-                this.workingTheme.colors['bgHeader-main'] = value;
-                this.workingTheme.colors['bgHeader-statusbar'] = value;
+            const themeName = this.workingTheme?.name || this.sourceThemeId;
+            if (!confirm(`Delete theme "${themeName}"? This cannot be undone.`)) {
+                return;
             }
-            if (key === 'bgPanel') {
-                this.workingTheme.colors['bgPanel-problems'] = value;
-                this.workingTheme.colors['bgPanel-input'] = value;
-                this.workingTheme.colors['bgPanel-expected'] = value;
+
+            const result = ThemeManager.deleteTheme(this.sourceThemeId);
+            if (result.success) {
+                console.log(`[Customizer] Deleted: ${themeName}`);
+
+                if (typeof ThemeMarketplace !== 'undefined') {
+                    ThemeMarketplace.renderCarousel();
+                }
+
+                this.close();
+            } else {
+                alert(result.message || 'Failed to delete theme');
             }
-        }
+        },
 
-        // Inject CSS variable onto preview wrapper for scoped live preview
-        this._injectPreviewVariable(key, value);
-    },
+        // ========== HELPER METHODS ==========
 
-    /**
-     * Validate hex color format
-     * Accepts: #RGB, #RRGGBB, rgb, rrggbb
-     */
-    _isValidHexColor(color) {
-        if (typeof color !== 'string') return false;
-        // Match #RGB, #RRGGBB, or just RGB/RRGGBB
-        const hexRegex = /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
-        return hexRegex.test(color);
-    },
+        /**
+         * Get base key from a unique key variant
+         * e.g., 'bgHeader-main' -> 'bgHeader', 'bgPanel-input' -> 'bgPanel'
+         */
+        _getBaseKey(key) {
+            // Map unique keys back to their base keys
+            const baseKeyMap = {
+                'bgHeader-main': 'bgHeader',
+                'bgHeader-statusbar': 'bgHeader',
+                'bgPanel-problems': 'bgPanel',
+                'bgPanel-input': 'bgPanel',
+                'bgPanel-expected': 'bgPanel'
+            };
 
-    /**
-     * Inject a single CSS variable onto the preview wrapper
-     * This scopes color changes to the preview only, preventing leakage to customizer UI
-     * 
-     * @param {string} key - Color key (e.g., 'bgPanel-input')
-     * @param {string} value - Color value (hex)
-     */
-    _injectPreviewVariable(key, value) {
-        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-        if (!wrapper) return;
+            return baseKeyMap[key] || key;
+        },
 
-        // Use ColorRegistry to get correct CSS variable name
-        const cssVar = window.ColorRegistry?.getCssVar(key);
-        if (cssVar) {
-            wrapper.style.setProperty(cssVar, value);
-        } else {
-            // Fallback: convert camelCase to kebab-case
-            const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-            wrapper.style.setProperty(`--${kebabKey}`, value);
-        }
-    },
+        _getColor(key) {
+            const c = this.workingTheme?.colors || {};
 
-    /**
-     * Inject ALL CSS variables from workingTheme onto preview wrapper
-     * Called after _renderPreview() to ensure all colors are applied
-     */
-    _injectAllPreviewVariables() {
-        const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-        if (!wrapper) return;
+            // Prefer exact key for variants, then fall back to base key
+            if (c[key]) return c[key];
 
-        const c = this.workingTheme?.colors || {};
+            // Normalize unique keys to base keys
+            const baseKey = this._getBaseKey(key);
 
-        // Map JSON keys to CSS variable names (match ThemeManager)
-        const varMappings = {
-            'bgBase': '--bg-base',
-            'bgSurface': '--bg-surface',
-            'bgOceanLight': '--bg-ocean-light',
-            'bgOceanMedium': '--bg-ocean-medium',
-            'bgOceanDeep': '--bg-ocean-deep',
-            'bgOceanDark': '--bg-ocean-dark',
-            'bgGlass': '--bg-glass',
-            'bgGlassHeavy': '--bg-glass-heavy',
-            'bgGlassBorder': '--bg-glass-border',
-            'accent': '--accent',
-            'accentHover': '--accent-hover',
-            'textPrimary': '--text-primary',
-            'textSecondary': '--text-secondary',
-            'textMuted': '--text-muted',
-            'success': '--success',
-            'error': '--error',
-            'warning': '--warning',
-            'border': '--border',
-            'borderStrong': '--border-strong',
-            'shadowSoft': '--shadow-soft',
-            'shadowCard': '--shadow-card',
-            'glow': '--glow',
-            'bgHeader': '--bg-header',
-            'bgPanel': '--bg-panel',
-            'bgInput': '--bg-input',
-            'bgButton': '--bg-button',
-            'bgButtonHover': '--bg-button-hover',
-            'bgHeader-main': '--bg-header-main',
-            'bgHeader-statusbar': '--bg-header-statusbar',
-            'bgPanel-problems': '--bg-panel-problems',
-            'bgPanel-input': '--bg-panel-input',
-            'bgPanel-expected': '--bg-panel-expected',
-            'editorBg': '--editor-bg',
-            'editorBackground': '--editor-bg-image',
-            'appBackground': '--app-bg-image',
-            'bgPosition': '--app-bg-position',
-            'editorBgPosition': '--editor-bg-position',
-            'bgOpacity': '--app-bg-opacity',
-            'bgBlur': '--app-bg-blur',
-            'editorBgOpacity': '--editor-bg-opacity',
-            'editorBgBlur': '--editor-bg-blur',
-            'terminalBg': '--terminal-bg',
-            'terminalBgBlur': '--terminal-bg-blur',
-            'settingsLabelColor': '--settings-label-color',
-            'settingsSectionColor': '--settings-section-color',
-            'buttonTextOnAccent': '--button-text-on-accent',
-            'terminalOpacity': '--terminal-opacity',
-            'panelOpacity': '--panel-opacity'
-        };
+            if (c[baseKey]) return c[baseKey];
 
-        // Apply all color values from workingTheme with same rules as ThemeManager
-        for (const [key, cssVar] of Object.entries(varMappings)) {
-            const value = c[key];
-            if (value !== undefined && value !== null) {
-                if (key === 'editorBackground' || key === 'appBackground') {
-                    if (value && value !== 'none' && !value.startsWith('url(')) {
-                        if (value.startsWith('data:')) {
-                            wrapper.style.setProperty(cssVar, `url("${value}")`);
-                        } else {
-                            const escapedValue = value.replace(/'/g, "\\'");
-                            wrapper.style.setProperty(cssVar, `url('${escapedValue}')`);
-                        }
-                    } else {
-                        wrapper.style.setProperty(cssVar, value || 'none');
+            if (baseKey.startsWith('syntax')) {
+                const syntaxKey = baseKey.replace('syntax', '').toLowerCase();
+                const color = this.workingTheme?.editor?.syntax?.[syntaxKey]?.color;
+                return color ? (color.startsWith('#') ? color : '#' + color) : '#888888';
+            }
+
+            if (baseKey === 'editorBg') {
+                return this.workingTheme?.editor?.background || c.editorBg || '#1e1e1e';
+            }
+
+            return '#888888';
+        },
+
+        /**
+         * Set color value for a key
+         * CRITICAL: Stores EXACT key (e.g., 'bgPanel-input') instead of normalizing to base key.
+         * Also injects CSS variable onto preview wrapper for scoped live preview.
+         * 
+         * @param {string} key - Color key (exact key like 'bgPanel-input')
+         * @param {string} value - Color value (hex)
+         */
+        _setColor(key, value) {
+            if (!this.workingTheme) return;
+            if (!this.workingTheme.colors) this.workingTheme.colors = {};
+
+            // Validate hex color format
+            if (!this._isValidHexColor(value)) {
+                console.warn(`[Customizer] Invalid color format for ${key}: ${value}`);
+                return;
+            }
+
+            // Handle syntax colors specially - they go to editor.syntax
+            if (key.startsWith('syntax')) {
+                const syntaxKey = key.replace('syntax', '').toLowerCase();
+                if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
+                if (!this.workingTheme.editor.syntax) this.workingTheme.editor.syntax = {};
+                if (!this.workingTheme.editor.syntax[syntaxKey]) this.workingTheme.editor.syntax[syntaxKey] = {};
+                this.workingTheme.editor.syntax[syntaxKey].color = value.replace('#', '');
+            } else if (key === 'editorBg') {
+                if (!this.workingTheme.editor) this.workingTheme.editor = {};
+                this.workingTheme.editor.background = value;
+                this.workingTheme.colors.editorBg = value;
+            } else {
+                // CRITICAL: Store EXACT key, do NOT normalize to base key
+                // This fixes scope leakage where bgPanel-input was being stored as bgPanel
+                // CRITICAL: Store EXACT key, do NOT normalize to base key
+                // This fixes scope leakage where bgPanel-input was being stored as bgPanel
+                if (key === 'bgPanel-input' || key === 'bgPanel-expected') {
+                    const counterpart = key === 'bgPanel-input' ? 'bgPanel-expected' : 'bgPanel-input';
+                    this.workingTheme.colors[key] = value;
+                    this.workingTheme.colors[counterpart] = value;
+                    this._injectPreviewVariable(counterpart, value);
+                    // Also update the preview for the counterpart
+                    if (this.popup) {
+                        this._updatePreviewWithoutRerender(counterpart);
                     }
-                } else if (key === 'bgOpacity' || key === 'editorBgOpacity' ||
-                    key === 'terminalOpacity' || key === 'panelOpacity') {
-                    wrapper.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
-                } else if (key === 'bgBlur' || key === 'editorBgBlur' || key === 'terminalBgBlur') {
-                    wrapper.style.setProperty(cssVar, `${parseInt(value)}px`);
-                } else if (key === 'bgPosition' || key === 'editorBgPosition') {
-                    wrapper.style.setProperty(cssVar, value || 'center center');
                 } else {
-                    wrapper.style.setProperty(cssVar, value);
+                    this.workingTheme.colors[key] = value;
+                }
+                // Sync variant colors when base keys change
+                if (key === 'bgHeader') {
+                    this.workingTheme.colors['bgHeader-main'] = value;
+                    this.workingTheme.colors['bgHeader-statusbar'] = value;
+                }
+                if (key === 'bgPanel') {
+                    this.workingTheme.colors['bgPanel-problems'] = value;
+                    this.workingTheme.colors['bgPanel-input'] = value;
+                    this.workingTheme.colors['bgPanel-expected'] = value;
                 }
             }
-        }
 
-        // Apply inheritance for variant colors (match ThemeManager behavior)
-        if (!c['bgHeader-main'] && c.bgHeader) {
-            wrapper.style.setProperty('--bg-header-main', c.bgHeader);
-        }
-        if (!c['bgHeader-statusbar'] && c.bgHeader) {
-            wrapper.style.setProperty('--bg-header-statusbar', c.bgHeader);
-        }
-        if (!c['bgPanel-problems'] && c.bgPanel) {
-            wrapper.style.setProperty('--bg-panel-problems', c.bgPanel);
-        }
-        if (!c['bgPanel-input'] && c.bgPanel) {
-            wrapper.style.setProperty('--bg-panel-input', c.bgPanel);
-        }
-        if (!c['bgPanel-expected'] && c.bgPanel) {
-            wrapper.style.setProperty('--bg-panel-expected', c.bgPanel);
-        }
+            // Inject CSS variable onto preview wrapper for scoped live preview
+            this._injectPreviewVariable(key, value);
+        },
 
-        // Also apply syntax colors
-        const syn = this.workingTheme?.editor?.syntax || {};
-        for (const [name, data] of Object.entries(syn)) {
-            if (data?.color) {
-                const hexColor = data.color.startsWith('#') ? data.color : '#' + data.color;
-                wrapper.style.setProperty(`--syntax-${name}`, hexColor);
+        /**
+         * Validate hex color format
+         * Accepts: #RGB, #RRGGBB, rgb, rrggbb
+         */
+        _isValidHexColor(color) {
+            if (typeof color !== 'string') return false;
+            // Match #RGB, #RRGGBB, or just RGB/RRGGBB
+            const hexRegex = /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+            return hexRegex.test(color);
+        },
+
+        /**
+         * Inject a single CSS variable onto the preview wrapper
+         * This scopes color changes to the preview only, preventing leakage to customizer UI
+         * Uses ThemeTokens as Single Source of Truth
+         * 
+         * @param {string} key - Color key (e.g., 'bgPanel-input')
+         * @param {string} value - Color value (hex)
+         */
+        _injectPreviewVariable(key, value) {
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (!wrapper) return;
+
+            // Use ThemeTokens for consistent value application
+            if (typeof ThemeTokens !== 'undefined') {
+                ThemeTokens.applyValue(wrapper, key, value);
+            } else {
+                // Fallback: use ColorRegistry for CSS variable name
+                const cssVar = window.ColorRegistry?.getCssVar(key);
+                if (cssVar) {
+                    wrapper.style.setProperty(cssVar, value);
+                } else {
+                    // Fallback: convert camelCase to kebab-case
+                    const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    wrapper.style.setProperty(`--${kebabKey}`, value);
+                }
             }
-        }
-    },
+        },
 
 
-    _getSyntaxColors() {
-        const syn = this.workingTheme?.editor?.syntax || {};
-        const format = (c) => c ? (c.startsWith('#') ? c : '#' + c) : '#888888';
+        /**
+         * Inject ALL CSS variables from workingTheme onto preview wrapper
+         * Called after _renderPreview() to ensure all colors are applied
+         * Uses ThemeTokens as Single Source of Truth
+         */
+        _injectAllPreviewVariables() {
+            const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
+            if (!wrapper) return;
 
-        return {
-            keyword: format(syn.keyword?.color),
-            string: format(syn.string?.color),
-            number: format(syn.number?.color),
-            type: format(syn.type?.color),
-            function: format(syn.function?.color),
-            comment: format(syn.comment?.color),
-            variable: format(syn.variable?.color)
-        };
-    },
+            const colors = this.workingTheme?.colors || {};
 
-    _toHex(color) {
-        if (!color) return '#888888';
-        if (typeof color !== 'string') return '#888888';
+            // Use unified ThemeTokens module
+            if (typeof ThemeTokens !== 'undefined') {
+                ThemeTokens.applyToElement(wrapper, colors);
 
-        if (color.startsWith('#')) {
-            return color.length > 7 ? color.slice(0, 7) : color;
-        }
-
-        if (color.startsWith('rgb')) {
-            const match = color.match(/\d+/g);
-            if (match && match.length >= 3) {
-                const r = parseInt(match[0]);
-                const g = parseInt(match[1]);
-                const b = parseInt(match[2]);
-                return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                // Also apply syntax colors
+                const syntax = this.workingTheme?.editor?.syntax || {};
+                ThemeTokens.applySyntax(wrapper, syntax);
+            } else {
+                console.warn('[ThemeCustomizer] ThemeTokens not loaded, preview may not update correctly');
             }
-        }
+        },
 
-        return '#888888';
-    },
 
-    _deepClone(obj) {
-        try {
-            return JSON.parse(JSON.stringify(obj));
-        } catch {
-            return {};
-        }
-    },
 
-    /**
-     * Save current state to history stack
-     */
-    _saveHistorySnapshot() {
-        // Remove any states after current index (when user made changes after undo)
-        this.historyStack = this.historyStack.slice(0, this.historyIndex + 1);
+        _getSyntaxColors() {
+            const syn = this.workingTheme?.editor?.syntax || {};
+            const format = (c) => c ? (c.startsWith('#') ? c : '#' + c) : '#888888';
 
-        // Add new snapshot
-        this.historyStack.push(this._deepClone(this.workingTheme));
-        this.historyIndex++;
+            return {
+                keyword: format(syn.keyword?.color),
+                string: format(syn.string?.color),
+                number: format(syn.number?.color),
+                type: format(syn.type?.color),
+                function: format(syn.function?.color),
+                comment: format(syn.comment?.color)
+            };
+        },
 
-        // Limit history size
-        if (this.historyStack.length > this.maxHistorySize) {
-            this.historyStack.shift();
-            this.historyIndex--;
-        }
+        _toHex(color) {
+            if (!color) return '#888888';
+            if (typeof color !== 'string') return '#888888';
 
-        this._updateHistoryButtons();
-    },
+            if (color.startsWith('#')) {
+                return color.length > 7 ? color.slice(0, 7) : color;
+            }
 
-    /**
-     * Undo to previous state
-     */
-    _undo() {
-        if (this.historyIndex > 0) {
-            this.historyIndex--;
-            this.workingTheme = this._deepClone(this.historyStack[this.historyIndex]);
-            this._renderControls();
-            this._renderPreview();
-            this._updateHistoryButtons();
-            console.log(`[Customizer] Undo to step ${this.historyIndex}`);
-        }
-    },
+            if (color.startsWith('rgb')) {
+                const match = color.match(/\d+/g);
+                if (match && match.length >= 3) {
+                    const r = parseInt(match[0]);
+                    const g = parseInt(match[1]);
+                    const b = parseInt(match[2]);
+                    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                }
+            }
 
-    /**
-     * Redo to next state
-     */
-    _redo() {
-        if (this.historyIndex < this.historyStack.length - 1) {
+            return '#888888';
+        },
+
+        _deepClone(obj) {
+            try {
+                return JSON.parse(JSON.stringify(obj));
+            } catch {
+                return {};
+            }
+        },
+
+        /**
+         * Save current state to history stack
+         */
+        _saveHistorySnapshot() {
+            // Remove any states after current index (when user made changes after undo)
+            this.historyStack = this.historyStack.slice(0, this.historyIndex + 1);
+
+            // Add new snapshot
+            this.historyStack.push(this._deepClone(this.workingTheme));
             this.historyIndex++;
-            this.workingTheme = this._deepClone(this.historyStack[this.historyIndex]);
-            this._renderControls();
-            this._renderPreview();
+
+            // Limit history size
+            if (this.historyStack.length > this.maxHistorySize) {
+                this.historyStack.shift();
+                this.historyIndex--;
+            }
+
             this._updateHistoryButtons();
-            console.log(`[Customizer] Redo to step ${this.historyIndex}`);
-        }
-    },
+        },
 
-    /**
-     * Update undo/redo button states
-     */
-    _updateHistoryButtons() {
-        const undoBtn = this.popup?.querySelector('#tc6-undo');
-        const redoBtn = this.popup?.querySelector('#tc6-redo');
+        /**
+         * Undo to previous state
+         */
+        _undo() {
+            if (this.historyIndex > 0) {
+                this.historyIndex--;
+                this.workingTheme = this._deepClone(this.historyStack[this.historyIndex]);
+                this._renderControls();
+                this._renderPreview();
+                this._updateHistoryButtons();
+                console.log(`[Customizer] Undo to step ${this.historyIndex}`);
+            }
+        },
 
-        if (undoBtn) {
-            undoBtn.disabled = this.historyIndex <= 0;
-        }
-        if (redoBtn) {
-            redoBtn.disabled = this.historyIndex >= this.historyStack.length - 1;
-        }
-    },
+        /**
+         * Redo to next state
+         */
+        _redo() {
+            if (this.historyIndex < this.historyStack.length - 1) {
+                this.historyIndex++;
+                this.workingTheme = this._deepClone(this.historyStack[this.historyIndex]);
+                this._renderControls();
+                this._renderPreview();
+                this._updateHistoryButtons();
+                console.log(`[Customizer] Redo to step ${this.historyIndex}`);
+            }
+        },
 
-    _escape(str) {
-        const div = document.createElement('div');
-        div.textContent = str || '';
-        return div.innerHTML;
-    },
+        /**
+         * Update undo/redo button states
+         */
+        _updateHistoryButtons() {
+            const undoBtn = this.popup?.querySelector('#tc6-undo');
+            const redoBtn = this.popup?.querySelector('#tc6-redo');
 
-    /**
-     * Show save success notification with tick icon
-     */
-    _showSaveNotification(message) {
-        // Remove existing notification if any
-        const existing = document.querySelector('.tc6-save-notification');
-        if (existing) existing.remove();
+            if (undoBtn) {
+                undoBtn.disabled = this.historyIndex <= 0;
+            }
+            if (redoBtn) {
+                redoBtn.disabled = this.historyIndex >= this.historyStack.length - 1;
+            }
+        },
 
-        const notification = document.createElement('div');
-        notification.className = 'tc6-save-notification';
-        notification.innerHTML = `
+        _escape(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        },
+
+        /**
+         * Show save success notification with tick icon
+         */
+        _showSaveNotification(message) {
+            // Remove existing notification if any
+            const existing = document.querySelector('.tc6-save-notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.className = 'tc6-save-notification';
+            notification.innerHTML = `
             <div class="tc6-save-notification-content">
                 <svg class="tc6-save-tick" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -4447,93 +5066,93 @@ const ThemeCustomizer = {
             </div>
         `;
 
-        document.body.appendChild(notification);
+            document.body.appendChild(notification);
 
-        // Trigger animation
-        requestAnimationFrame(() => {
-            notification.classList.add('visible');
-        });
+            // Trigger animation
+            requestAnimationFrame(() => {
+                notification.classList.add('visible');
+            });
 
-        // Auto remove after 3 seconds
-        setTimeout(() => {
-            notification.classList.remove('visible');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    },
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('visible');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        },
 
-    /**
-     * Trigger auto-save (debounced)
-     */
-    _triggerAutoSave() {
-        // Only auto-save if it's a custom theme
-        if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
-            return;
+        /**
+         * Trigger auto-save (debounced)
+         */
+        _triggerAutoSave() {
+            // Only auto-save if it's a custom theme
+            if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
+                return;
+            }
+
+            // Clear previous timeout
+            if (this._autoSaveTimeout) {
+                clearTimeout(this._autoSaveTimeout);
+            }
+
+            // Debounce auto-save by 2 seconds
+            this._autoSaveTimeout = setTimeout(() => {
+                this._performAutoSave();
+            }, 2000);
+        },
+
+        /**
+         * Perform the actual auto-save
+         */
+        _performAutoSave() {
+            if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
+                return;
+            }
+
+            const name = this.popup?.querySelector('#tc6-name')?.value?.trim() || this.workingTheme.name;
+            this.workingTheme.name = name;
+
+            const colorsClone = this._deepClone(this.workingTheme.colors || {});
+            const editorClone = this._deepClone(this.workingTheme.editor || {});
+            const terminalClone = this._deepClone(this.workingTheme.terminal || {});
+
+            const themeData = {
+                meta: {
+                    id: this.sourceThemeId,
+                    name: name,
+                    author: this.workingTheme.author || 'User',
+                    version: '1.0.0',
+                    type: this.workingTheme.type || 'dark',
+                    tags: ['custom']
+                },
+                colors: colorsClone,
+                editor: editorClone,
+                terminal: terminalClone
+            };
+
+            if (ThemeManager.registerTheme(themeData)) {
+                ThemeManager._saveUserThemes();
+
+                // Show auto-save indicator
+                this._showAutoSaveIndicator();
+
+                console.log(`[Customizer] Auto-saved: ${name}`);
+            }
+        },
+
+        /**
+         * Show auto-save indicator
+         */
+        _showAutoSaveIndicator() {
+            const indicator = this.popup?.querySelector('#tc6-autosave');
+            if (!indicator) return;
+
+            indicator.style.display = 'flex';
+
+            // Hide after 2 seconds
+            setTimeout(() => {
+                if (indicator) indicator.style.display = 'none';
+            }, 2000);
         }
+    };
 
-        // Clear previous timeout
-        if (this._autoSaveTimeout) {
-            clearTimeout(this._autoSaveTimeout);
-        }
-
-        // Debounce auto-save by 2 seconds
-        this._autoSaveTimeout = setTimeout(() => {
-            this._performAutoSave();
-        }, 2000);
-    },
-
-    /**
-     * Perform the actual auto-save
-     */
-    _performAutoSave() {
-        if (!this.sourceThemeId || ThemeManager.builtinThemeIds.includes(this.sourceThemeId)) {
-            return;
-        }
-
-        const name = this.popup?.querySelector('#tc6-name')?.value?.trim() || this.workingTheme.name;
-        this.workingTheme.name = name;
-
-        const colorsClone = this._deepClone(this.workingTheme.colors || {});
-        const editorClone = this._deepClone(this.workingTheme.editor || {});
-        const terminalClone = this._deepClone(this.workingTheme.terminal || {});
-
-        const themeData = {
-            meta: {
-                id: this.sourceThemeId,
-                name: name,
-                author: this.workingTheme.author || 'User',
-                version: '1.0.0',
-                type: this.workingTheme.type || 'dark',
-                tags: ['custom']
-            },
-            colors: colorsClone,
-            editor: editorClone,
-            terminal: terminalClone
-        };
-
-        if (ThemeManager.registerTheme(themeData)) {
-            ThemeManager._saveUserThemes();
-
-            // Show auto-save indicator
-            this._showAutoSaveIndicator();
-
-            console.log(`[Customizer] Auto-saved: ${name}`);
-        }
-    },
-
-    /**
-     * Show auto-save indicator
-     */
-    _showAutoSaveIndicator() {
-        const indicator = this.popup?.querySelector('#tc6-autosave');
-        if (!indicator) return;
-
-        indicator.style.display = 'flex';
-
-        // Hide after 2 seconds
-        setTimeout(() => {
-            if (indicator) indicator.style.display = 'none';
-        }, 2000);
-    }
-};
-
-window.ThemeCustomizer = ThemeCustomizer;
+    window.ThemeCustomizer = ThemeCustomizer;

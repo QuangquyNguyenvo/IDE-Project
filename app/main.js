@@ -20,6 +20,11 @@ const registerLegacyHandlers = require('./ipc');
 // ============================================================================
 // SINGLE INSTANCE LOCK
 // ============================================================================
+// Set App User Model ID for Windows Taskbar Icon
+if (process.platform === 'win32') {
+    app.setAppUserModelId('com.quangquy.cppide');
+}
+
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {

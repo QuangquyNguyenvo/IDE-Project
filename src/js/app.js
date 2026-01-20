@@ -803,7 +803,7 @@ function initSettings() {
     }
 
     // Appearance: open customizer for current theme
-    const customizeBtn = document.getElementById('btn-theme-customize');
+    const customizeBtn = document.getElementById('btn-open-customizer');
     if (customizeBtn) {
         customizeBtn.onclick = () => {
             const currentThemeId = document.getElementById('set-theme')?.value || App.settings?.appearance?.theme;

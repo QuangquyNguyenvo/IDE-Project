@@ -38,7 +38,7 @@ const ColorRegistry = {
             description: 'Panels, headers, cards - slightly lighter',
             icon: 'layers',
             baseKey: 'bgSurface',
-            members: ['bgPanel', 'bgPanel-problems', 'bgPanel-input', 'bgPanel-expected', 'bgHeader', 'bgGlass', 'bgGlassHeavy', 'bgButton', 'bgButtonHover', 'bgOceanLight']
+            members: ['bgPanel', 'bgHeader', 'bgGlass', 'bgGlassHeavy', 'bgButton', 'bgButtonHover', 'bgOceanLight']
         },
         accent: {
             label: 'Accent',
@@ -95,9 +95,6 @@ const ColorRegistry = {
         // Surface group
         'bgSurface': '--bg-surface',
         'bgPanel': '--bg-panel',
-        'bgPanel-problems': '--bg-panel-problems',
-        'bgPanel-input': '--bg-panel-input',
-        'bgPanel-expected': '--bg-panel-expected',
         'bgHeader': '--bg-header',
         'bgGlass': '--bg-glass',
         'bgGlassHeavy': '--bg-glass-heavy',
@@ -131,7 +128,6 @@ const ColorRegistry = {
         'syntaxNumber': '--syntax-number',
         'syntaxType': '--syntax-type',
         'syntaxFunction': '--syntax-function',
-        'syntaxVariable': '--syntax-variable', // Added for custom variables like cout
         'syntaxComment': '--syntax-comment',
 
         // Effects (kept for compatibility)
@@ -219,27 +215,6 @@ const ColorRegistry = {
                 rgb.g + (gray - rgb.g) * amount,
                 rgb.b + (gray - rgb.b) * amount
             );
-        },
-
-        /**
-         * Mix two colors (linear interpolation)
-         * @param {string} color1 - Hex color 1
-         * @param {string} color2 - Hex color 2
-         * @param {number} weight - Percentage of color1 to keep (0-100)
-         */
-        mix(color1, color2, weight = 50) {
-            const rgb1 = this.hexToRgb(color1);
-            const rgb2 = this.hexToRgb(color2);
-            if (!rgb1 || !rgb2) return color1;
-
-            const w = weight / 100;
-            const a = 1 - w;
-
-            return this.rgbToHex(
-                rgb1.r * w + rgb2.r * a,
-                rgb1.g * w + rgb2.g * a,
-                rgb1.b * w + rgb2.b * a
-            );
         }
     },
 
@@ -267,9 +242,6 @@ const ColorRegistry = {
                 return {
                     bgSurface: baseColor,
                     bgPanel: utils.toRgba(baseColor, 0.95),
-                    'bgPanel-problems': utils.toRgba(baseColor, 0.95),
-                    'bgPanel-input': utils.toRgba(baseColor, 0.95),
-                    'bgPanel-expected': utils.toRgba(baseColor, 0.95),
                     bgHeader: utils.toRgba(utils.darken(baseColor, 10), 0.97),
                     bgGlass: utils.toRgba(baseColor, 0.92),
                     bgGlassHeavy: utils.toRgba(baseColor, 0.97),
@@ -306,19 +278,12 @@ const ColorRegistry = {
         }
     },
 
-
     /**
      * Get CSS variable name for a color key
-     * Uses ThemeTokens as Single Source of Truth
      */
     getCssVar(colorKey) {
-        // Use ThemeTokens if available, fallback to local mapping
-        if (typeof ThemeTokens !== 'undefined') {
-            return ThemeTokens.getCssVar(colorKey);
-        }
         return this._cssVars[colorKey] || null;
     },
-
 
     /**
      * Get all keys in a group
