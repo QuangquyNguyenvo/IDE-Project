@@ -23,8 +23,6 @@ const competitiveHandlers = require('./competitive-handlers');
  * @param {import('electron').BrowserWindow} mainWindow
  */
 function registerAllHandlers(mainWindow) {
-    console.log('[IPC] Registering all handlers...');
-
     // Set main window reference for handlers that need it
     fileHandlers.setMainWindow(mainWindow);
     compilerHandlers.setMainWindow(mainWindow);
@@ -39,8 +37,6 @@ function registerAllHandlers(mainWindow) {
     settingsHandlers.registerHandlers();
     formatHandlers.registerHandlers();
     competitiveHandlers.registerHandlers();
-
-    console.log('[IPC] All handlers registered');
 }
 
 // ============================================================================

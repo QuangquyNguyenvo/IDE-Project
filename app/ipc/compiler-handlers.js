@@ -72,7 +72,7 @@ function registerHandlers() {
         return compiler.getCompilerInfo();
     });
 
-    console.log('[IPC] Compiler handlers registered');
+
 }
 
 // ============================================================================

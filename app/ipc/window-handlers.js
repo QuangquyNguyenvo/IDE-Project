@@ -30,7 +30,7 @@ function registerHandlers() {
         closeWindow();
     });
 
-    console.log('[IPC] Window handlers registered');
+
 }
 
 // ============================================================================

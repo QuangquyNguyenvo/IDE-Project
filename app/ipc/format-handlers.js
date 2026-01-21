@@ -34,7 +34,7 @@ function registerHandlers() {
         return await syntax.checkSyntax(content, filePath);
     });
 
-    console.log('[IPC] Format handlers registered');
+
 }
 
 // ============================================================================

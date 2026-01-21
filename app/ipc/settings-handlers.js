@@ -64,7 +64,7 @@ function registerHandlers() {
         };
     });
 
-    console.log('[IPC] Settings handlers registered');
+
 }
 
 // ============================================================================

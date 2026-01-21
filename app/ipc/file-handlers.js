@@ -75,9 +75,8 @@ function watchFile(filePath) {
         });
 
         fileWatchers.set(filePath, { watcher, mtime: stats.mtimeMs });
-        console.log(`[FileWatcher] Watching: ${filePath}`);
     } catch (e) {
-        console.log(`[FileWatcher] Cannot watch: ${filePath}`, e.message);
+        console.error(`[FileWatcher] Cannot watch: ${filePath}`, e.message);
     }
 }
 
@@ -90,7 +89,6 @@ function unwatchFile(filePath) {
     if (entry) {
         entry.watcher.close();
         fileWatchers.delete(filePath);
-        console.log(`[FileWatcher] Stopped watching: ${filePath}`);
     }
 }
 
@@ -246,7 +244,7 @@ function registerHandlers() {
         }
     });
 
-    console.log('[IPC] File handlers registered');
+
 }
 
 // ============================================================================

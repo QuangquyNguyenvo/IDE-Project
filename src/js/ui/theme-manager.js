@@ -591,6 +591,11 @@ const ThemeManager = {
         console.log(`[ThemeManager] Applying theme: ${theme.name} (${themeId})`);
         this.activeThemeId = themeId;
 
+        // Load saved background settings for built-in themes
+        if (this.builtinThemeIds.includes(themeId)) {
+            this._loadSavedBackground(themeId, theme);
+        }
+
         // 1. Set data-theme attribute for CSS
         document.documentElement.setAttribute('data-theme', themeId);
 
@@ -618,6 +623,27 @@ const ThemeManager = {
             } catch (e) {
                 console.warn('[ThemeManager] Monaco theme not ready:', e);
             }
+        }
+    },
+
+    /**
+     * Load saved background settings for a built-in theme
+     * @param {string} themeId - Theme ID
+     * @param {object} theme - Theme object to modify
+     * @private
+     */
+    _loadSavedBackground(themeId, theme) {
+        const storageKey = `theme-bg-${themeId}`;
+        try {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+                const bgSettings = JSON.parse(saved);
+                if (!theme.colors) theme.colors = {};
+                Object.assign(theme.colors, bgSettings);
+                console.log(`[ThemeManager] Loaded saved background for: ${themeId}`);
+            }
+        } catch (e) {
+            console.warn(`[ThemeManager] Failed to load saved background for ${themeId}:`, e);
         }
     },
 

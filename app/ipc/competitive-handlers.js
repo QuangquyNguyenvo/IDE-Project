@@ -72,7 +72,7 @@ function registerHandlers() {
         return await competitive.runTest({ exePath, input, expectedOutput, timeLimit, cwd });
     });
 
-    console.log('[IPC] Competitive handlers registered');
+
 }
 
 // ============================================================================

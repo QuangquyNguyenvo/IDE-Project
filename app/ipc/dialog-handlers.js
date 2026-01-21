@@ -44,7 +44,7 @@ function registerHandlers() {
         }
     });
 
-    console.log('[IPC] Dialog handlers registered');
+
 }
 
 // ============================================================================
