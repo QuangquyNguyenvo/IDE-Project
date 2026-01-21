@@ -25,10 +25,10 @@ function initTreeSitter() {
         const Cpp = require('tree-sitter-cpp');
         tsParser = new Parser();
         tsParser.setLanguage(Cpp);
-        console.log('[TreeSitter] Initialized successfully');
+            // console.log('[TreeSitter] Initialized successfully');
         return true;
     } catch (e) {
-        console.log('[TreeSitter] Not available, falling back to g++ only:', e.message);
+            // console.log('[TreeSitter] Not available, falling back to g++ only:', e.message);
         return false;
     }
 }
@@ -55,7 +55,7 @@ function ensureDirectories() {
     for (const dir of dirs) {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
-            console.log(`[Init] Created directory: ${dir}`);
+            // console.log(`[Init] Created directory: ${dir}`);
         }
     }
 }
@@ -65,7 +65,7 @@ function ensureDirectories() {
  * Called after app.whenReady()
  */
 async function initializeApp() {
-    console.log('[App] Initializing Sameko Dev C++...');
+    // console.log('[App] Initializing Sameko Dev C++...');
 
     // 1. Initialize Tree-sitter
     initTreeSitter();
@@ -77,14 +77,14 @@ async function initializeApp() {
     // detectCompiler();
     // performCompilerWarmup();
 
-    console.log('[App] Initialization complete');
+    // console.log('[App] Initialization complete');
 }
 
 /**
  * Cleanup before app quits
  */
 function cleanupBeforeQuit() {
-    console.log('[App] Cleaning up before quit...');
+    // console.log('[App] Cleaning up before quit...');
 
     // Close all file watchers
     // (will be implemented in Phase 4+)

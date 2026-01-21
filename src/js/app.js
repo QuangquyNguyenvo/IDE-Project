@@ -715,13 +715,11 @@ function loadSettings() {
                 editor: { ...DEFAULT_SETTINGS.editor, ...saved.editor },
                 compiler: { ...DEFAULT_SETTINGS.compiler, ...saved.compiler },
                 execution: { ...DEFAULT_SETTINGS.execution, ...saved.execution },
-                appearance: { ...DEFAULT_SETTINGS.appearance, ...saved.appearance },
-                // Ensure perTheme exists if added later
-                appearance: {
+                appearance: sanitizeAppearanceSettings({
                     ...DEFAULT_SETTINGS.appearance,
                     ...saved.appearance,
                     perTheme: saved.appearance?.perTheme || {}
-                },
+                }),
                 terminal: { ...DEFAULT_SETTINGS.terminal, ...saved.terminal },
                 panels: { ...DEFAULT_SETTINGS.panels, ...saved.panels },
                 oj: { ...DEFAULT_SETTINGS.oj, ...saved.oj },
@@ -741,6 +739,56 @@ function loadSettings() {
     } catch (e) {
         console.log('Using default settings', e);
     }
+}
+
+function clearThemeBackgroundOverrides() {
+    try {
+        if (typeof ThemeManager !== 'undefined' && ThemeManager.builtinThemeIds) {
+            ThemeManager.builtinThemeIds.forEach(id => {
+                localStorage.removeItem(`theme-bg-${id}`);
+            });
+        }
+    } catch (e) {
+        console.warn('Failed to clear saved theme backgrounds', e);
+    }
+}
+
+function sanitizeAppearanceSettings(appearance) {
+    if (!appearance) return DEFAULT_SETTINGS.appearance;
+
+    const normalizeBgUrl = (url) => {
+        if (!url) return '';
+        const cleaned = String(url).trim();
+        if (!cleaned) return '';
+
+        // Guard against bogus values like '\\' or root-only paths that break background loading
+        const invalidSingletons = ['\\', '/', '.', './', '..'];
+        if (invalidSingletons.includes(cleaned)) return '';
+
+        // If url starts with just 'file://' with nothing else, treat as invalid
+        if (cleaned.toLowerCase() === 'file://' || cleaned.toLowerCase() === 'file:') return '';
+
+        return cleaned;
+    };
+
+    const cleanedAppearance = { ...appearance };
+    cleanedAppearance.bgUrl = normalizeBgUrl(appearance.bgUrl);
+
+    if (!cleanedAppearance.perTheme) cleanedAppearance.perTheme = {};
+    for (const themeId of Object.keys(cleanedAppearance.perTheme)) {
+        const bgUrl = cleanedAppearance.perTheme[themeId]?.bgUrl;
+        const normalized = normalizeBgUrl(bgUrl);
+        if (normalized) {
+            cleanedAppearance.perTheme[themeId] = {
+                ...cleanedAppearance.perTheme[themeId],
+                bgUrl: normalized
+            };
+        } else {
+            delete cleanedAppearance.perTheme[themeId].bgUrl;
+        }
+    }
+
+    return cleanedAppearance;
 }
 
 function saveSettings() {
@@ -1553,15 +1601,26 @@ function saveSettingsAndClose() {
     // Save per-theme background setting (optional)
     const targetTheme = document.getElementById('set-theme').value;
     const bgUrlEl = document.getElementById('set-bgUrl');
-    const targetBgUrl = bgUrlEl ? bgUrlEl.value : '';
+    const normalizeBgInput = (url) => {
+        if (!url) return '';
+        const cleaned = String(url).trim();
+        if (!cleaned) return '';
+        const invalidSingletons = ['\\', '/', '.', './', '..'];
+        if (invalidSingletons.includes(cleaned)) return '';
+        if (cleaned.toLowerCase() === 'file://' || cleaned.toLowerCase() === 'file:') return '';
+        return cleaned;
+    };
+
+    const targetBgUrl = normalizeBgInput(bgUrlEl ? bgUrlEl.value : '');
 
     if (!App.settings.appearance.perTheme) App.settings.appearance.perTheme = {};
     if (!App.settings.appearance.perTheme[targetTheme]) App.settings.appearance.perTheme[targetTheme] = {};
 
-    App.settings.appearance.perTheme[targetTheme].bgUrl = targetBgUrl;
-
-    // Also update global for cache/fallback if needed, but per-theme logic should take precedence
-    App.settings.appearance.bgUrl = targetBgUrl;
+    if (targetBgUrl) {
+        App.settings.appearance.perTheme[targetTheme].bgUrl = targetBgUrl;
+    } else {
+        delete App.settings.appearance.perTheme[targetTheme].bgUrl;
+    }
 
 
     if (!App.settings.template) App.settings.template = {};
@@ -1576,6 +1635,14 @@ function saveSettingsAndClose() {
 function resetSettings() {
     if (confirm('Reset all settings to defaults?')) {
         App.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+        // Clear any saved per-theme background overrides (Customizer)
+        clearThemeBackgroundOverrides();
+        App.settings.appearance.perTheme = {};
+        App.settings.appearance.bgUrl = '';
+        // Restore hardcoded built-in themes in memory (drop previous overrides)
+        if (typeof ThemeManager !== 'undefined' && ThemeManager.restoreAllBuiltinThemes) {
+            ThemeManager.restoreAllBuiltinThemes();
+        }
         applySettings();
         saveSettings();
         openSettings();
@@ -1953,7 +2020,6 @@ function applyEditorColorScheme() {
 
 function applyBackgroundSettings() {
     const theme = App.settings.appearance.theme || 'kawaii-dark';
-    const bgUrl = App.settings.appearance.bgUrl;
     const opacity = (App.settings.appearance.bgOpacity || 50) / 100;
 
 
@@ -1990,9 +2056,19 @@ function applyBackgroundSettings() {
 
     const themeConfig = themeBackgrounds[theme] || themeBackgrounds['kawaii-dark'];
 
+    const normalizeBgUrl = (url) => {
+        if (!url) return '';
+        const cleaned = String(url).trim();
+        if (!cleaned) return '';
+        const invalidSingletons = ['\\', '/', '.', './', '..'];
+        if (invalidSingletons.includes(cleaned)) return '';
+        if (cleaned.toLowerCase() === 'file://' || cleaned.toLowerCase() === 'file:') return '';
+        return cleaned;
+    };
+
     // Get theme-specific background from USER settings
     const perTheme = App.settings.appearance.perTheme || {};
-    const userThemeBg = perTheme[theme]?.bgUrl;
+    const userThemeBg = normalizeBgUrl(perTheme[theme]?.bgUrl || App.settings.appearance.bgUrl);
 
     // Get theme-specific background from THEME definition (default)
     const themeObj = ThemeManager.themes.get(theme);

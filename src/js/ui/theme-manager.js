@@ -57,6 +57,23 @@ const ThemeManager = {
     },
 
     /**
+     * Restore a built-in theme to its hardcoded definition (drops in-memory overrides)
+     */
+    _restoreBuiltinTheme(themeId) {
+        const hardcoded = this._getHardcodedThemes();
+        if (hardcoded[themeId]) {
+            this.registerTheme(hardcoded[themeId]);
+        }
+    },
+
+    /**
+     * Restore all built-in themes to hardcoded defaults
+     */
+    restoreAllBuiltinThemes() {
+        this.builtinThemeIds.forEach(id => this._restoreBuiltinTheme(id));
+    },
+
+    /**
      * Load JSON themes in background (non-blocking)
      */
     _loadJSONThemesInBackground() {
@@ -460,7 +477,12 @@ const ThemeManager = {
             const stored = localStorage.getItem('sameko-user-themes');
             if (stored) {
                 const userThemes = JSON.parse(stored);
-                userThemes.forEach(theme => this.registerTheme(theme));
+                userThemes
+                    .filter(theme => {
+                        const id = theme?.meta?.id || theme?.id;
+                        return id && !this.builtinThemeIds.includes(id);
+                    })
+                    .forEach(theme => this.registerTheme(theme));
             }
         } catch (e) {
             console.warn('[ThemeManager] Failed to load user themes:', e);

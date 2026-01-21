@@ -6,12 +6,60 @@
 
 'use strict';
 
-const { BrowserWindow, Menu } = require('electron');
+const { BrowserWindow, Menu, app } = require('electron');
 const path = require('path');
+const http = require('http');
+const fs = require('fs');
 const { WINDOW } = require('../../shared/constants');
 
 /** @type {BrowserWindow|null} */
 let mainWindow = null;
+
+let devServer = null;
+let devServerPort = null;
+
+function startDevStaticServer(appRoot) {
+    if (app.isPackaged) return null;
+    if (devServer) return { port: devServerPort };
+
+    const publicDir = path.join(appRoot, 'src');
+    const mime = {
+        '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css',
+        '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png',
+        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.ico': 'image/x-icon',
+        '.woff2': 'font/woff2', '.ttf': 'font/ttf'
+    };
+
+    devServer = http.createServer((req, res) => {
+        const urlPath = req.url.split('?')[0];
+        const safePath = urlPath === '/' ? '/index.html' : urlPath;
+        const filePath = path.join(publicDir, safePath);
+
+        if (!filePath.startsWith(publicDir)) {
+            res.writeHead(403); res.end('Forbidden'); return;
+        }
+
+        fs.readFile(filePath, (err, data) => {
+            if (err) {
+                res.writeHead(404); res.end('Not found'); return;
+            }
+            const ext = path.extname(filePath).toLowerCase();
+            res.setHeader('Content-Type', mime[ext] || 'application/octet-stream');
+            res.end(data);
+        });
+    });
+
+    devServer.listen(0, '127.0.0.1', () => {
+        devServerPort = devServer.address().port;
+        console.log(`[DevServer] http://localhost:${devServerPort}/`);
+    });
+
+    devServer.on('error', (err) => {
+        console.warn('[DevServer] Failed to start:', err.message);
+    });
+
+    return { port: devServerPort };
+}
 
 /**
  * Get the correct base path (handles both dev and packaged app)
@@ -54,7 +102,15 @@ function createMainWindow() {
         backgroundColor: WINDOW.BACKGROUND_COLOR
     });
 
-    mainWindow.loadFile(path.join(appRoot, 'src', 'index.html'));
+    // Dev server for browser debugging (non-packaged only)
+    const devServerInfo = startDevStaticServer(appRoot);
+    if (devServerInfo?.port) {
+        const devUrl = `http://localhost:${devServerInfo.port}/`;
+        mainWindow.loadURL(devUrl);
+        console.log(`[Window] DevTools URL: ${devUrl}`);
+    } else {
+        mainWindow.loadFile(path.join(appRoot, 'src', 'index.html'));
+    }
 
     // Open DevTools in development (comment out for production)
     // mainWindow.webContents.openDevTools();
