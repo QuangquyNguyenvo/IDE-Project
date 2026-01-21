@@ -1956,7 +1956,6 @@ function applyBackgroundSettings() {
     const bgUrl = App.settings.appearance.bgUrl;
     const opacity = (App.settings.appearance.bgOpacity || 50) / 100;
 
-
     const themeBackgrounds = {
         'kawaii-dark': {
             default: 'linear-gradient(135deg, #1a2530 0%, #152535 100%)',
@@ -1998,28 +1997,32 @@ function applyBackgroundSettings() {
     const themeObj = ThemeManager.themes.get(theme);
     const themeDefaultBg = themeObj?.colors?.appBackground; // e.g. 'assets/pink.gif'
 
+    // IMPORTANT: Only use CSS variables to set background - not inline styles!
+    // The actual background is rendered by body::before pseudo-element via CSS variables
+    // We should NOT set document.body.style.backgroundImage directly (causes duplicate)
+    
+    // Clear any legacy inline background styles on body
+    document.body.style.backgroundImage = '';
+    document.body.style.backgroundRepeat = '';
+    document.body.style.backgroundAttachment = '';
+    document.body.style.backgroundSize = '';
 
+    // Background is already applied via ThemeManager._applyCSSVariables() → ThemeTokens
+    // which sets --app-bg-image CSS variable. body::before uses this variable.
+
+    // Only handle legacy userThemeBg (per-theme custom background from settings)
+    // This is separate from theme's appBackground
     if (userThemeBg) {
-        // Use CSS variable for background-position (set by ThemeManager)
-        // Don't override background-position in inline style - let CSS variable handle it
-        document.body.style.backgroundImage = `url('${userThemeBg.replace(/'/g, "\\'")}')`;
-        document.body.style.backgroundRepeat = 'no-repeat';
-        // background-position is handled by CSS variable --app-bg-position
-        document.body.style.backgroundAttachment = 'fixed';
-        document.body.style.backgroundSize = 'cover';
-    } else if (themeDefaultBg) {
-        document.body.style.backgroundImage = `url('${themeDefaultBg.replace(/'/g, "\\'")}')`;
-        document.body.style.backgroundRepeat = 'no-repeat';
-        // background-position is handled by CSS variable --app-bg-position
-        document.body.style.backgroundAttachment = 'fixed';
-        document.body.style.backgroundSize = 'cover';
-    } else {
-        document.body.style.background = themeConfig.default;
-        // Clear background-image when using gradient
-        document.body.style.backgroundImage = 'none';
+        // User has custom background for this theme - apply via CSS variable
+        const root = document.documentElement;
+        root.style.setProperty('--app-bg-image', `url('${userThemeBg.replace(/'/g, "\\'")}')`);
     }
+    // Note: themeDefaultBg is handled by ThemeManager._applyCSSVariables() already
+    // No need to set it here again
 
-
+    // Legacy code removed - was causing duplicate background:
+    // } else if (themeDefaultBg) {
+    //     document.body.style.backgroundImage = `url('${themeDefaultBg}')`;
     const appContainer = document.querySelector('.app-container');
     if (appContainer) {
         if (userThemeBg || themeDefaultBg) {
