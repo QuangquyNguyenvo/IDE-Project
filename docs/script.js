@@ -2,7 +2,7 @@ const canvas = document.getElementById('grid-canvas');
 const ctx = canvas.getContext('2d');
 let width, height;
 let points = [];
-const spacing = 50;
+let spacing = 50;
 const mouse = { x: -1000, y: -1000 };
 let animationFrameId;
 let isAnimating = false;
@@ -10,6 +10,10 @@ let isAnimating = false;
 function init() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
+
+    // Increase spacing on mobile to improve performance
+    spacing = window.innerWidth < 768 ? 70 : 50;
+
     points = [];
 
     if (width * height > 50000000) return;
@@ -245,8 +249,18 @@ function scrollToTop() {
 // Bind smooth scroll to nav links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
-        // Only trigger for links on the same page
-        const targetId = this.getAttribute('href').substring(1);
+        const href = this.getAttribute('href');
+
+        // Handle scroll to top for href="#"
+        if (href === '#') {
+            e.preventDefault();
+            smoothScrollTo(0);
+            history.pushState(null, null, ' '); // Clear hash from URL
+            return;
+        }
+
+        // Handle scroll to specific element
+        const targetId = href.substring(1);
         const targetElement = document.getElementById(targetId);
 
         if (targetElement) {

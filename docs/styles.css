@@ -258,8 +258,23 @@ svg.icon {
 .reveal {
     opacity: 0;
     transform: translateY(30px);
-    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
-    will-change: opacity, transform;
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    .reveal {
+        transition: opacity 0.3s ease-out;
+        transform: none;
+    }
+
+    .reveal.active {
+        transform: none;
+    }
+
+    .float-animation {
+        animation: none;
+    }
 }
 
 .reveal.active {
@@ -272,7 +287,7 @@ svg.icon {
 }
 
 .reveal.zoom-in {
-    transform: scale(0.9);
+    transform: scale(0.95);
 }
 
 .reveal.active {
@@ -350,7 +365,6 @@ nav {
     height: 32px;
     border-radius: 8px;
 }
-
 
 .nav-links {
     display: flex;

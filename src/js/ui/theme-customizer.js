@@ -19,6 +19,7 @@ const ThemeCustomizer = {
     bgDragMode: false,
     currentColorPicker: null,
     _activeColorKey: null, // Track which color is being edited
+    jsonMonacoEditor: null, // Monaco editor for JSON tab
 
     // History for undo/redo
     historyStack: [],
@@ -99,6 +100,12 @@ const ThemeCustomizer = {
 
         // Cleanup drag handlers
         this._cleanupBgDrag();
+
+        // Dispose Monaco JSON editor
+        if (this.jsonMonacoEditor) {
+            this.jsonMonacoEditor.dispose();
+            this.jsonMonacoEditor = null;
+        }
 
         if (this.popup) {
             this.popup.classList.remove('visible');
@@ -260,6 +267,15 @@ const ThemeCustomizer = {
                                 <path d="M21 15l-5-5L5 21"/>
                             </svg>
                             Backgrounds
+                        </button>
+                        <button class="tc6-toolbar-btn" data-category="json">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            JSON
                         </button>
                         <button class="tc6-toolbar-btn" data-category="advanced">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -719,6 +735,49 @@ const ThemeCustomizer = {
             .tc6-clear-btn:hover {
                 color: var(--error, #ff8fab);
                 border-color: var(--error, #ff8fab);
+            }
+            
+            /* JSON Editor Styles - Monaco Container */
+            .tc6-json-section {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                padding-bottom: 0;
+            }
+            .tc6-monaco-container {
+                flex: 1;
+                min-height: 450px;
+                border-radius: 12px;
+                overflow: hidden;
+                border: 2px solid var(--border, #3a6075);
+            }
+            .tc6-monaco-container:focus-within {
+                border-color: var(--accent, #88c9ea);
+            }
+            .tc6-json-editor-actions {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 10px;
+                gap: 10px;
+                flex-shrink: 0;
+            }
+            .tc6-json-status {
+                font-size: 11px;
+                font-weight: 500;
+            }
+            .tc6-json-status.tc6-json-valid {
+                color: var(--success, #7dcea0);
+            }
+            .tc6-json-status.tc6-json-invalid {
+                color: var(--error, #ff8fab);
+            }
+            .tc6-json-apply-btn {
+                flex-shrink: 0;
+            }
+            .tc6-json-apply-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
             }
             
             .tc6-slider-row {
@@ -2133,6 +2192,22 @@ const ThemeCustomizer = {
                 </div>
             </div>
             
+            <!-- JSON Editor Panel with Monaco -->
+            <div class="tc6-category-panel" data-panel="json">
+                <div class="tc6-section tc6-json-section">
+                    <div class="tc6-section-title">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Theme JSON Editor
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px;">Double-click color values to pick • Ctrl+Enter to apply</p>
+                    <div class="tc6-monaco-container" id="tc6-monaco-container"></div>
+                    <div class="tc6-json-editor-actions">
+                        <span class="tc6-json-status" id="tc6-json-status"></span>
+                        <button class="tc6-upload-btn tc6-json-apply-btn" id="tc6-json-apply">Apply Changes</button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Advanced Panel -->
             <div class="tc6-category-panel" data-panel="advanced">
                 <div class="tc6-section">
@@ -2291,6 +2366,35 @@ const ThemeCustomizer = {
         this.popup.querySelectorAll('.tc6-category-panel').forEach(panel => {
             panel.classList.toggle('active', panel.dataset.panel === category);
         });
+        
+        // Initialize Monaco editor when JSON tab is selected
+        if (category === 'json') {
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                if (!this.jsonMonacoEditor) {
+                    this._bindJsonEditor();
+                } else {
+                    // Update content if editor exists
+                    const themeForEdit = this._prepareThemeForJsonEdit();
+                    const newContent = JSON.stringify(themeForEdit, null, 2);
+                    const currentContent = this.jsonMonacoEditor.getValue();
+                    
+                    // Only update if content changed significantly (not just formatting)
+                    try {
+                        const currentParsed = JSON.parse(currentContent);
+                        const newParsed = JSON.parse(newContent);
+                        if (JSON.stringify(currentParsed) !== JSON.stringify(newParsed)) {
+                            this.jsonMonacoEditor.setValue(newContent);
+                        }
+                    } catch (e) {
+                        // Current content is invalid JSON, don't update
+                    }
+                    
+                    // Trigger layout update
+                    this.jsonMonacoEditor.layout();
+                }
+            }, 50);
+        }
     },
 
     /**
@@ -2446,6 +2550,363 @@ const ThemeCustomizer = {
             // Click on entire row
             item.addEventListener('click', openPicker);
         });
+    },
+
+    /**
+     * Bind JSON Editor events and initialize Monaco Editor
+     */
+    _bindJsonEditor() {
+        const container = this.popup?.querySelector('#tc6-monaco-container');
+        const applyBtn = this.popup?.querySelector('#tc6-json-apply');
+        const statusEl = this.popup?.querySelector('#tc6-json-status');
+        
+        if (!container) return;
+        
+        // Dispose old editor if exists
+        if (this.jsonMonacoEditor) {
+            this.jsonMonacoEditor.dispose();
+            this.jsonMonacoEditor = null;
+        }
+        
+        // Prepare theme JSON
+        const themeForEdit = this._prepareThemeForJsonEdit();
+        const jsonContent = JSON.stringify(themeForEdit, null, 2);
+        
+        // Create Monaco Editor
+        try {
+            this.jsonMonacoEditor = monaco.editor.create(container, {
+                value: jsonContent,
+                language: 'json',
+                theme: 'vs-dark',
+                minimap: { enabled: false },
+                fontSize: 12,
+                lineNumbers: 'off',
+                glyphMargin: false,
+                folding: true,
+                lineDecorationsWidth: 10,
+                lineNumbersMinChars: 0,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 2,
+                wordWrap: 'on',
+                formatOnPaste: true,
+                formatOnType: true,
+                renderLineHighlight: 'none',
+                colorDecorators: true,
+                scrollbar: {
+                    verticalScrollbarSize: 8,
+                    horizontalScrollbarSize: 8
+                },
+                padding: { top: 12, bottom: 12 }
+            });
+            
+            // Validate on content change
+            let debounceTimer = null;
+            this.jsonMonacoEditor.onDidChangeModelContent(() => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    this._validateJsonEditor();
+                }, 300);
+            });
+            
+            // Ctrl+Enter to apply
+            this.jsonMonacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                this._applyJsonEditorChanges();
+            });
+            
+            // Add color decorations for JSON
+            this._updateMonacoColorDecorations();
+            this.jsonMonacoEditor.onDidChangeModelContent(() => {
+                clearTimeout(this._colorDecoTimer);
+                this._colorDecoTimer = setTimeout(() => {
+                    this._updateMonacoColorDecorations();
+                }, 100);
+            });
+            
+            // Click handler for color picking
+            this._setupMonacoColorPicker();
+            
+            // Initial validation
+            setTimeout(() => this._validateJsonEditor(), 100);
+            
+        } catch (err) {
+            console.error('[Customizer] Failed to create Monaco editor:', err);
+            // Fallback to simple message
+            container.innerHTML = '<div style="padding: 20px; color: var(--text-muted);">Monaco Editor not available</div>';
+        }
+        
+        // Apply button
+        applyBtn?.addEventListener('click', () => {
+            this._applyJsonEditorChanges();
+        });
+    },
+    
+    /**
+     * Add color square decorations to JSON editor
+     */
+    _updateMonacoColorDecorations() {
+        if (!this.jsonMonacoEditor) return;
+        
+        const model = this.jsonMonacoEditor.getModel();
+        if (!model) return;
+        
+        const content = model.getValue();
+        const decorations = [];
+        
+        // Match hex colors and rgba colors
+        const colorRegex = /"(#[0-9a-fA-F]{3,8}|rgba?\s*\([^)]+\))"/g;
+        let match;
+        
+        while ((match = colorRegex.exec(content)) !== null) {
+            const colorValue = match[1];
+            const startPos = model.getPositionAt(match.index + 1); // +1 to skip opening quote
+            const endPos = model.getPositionAt(match.index + match[0].length - 1); // -1 to skip closing quote
+            
+            decorations.push({
+                range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+                options: {
+                    before: {
+                        content: '■',
+                        inlineClassName: `tc6-color-deco-${colorValue.replace(/[^a-zA-Z0-9]/g, '')}`,
+                        inlineClassNameAffectsLetterSpacing: true
+                    },
+                    hoverMessage: { value: `Click to pick color: ${colorValue}` }
+                }
+            });
+        }
+        
+        // Apply decorations
+        this._colorDecorations = this.jsonMonacoEditor.deltaDecorations(
+            this._colorDecorations || [],
+            decorations
+        );
+        
+        // Inject inline styles for color swatches
+        this._injectColorDecoStyles(content);
+    },
+    
+    /**
+     * Inject dynamic styles for color decorations
+     */
+    _injectColorDecoStyles(content) {
+        let styleEl = document.getElementById('tc6-color-deco-styles');
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = 'tc6-color-deco-styles';
+            document.head.appendChild(styleEl);
+        }
+        
+        const colorRegex = /"(#[0-9a-fA-F]{3,8}|rgba?\s*\([^)]+\))"/g;
+        let match;
+        let css = '';
+        
+        while ((match = colorRegex.exec(content)) !== null) {
+            const colorValue = match[1];
+            const className = colorValue.replace(/[^a-zA-Z0-9]/g, '');
+            css += `.tc6-color-deco-${className} { 
+                color: ${colorValue} !important; 
+                margin-right: 4px;
+                font-size: 14px;
+                text-shadow: 0 0 1px rgba(0,0,0,0.5);
+            }\n`;
+        }
+        
+        styleEl.textContent = css;
+    },
+    
+    /**
+     * Setup color picker on click for Monaco JSON editor
+     */
+    _setupMonacoColorPicker() {
+        if (!this.jsonMonacoEditor) return;
+        
+        // Create hidden color input
+        let colorInput = document.getElementById('tc6-monaco-color-picker');
+        if (!colorInput) {
+            colorInput = document.createElement('input');
+            colorInput.type = 'color';
+            colorInput.id = 'tc6-monaco-color-picker';
+            colorInput.style.cssText = 'position: absolute; visibility: hidden; pointer-events: none;';
+            document.body.appendChild(colorInput);
+        }
+        
+        // Track current editing position
+        let editRange = null;
+        
+        // Double click to open color picker
+        this.jsonMonacoEditor.onMouseDown((e) => {
+            if (e.event.detail !== 2) return; // Only double-click
+            
+            const model = this.jsonMonacoEditor.getModel();
+            if (!model) return;
+            
+            const position = e.target.position;
+            if (!position) return;
+            
+            const lineContent = model.getLineContent(position.lineNumber);
+            
+            // Find color value at click position
+            const colorRegex = /"(#[0-9a-fA-F]{3,8})"/g;
+            let match;
+            
+            while ((match = colorRegex.exec(lineContent)) !== null) {
+                const startCol = match.index + 2; // Skip opening quote and first char
+                const endCol = match.index + match[0].length - 1;
+                
+                if (position.column >= startCol && position.column <= endCol) {
+                    const colorValue = match[1];
+                    
+                    // Store range for replacement
+                    editRange = new monaco.Range(
+                        position.lineNumber, 
+                        match.index + 2, 
+                        position.lineNumber, 
+                        match.index + match[0].length - 1
+                    );
+                    
+                    // Open native color picker
+                    colorInput.value = colorValue.length === 4 
+                        ? `#${colorValue[1]}${colorValue[1]}${colorValue[2]}${colorValue[2]}${colorValue[3]}${colorValue[3]}`
+                        : colorValue.substring(0, 7);
+                    colorInput.click();
+                    break;
+                }
+            }
+        });
+        
+        // Handle color change
+        colorInput.addEventListener('input', (e) => {
+            if (!editRange || !this.jsonMonacoEditor) return;
+            
+            const newColor = e.target.value;
+            this.jsonMonacoEditor.executeEdits('color-picker', [{
+                range: editRange,
+                text: newColor
+            }]);
+        });
+    },
+    
+    /**
+     * Prepare theme object for JSON editing (strip large base64 images)
+     */
+    _prepareThemeForJsonEdit() {
+        const theme = this._deepClone(this.workingTheme);
+        
+        // Replace large base64 data URIs with placeholder
+        if (theme.colors?.appBackground?.startsWith('data:')) {
+            theme.colors.appBackground = '[BASE64_IMAGE_DATA]';
+        }
+        if (theme.colors?.editorBackground?.startsWith('data:')) {
+            theme.colors.editorBackground = '[BASE64_IMAGE_DATA]';
+        }
+        
+        return theme;
+    },
+    
+    /**
+     * Validate JSON in Monaco editor
+     */
+    _validateJsonEditor() {
+        const applyBtn = this.popup?.querySelector('#tc6-json-apply');
+        const statusEl = this.popup?.querySelector('#tc6-json-status');
+        
+        if (!this.jsonMonacoEditor || !statusEl) return false;
+        
+        const content = this.jsonMonacoEditor.getValue();
+        
+        try {
+            const parsed = JSON.parse(content);
+            
+            // Basic validation
+            if (!parsed.name || typeof parsed.name !== 'string') {
+                throw new Error('Theme must have a valid name');
+            }
+            if (!parsed.colors || typeof parsed.colors !== 'object') {
+                throw new Error('Theme must have colors object');
+            }
+            
+            statusEl.textContent = '✔ Valid JSON';
+            statusEl.className = 'tc6-json-status tc6-json-valid';
+            if (applyBtn) applyBtn.disabled = false;
+            return true;
+        } catch (err) {
+            statusEl.textContent = `✘ ${err.message}`;
+            statusEl.className = 'tc6-json-status tc6-json-invalid';
+            if (applyBtn) applyBtn.disabled = true;
+            return false;
+        }
+    },
+    
+    /**
+     * Apply changes from Monaco JSON editor to working theme
+     */
+    _applyJsonEditorChanges() {
+        const statusEl = this.popup?.querySelector('#tc6-json-status');
+        
+        if (!this.jsonMonacoEditor) return;
+        
+        const content = this.jsonMonacoEditor.getValue();
+        
+        try {
+            const parsed = JSON.parse(content);
+            
+            // Preserve base64 images if they were stripped
+            const currentAppBg = this.workingTheme?.colors?.appBackground;
+            const currentEditorBg = this.workingTheme?.colors?.editorBackground;
+            
+            // Merge parsed data into working theme
+            this.workingTheme = this._deepClone(parsed);
+            
+            // Restore base64 images if they were placeholders
+            if (parsed.colors?.appBackground === '[BASE64_IMAGE_DATA]' && currentAppBg?.startsWith('data:')) {
+                this.workingTheme.colors.appBackground = currentAppBg;
+            }
+            if (parsed.colors?.editorBackground === '[BASE64_IMAGE_DATA]' && currentEditorBg?.startsWith('data:')) {
+                this.workingTheme.colors.editorBackground = currentEditorBg;
+            }
+            
+            // Re-render everything (but not JSON editor to avoid cursor jump)
+            this._renderControlsWithoutJson();
+            this._renderPreview();
+            
+            if (statusEl) {
+                statusEl.textContent = '✔ Applied successfully!';
+                statusEl.className = 'tc6-json-status tc6-json-valid';
+            }
+            
+            console.log('[Customizer] JSON changes applied');
+        } catch (err) {
+            console.error('[Customizer] Failed to apply JSON:', err);
+            if (statusEl) {
+                statusEl.textContent = `✘ ${err.message}`;
+                statusEl.className = 'tc6-json-status tc6-json-invalid';
+            }
+        }
+    },
+    
+    /**
+     * Re-render controls without affecting JSON editor
+     */
+    _renderControlsWithoutJson() {
+        // Store current active panel
+        const activePanel = this.popup?.querySelector('.tc6-category-panel.active')?.dataset.panel;
+        
+        // Re-render controls
+        this._renderControls();
+        
+        // Don't rebind JSON editor since we want to keep current editor state
+        // Just restore the active panel if it was JSON
+        if (activePanel === 'json') {
+            const jsonPanel = this.popup?.querySelector('[data-panel="json"]');
+            const allPanels = this.popup?.querySelectorAll('.tc6-category-panel');
+            allPanels?.forEach(p => p.classList.remove('active'));
+            jsonPanel?.classList.add('active');
+            
+            // Re-activate JSON tab
+            const allTabs = this.popup?.querySelectorAll('.tc6-toolbar-btn');
+            allTabs?.forEach(t => t.classList.remove('active'));
+            this.popup?.querySelector('[data-category="json"]')?.classList.add('active');
+        }
     },
 
     /**
