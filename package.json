@@ -1,6 +1,6 @@
 {
     "name": "sameko-dev-cpp",
-    "version": "1.0.0-beta.9",
+    "version": "1.0.0-beta.10",
     "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
     "main": "app/main.js",
     "author": "QuangquyNguyenvo",
@@ -67,6 +67,8 @@
         "rebuild:win": "npm run clean:dist && npm run build:win"
     },
     "dependencies": {
+        "electron-log": "^5.4.3",
+        "electron-updater": "^6.7.3",
         "golden-layout": "^2.6.0",
         "monaco-editor": "^0.45.0",
         "tree-sitter": "^0.21.1",
@@ -106,12 +108,43 @@
             }
         ],
         "asar": false,
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "QuangquyNguyenvo",
+                "repo": "Sameko-Dev-CPP",
+                "releaseType": "release"
+            }
+        ],
         "win": {
             "target": [
-                "portable",
-                "dir"
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                },
+                {
+                    "target": "portable",
+                    "arch": [
+                        "x64"
+                    ]
+                }
             ],
-            "icon": "src/assets/icon.ico"
+            "icon": "src/assets/icon.ico",
+            "publisherName": "Sameko Project"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "Sameko Dev C++",
+            "perMachine": false,
+            "allowElevation": true
+        },
+        "portable": {
+            "artifactName": "${productName}-${version}-Portable.${ext}"
         },
         "mac": {
             "target": "dmg",

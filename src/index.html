@@ -26,8 +26,8 @@
         <div class="header-bar">
             <div class="logo">C++</div>
 
-            <!-- Explorer toggle button -->
-            <button class="toggle-btn explorer-toggle" id="btn-toggle-explorer" title="File Explorer (Ctrl+E)">
+            <!-- Explorer toggle button (temporarily hidden due to bugs) -->
+            <button class="toggle-btn explorer-toggle" id="btn-toggle-explorer" title="File Explorer (Ctrl+E)" style="display:none">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
                     <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
@@ -160,8 +160,8 @@
             <div class="dropdown-item" data-action="find"><span>Find</span><span class="key">Ctrl+F</span></div>
         </div>
         <div class="dropdown" id="menu-view">
-            <div class="dropdown-item" data-action="toggleexplorer"><span>File Explorer</span><span
-                    class="key">Ctrl+E</span></div>
+            <div class="dropdown-item" data-action="toggleexplorer" style="display:none"><span>File Explorer</span><span
+                class="key">Ctrl+E</span></div>
             <div class="dropdown-item" data-action="toggleio"><span>Input/Output</span></div>
             <div class="dropdown-item" data-action="toggleterm"><span>Terminal</span></div>
             <div class="dropdown-item" data-action="toggleproblems"><span>Problems</span><span class="key">Ctrl+J</span>
@@ -233,7 +233,7 @@
                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
                         </svg>
-                        Có phiên bản mới!
+                        <span id="update-title">Update Available</span>
                     </h2>
                     <button class="update-close" id="update-close">×</button>
                 </div>
@@ -249,15 +249,29 @@
                     <div class="update-notes" id="update-notes">
                         <!-- Release notes will be inserted here -->
                     </div>
+                    <!-- Progress bar for downloading -->
+                    <div class="update-progress" id="update-progress" style="display:none;">
+                        <div class="update-progress-bar">
+                            <div class="update-progress-fill" id="update-progress-fill"></div>
+                        </div>
+                        <div class="update-progress-text" id="update-progress-text">Downloading: 0%</div>
+                    </div>
                 </div>
                 <div class="update-footer">
-                    <button class="update-btn secondary" id="update-later">Để sau</button>
+                    <button class="update-btn secondary" id="update-later">Later</button>
                     <button class="update-btn primary" id="update-download">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
                         </svg>
-                        Tải về ngay
+                        <span id="update-download-text">Download Update</span>
+                    </button>
+                    <button class="update-btn primary" id="update-restart" style="display:none;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.3" />
+                        </svg>
+                        Restart to Update
                     </button>
                 </div>
             </div>

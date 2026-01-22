@@ -157,9 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI();
 
     // Initialize File Explorer
-    if (typeof FileExplorer !== 'undefined') {
-        FileExplorer.init();
-    }
+    // Temporarily disabled: File Explorer init (buggy)
+    // if (typeof FileExplorer !== 'undefined') {
+    //     FileExplorer.init();
+    // }
 
 
     let resizeTimer;
@@ -2133,15 +2134,15 @@ function initShortcuts() {
             return;
         }
 
-        // Ctrl+K, O - Open Folder
-        if (ctrlKPressed && e.key.toLowerCase() === 'o') {
-            e.preventDefault();
-            ctrlKPressed = false;
-            if (typeof FileExplorer !== 'undefined') {
-                FileExplorer.openFolderDialog();
-            }
-            return;
-        }
+        // Temporarily disabled: Ctrl+K, O (Open Folder via Explorer)
+        // if (ctrlKPressed && e.key.toLowerCase() === 'o') {
+        //     e.preventDefault();
+        //     ctrlKPressed = false;
+        //     if (typeof FileExplorer !== 'undefined') {
+        //         FileExplorer.openFolderDialog();
+        //     }
+        //     return;
+        // }
 
         // Reset chord if other key pressed
         if (ctrlKPressed && e.key !== 'Control') {
@@ -2154,10 +2155,11 @@ function initShortcuts() {
         if (e.ctrlKey && e.key === 'w') { e.preventDefault(); if (App.activeTabId) closeTab(App.activeTabId); }
         if (e.ctrlKey && e.key === 'j') { e.preventDefault(); toggleProblems(); }
         if (e.ctrlKey && e.key === ',') { e.preventDefault(); openSettings(); }
-        if (e.ctrlKey && e.key.toLowerCase() === 'e' && !e.shiftKey) {
-            e.preventDefault();
-            if (typeof FileExplorer !== 'undefined') FileExplorer.toggle();
-        }
+        // Temporarily disabled: Ctrl+E (toggle Explorer)
+        // if (e.ctrlKey && e.key.toLowerCase() === 'e' && !e.shiftKey) {
+        //     e.preventDefault();
+        //     if (typeof FileExplorer !== 'undefined') FileExplorer.toggle();
+        // }
         if (e.ctrlKey && !e.shiftKey && e.key === '\\') { e.preventDefault(); toggleSplit(); }
         if (e.ctrlKey && e.shiftKey && e.key === '|') { e.preventDefault(); swapSplitEditors(); }
         if (e.key === 'F11') { e.preventDefault(); buildRun(); }
@@ -3365,11 +3367,12 @@ function doAction(action) {
         undo: () => getActiveEditor()?.trigger('keyboard', 'undo'),
         redo: () => getActiveEditor()?.trigger('keyboard', 'redo'),
         find: () => getActiveEditor()?.trigger('keyboard', 'actions.find'),
-        toggleexplorer: () => {
-            if (typeof FileExplorer !== 'undefined') {
-                FileExplorer.toggle();
-            }
-        },
+        // Temporarily disabled: toggleexplorer
+        // toggleexplorer: () => {
+        //     if (typeof FileExplorer !== 'undefined') {
+        //         FileExplorer.toggle();
+        //     }
+        // },
         toggleio: toggleIO,
         toggleterm: toggleTerm,
         toggleproblems: toggleProblems,
@@ -5253,7 +5256,7 @@ async function initAbout() {
     if (checkBtn) {
         const newBtn = checkBtn.cloneNode(true);
         checkBtn.parentNode.replaceChild(newBtn, checkBtn);
-        newBtn.onclick = () => checkForUpdates(true);
+        newBtn.onclick = () => checkForUpdates();
     }
 
     const githubBtn = document.getElementById('btn-github');
@@ -5268,73 +5271,157 @@ async function initAbout() {
     const closeBtn = document.getElementById('update-close');
     const laterBtn = document.getElementById('update-later');
     const downloadBtn = document.getElementById('update-download');
+    const restartBtn = document.getElementById('update-restart');
 
     if (overlay) {
         const close = () => { overlay.style.display = 'none'; };
         if (closeBtn) closeBtn.onclick = close;
         if (laterBtn) laterBtn.onclick = close;
-        if (downloadBtn) downloadBtn.onclick = () => {
-            window.electronAPI.openReleasePage('https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/releases/latest');
-            close();
-        };
+        if (downloadBtn) downloadBtn.onclick = () => downloadUpdate();
+        if (restartBtn) restartBtn.onclick = () => restartToUpdate();
+    }
+
+    // Listen for update status from main process
+    window.electronAPI.onUpdateStatus((data) => {
+        handleUpdateStatus(data);
+    });
+}
+
+// Update state
+let updateDownloaded = false;
+
+function handleUpdateStatus(data) {
+    const { status, data: updateData, currentVersion } = data;
+    
+    console.log('[Update]', status, updateData);
+
+    const overlay = document.getElementById('update-overlay');
+    const title = document.getElementById('update-title');
+    const progress = document.getElementById('update-progress');
+    const progressFill = document.getElementById('update-progress-fill');
+    const progressText = document.getElementById('update-progress-text');
+    const downloadBtn = document.getElementById('update-download');
+    const restartBtn = document.getElementById('update-restart');
+    const laterBtn = document.getElementById('update-later');
+
+    switch (status) {
+        case 'checking-for-update':
+            console.log('[Update] Checking for updates...');
+            break;
+
+        case 'update-available':
+            console.log('[Update] Update available:', updateData.version);
+            
+            // Show badges
+            const badgeMain = document.getElementById('badge-settings-main');
+            const badgeTab = document.getElementById('badge-settings-tab');
+            const badgeBtn = document.getElementById('badge-update-btn');
+            if (badgeMain) badgeMain.style.display = 'block';
+            if (badgeTab) badgeTab.style.display = 'block';
+            if (badgeBtn) badgeBtn.style.display = 'block';
+
+            // Update version info
+            const upCur = document.getElementById('update-current');
+            const upNew = document.getElementById('update-new');
+            if (upCur) upCur.textContent = 'v' + currentVersion;
+            if (upNew) upNew.textContent = 'v' + updateData.version;
+
+            // Update title
+            if (title) {
+                title.textContent = updateData.isPrerelease ? 
+                    'Pre-release Update Available' : 
+                    'Update Available';
+            }
+
+            // Show overlay if checking manually
+            if (overlay) overlay.style.display = 'flex';
+            
+            // Reset UI state
+            if (downloadBtn) {
+                downloadBtn.style.display = 'flex';
+                downloadBtn.disabled = false;
+            }
+            if (restartBtn) restartBtn.style.display = 'none';
+            if (progress) progress.style.display = 'none';
+            break;
+
+        case 'update-not-available':
+            console.log('[Update] No updates available');
+            
+            if (updateData.showMessage) {
+                alert('You are using the latest version!');
+            }
+            break;
+
+        case 'download-started':
+            console.log('[Update] Download started');
+            
+            if (title) title.textContent = 'Downloading Update...';
+            if (downloadBtn) downloadBtn.disabled = true;
+            if (progress) {
+                progress.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = 'Downloading: 0%';
+            }
+            break;
+
+        case 'download-progress':
+            console.log('[Update] Download progress:', updateData.percent + '%');
+            
+            if (progressFill) progressFill.style.width = updateData.percent + '%';
+            if (progressText) progressText.textContent = `Downloading: ${updateData.percent}%`;
+            break;
+
+        case 'update-downloaded':
+            console.log('[Update] Update downloaded');
+            updateDownloaded = true;
+            
+            if (title) title.textContent = 'Update Ready to Install';
+            if (downloadBtn) downloadBtn.style.display = 'none';
+            if (restartBtn) restartBtn.style.display = 'flex';
+            if (laterBtn) laterBtn.textContent = 'Later';
+            if (progress) progress.style.display = 'none';
+            break;
+
+        case 'update-error':
+            console.error('[Update] Error:', updateData.message);
+            
+            if (updateData.showMessage) {
+                alert('Failed to check for updates: ' + updateData.message);
+            }
+            
+            if (downloadBtn) downloadBtn.disabled = false;
+            if (progress) progress.style.display = 'none';
+            break;
     }
 }
 
-async function checkForUpdates(manual = false) {
+async function checkForUpdates() {
     if (!window.electronAPI) return;
 
     try {
-        const result = await window.electronAPI.checkForUpdates();
-
-        if (result.success) {
-            const latestVer = result.data.tag_name.replace('v', '');
-            const currentVer = document.getElementById('about-version').textContent;
-
-            // Simple comparison (assuming strict X.Y.Z format or at least string inequality)
-            // Ideally use semver, but string compare works if versions are clean
-            if (latestVer !== currentVer) {
-                // Show Badges
-                const badgeMain = document.getElementById('badge-settings-main');
-                const badgeTab = document.getElementById('badge-settings-tab');
-                const badgeBtn = document.getElementById('badge-update-btn');
-
-                if (badgeMain) badgeMain.style.display = 'block';
-                if (badgeTab) badgeTab.style.display = 'block';
-                if (badgeBtn) badgeBtn.style.display = 'block';
-
-                // Update Overlay Info
-                const upNew = document.getElementById('update-new');
-                const upCur = document.getElementById('update-current');
-
-                if (upNew) upNew.textContent = 'v' + latestVer;
-                if (upCur) upCur.textContent = 'v' + currentVer;
-
-                if (manual) {
-                    const overlay = document.getElementById('update-overlay');
-                    if (overlay) overlay.style.display = 'flex';
-                }
-            } else {
-                if (manual) {
-                    alert('You are using the latest version!');
-                }
-            }
-        } else {
-            if (manual) {
-                // Show specific error for debugging
-                const msg = result.error || 'Check your internet connection.';
-                if (msg.includes('404')) {
-                    alert('No releases found on GitHub. Please publish a release first.');
-                } else if (msg.includes('403')) {
-                    alert('Update check limit exceeded (API Rate Limit). Try again later.');
-                } else {
-                    alert('Failed to check for updates: ' + msg);
-                }
-            }
-        }
-    } catch (e) {
-        console.error('Update check error:', e);
-        if (manual) alert('An error occurred while checking for updates.');
+        await window.electronAPI.checkForUpdates();
+    } catch (error) {
+        console.error('[Update] Check failed:', error);
+        alert('Failed to check for updates');
     }
+}
+
+async function downloadUpdate() {
+    if (!window.electronAPI) return;
+
+    try {
+        await window.electronAPI.downloadUpdate();
+    } catch (error) {
+        console.error('[Update] Download failed:', error);
+        alert('Failed to download update');
+    }
+}
+
+function restartToUpdate() {
+    if (!window.electronAPI || !updateDownloaded) return;
+
+    window.electronAPI.quitAndInstall();
 }
 
 // ============================================================================

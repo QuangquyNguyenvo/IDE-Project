@@ -104,6 +104,10 @@ const history = {
 // ============================================================================
 const update = {
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    downloadUpdate: () => ipcRenderer.invoke('download-update'),
+    quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
+    getUpdateStatus: () => ipcRenderer.invoke('get-update-status'),
+    onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, data) => callback(data)),
     getCurrentVersion: () => ipcRenderer.invoke('get-current-version'),
     openReleasePage: (url) => ipcRenderer.invoke('open-release-page', url),
 };

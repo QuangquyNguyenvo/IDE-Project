@@ -12,6 +12,7 @@ require('v8-compile-cache');
 const { app } = require('electron');
 const { initializeApp, setupAppEvents } = require('./core/app-lifecycle');
 const { createMainWindow } = require('./core/window-manager');
+const autoUpdateService = require('./services/auto-update-service');
 
 // Register all IPC handlers (will be expanded in Phase 7)
 // For now, we'll import from the legacy main.js to maintain compatibility
@@ -52,6 +53,9 @@ app.whenReady().then(async () => {
 
     // Register IPC handlers (pass mainWindow for process output callbacks)
     registerLegacyHandlers(mainWindow);
+
+    // Initialize auto-update service
+    autoUpdateService.initialize(mainWindow);
 
     console.log('[App] Sameko Dev C++ is ready!');
 });
