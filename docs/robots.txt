@@ -4,8 +4,7 @@ Allow: /
 # Sitemap location
 Sitemap: https://quangquynguyenvo.github.io/Sameko-Dev-CPP/sitemap.xml
 
-# Crawl-delay (optional, helps prevent overload)
-Crawl-delay: 1
+
 
 # Disallow specific paths if needed (currently allowing all)
 # Disallow: /private/

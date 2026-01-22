@@ -62,7 +62,7 @@ const ThemeManager = {
     _restoreBuiltinTheme(themeId) {
         const hardcoded = this._getHardcodedThemes();
         if (hardcoded[themeId]) {
-            this.registerTheme(hardcoded[themeId]);
+            this.registerTheme(hardcoded[themeId], true); // Skip auto re-apply
         }
     },
 
@@ -173,7 +173,10 @@ const ThemeManager = {
                         string: { color: 'a3d9a5' },
                         number: { color: 'ebcb8b' },
                         type: { color: 'e8a8b8' },
-                        function: { color: '7ec8e3' }
+                        function: { color: '7ec8e3' },
+                        variable: { color: '9cdcfe' },
+                        operator: { color: 'e0f0ff' },
+                        bracket: { color: 'ffd700' }
                     }
                 }
             },
@@ -230,7 +233,10 @@ const ThemeManager = {
                         string: { color: 'a3d9a5' },
                         number: { color: 'ebcb8b' },
                         type: { color: 'e8a8b8' },
-                        function: { color: '7ec8e3' }
+                        function: { color: '7ec8e3' },
+                        variable: { color: '9cdcfe' },
+                        operator: { color: 'e0f0ff' },
+                        bracket: { color: 'ffd700' }
                     }
                 }
             },
@@ -505,8 +511,9 @@ const ThemeManager = {
     /**
      * Register a theme from JSON object
      * @param {Object} themeData - Theme JSON object
+     * @param {boolean} skipReapply - Skip auto re-apply if this is the active theme
      */
-    registerTheme(themeData) {
+    registerTheme(themeData, skipReapply = false) {
         const id = themeData.meta?.id || themeData.id;
         if (!id) {
             console.error('[ThemeManager] Theme must have an id');
@@ -525,7 +532,7 @@ const ThemeManager = {
         }
 
         // If this is the active theme, re-apply it to update UI colors (e.g. after background JSON load)
-        if (id === this.activeThemeId) {
+        if (!skipReapply && id === this.activeThemeId) {
             this.setTheme(id);
         }
 
@@ -566,6 +573,12 @@ const ThemeManager = {
         if (syntax.function) rules.push({ token: 'function', foreground: syntax.function.color });
         if (syntax.variable) rules.push({ token: 'variable', foreground: syntax.variable.color });
         if (syntax.operator) rules.push({ token: 'operator', foreground: syntax.operator.color });
+        if (syntax.bracket) {
+            rules.push({ token: 'delimiter.bracket', foreground: syntax.bracket.color });
+            rules.push({ token: 'delimiter.parenthesis', foreground: syntax.bracket.color });
+            rules.push({ token: 'delimiter.curly', foreground: syntax.bracket.color });
+            rules.push({ token: 'delimiter.square', foreground: syntax.bracket.color });
+        }
 
         const monacoTheme = {
             base: editorConfig.base || 'vs-dark',

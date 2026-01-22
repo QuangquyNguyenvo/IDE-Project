@@ -129,6 +129,8 @@ const ColorRegistry = {
         'syntaxType': '--syntax-type',
         'syntaxFunction': '--syntax-function',
         'syntaxComment': '--syntax-comment',
+        'syntaxOperator': '--syntax-operator',
+        'syntaxBracket': '--syntax-bracket',
 
         // Effects (kept for compatibility)
         'bgOpacity': '--app-bg-opacity',

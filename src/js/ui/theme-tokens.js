@@ -88,6 +88,10 @@ const ThemeTokens = {
         appBackground: { cssVar: '--app-bg-image', type: 'image' },
         editorBackground: { cssVar: '--editor-bg-image', type: 'image' },
 
+        // ============= BRIGHTNESS =============
+        bgBrightness: { cssVar: '--app-bg-brightness', type: 'brightness' },
+        editorBgBrightness: { cssVar: '--editor-bg-brightness', type: 'brightness' },
+
         // ============= POSITIONS =============
         bgPosition: { cssVar: '--app-bg-position', type: 'position' },
         editorBgPosition: { cssVar: '--editor-bg-position', type: 'position' },
@@ -110,7 +114,9 @@ const ThemeTokens = {
         syntaxType: { cssVar: '--syntax-type', type: 'color', group: 'syntax' },
         syntaxFunction: { cssVar: '--syntax-function', type: 'color', group: 'syntax' },
         syntaxVariable: { cssVar: '--syntax-variable', type: 'color', group: 'syntax' },
-        syntaxComment: { cssVar: '--syntax-comment', type: 'color', group: 'syntax' }
+        syntaxComment: { cssVar: '--syntax-comment', type: 'color', group: 'syntax' },
+        syntaxOperator: { cssVar: '--syntax-operator', type: 'color', group: 'syntax' },
+        syntaxBracket: { cssVar: '--syntax-bracket', type: 'color', group: 'syntax' }
     },
 
     /**
@@ -211,6 +217,11 @@ const ThemeTokens = {
                 element.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
                 break;
 
+            case 'brightness':
+                // Convert percentage (0-100) to multiplier (0-1+)
+                element.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
+                break;
+
             case 'blur':
                 // Add px unit
                 element.style.setProperty(cssVar, `${parseInt(value)}px`);
@@ -267,7 +278,7 @@ const ThemeTokens = {
     applySyntax(element, syntax) {
         if (!element || !syntax) return;
 
-        const syntaxKeys = ['keyword', 'string', 'number', 'type', 'function', 'comment'];
+        const syntaxKeys = ['keyword', 'string', 'number', 'type', 'function', 'comment', 'variable', 'operator', 'bracket'];
         for (const name of syntaxKeys) {
             const data = syntax[name];
             if (data?.color) {

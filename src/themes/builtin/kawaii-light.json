@@ -79,6 +79,15 @@
             },
             "function": {
                 "color": "7ec8e3"
+            },
+            "variable": {
+                "color": "9cdcfe"
+            },
+            "operator": {
+                "color": "e0f0ff"
+            },
+            "bracket": {
+                "color": "ffd700"
             }
         }
     },

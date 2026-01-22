@@ -156,23 +156,10 @@ body {
     position: relative;
 }
 
-/* App background image with opacity support using pseudo-element */
-body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: var(--app-bg-image, url('../assets/background.jpg'));
-    background-repeat: no-repeat;
-    background-position: var(--app-bg-position, center center);
-    background-size: cover;
-    background-attachment: fixed;
-    opacity: var(--app-bg-opacity, 0.5);
-    filter: blur(var(--app-bg-blur, 0px));
-    z-index: -1;
-    pointer-events: none;
-}
+/* App background is now set via inline styles in app.js, not pseudo-element */
+/* This ensures reset properly clears old backgrounds */
 
-/* Hide app background when customizer is open to prevent overlap */
+/* Hide any leftover pseudo-element backgrounds when customizer is open */
 body.customizer-open::before {
     display: none !important;
 }
@@ -328,8 +315,8 @@ body.customizer-open::before {
     align-items: center;
     gap: 10px;
     overflow: hidden;
-    /* -webkit-app-region: no-drag; REMOVED to allow dragging on empty space */
     padding-left: 10px;
+    /* Inherit drag from header-bar, empty space is draggable */
 }
 
 .tabs-container {
@@ -337,8 +324,12 @@ body.customizer-open::before {
     gap: 8px;
     overflow-x: auto;
     padding: 6px 4px;
-    -webkit-app-region: no-drag;
-    /* Add this so tabs are clickable/scrollable */
+    /* Inherit drag from parent, empty space remains draggable */
+    pointer-events: none; /* Allow drag on empty space */
+}
+
+.tabs-container > * {
+    pointer-events: auto; /* Re-enable clicks on children (tabs, buttons) */
 }
 
 .tabs-container::-webkit-scrollbar {
@@ -361,6 +352,7 @@ body.customizer-open::before {
     transition: transform var(--transition-duration) var(--transition-timing), box-shadow var(--transition-duration), color var(--transition-duration);
     box-shadow: 0 2px 4px rgba(136, 201, 234, 0.15);
     flex-shrink: 0;
+    -webkit-app-region: no-drag; /* Tabs are clickable */
 }
 
 .tab:hover {
@@ -2543,7 +2535,7 @@ body.split-active .editor-pane {
     background-position: var(--editor-bg-position, center center);
     background-repeat: no-repeat;
     opacity: var(--editor-bg-opacity, 0.15);
-    filter: blur(var(--editor-bg-blur, 0px));
+    filter: blur(var(--editor-bg-blur, 0px)) brightness(var(--editor-bg-brightness, 1));
     pointer-events: none;
     z-index: 0;
     border-radius: inherit;

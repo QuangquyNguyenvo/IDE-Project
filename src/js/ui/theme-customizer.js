@@ -52,6 +52,16 @@ const ThemeCustomizer = {
         if (!this.workingTheme.colors) this.workingTheme.colors = {};
         if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
 
+        // Initialize default values for blur and opacity if not set
+        // This prevents undefined values from being removed when saving
+        const c = this.workingTheme.colors;
+        if (c.bgOpacity === undefined) c.bgOpacity = 100;
+        if (c.bgBrightness === undefined) c.bgBrightness = 100;
+        if (c.bgBlur === undefined) c.bgBlur = 0;
+        if (c.editorBgOpacity === undefined) c.editorBgOpacity = 100;
+        if (c.editorBgBrightness === undefined) c.editorBgBrightness = 100;
+        if (c.editorBgBlur === undefined) c.editorBgBlur = 0;
+
         // Load saved background settings from localStorage for built-in themes
         // This ensures customizer shows the user's saved background, not the default
         if (ThemeManager.builtinThemeIds?.includes(themeId)) {
@@ -82,6 +92,10 @@ const ThemeCustomizer = {
         this._savedEditorBgOpacity = root.style.getPropertyValue('--editor-bg-opacity');
         this._savedAppBgImage = root.style.getPropertyValue('--app-bg-image');
         this._savedEditorBgImage = root.style.getPropertyValue('--editor-bg-image');
+        this._savedAppBgBrightness = root.style.getPropertyValue('--app-bg-brightness');
+        this._savedEditorBgBrightness = root.style.getPropertyValue('--editor-bg-brightness');
+        this._savedAppBgBlur = root.style.getPropertyValue('--app-bg-blur');
+        this._savedEditorBgBlur = root.style.getPropertyValue('--editor-bg-blur');
 
         // Hide both opacity and image to prevent any overlap
         root.style.setProperty('--app-bg-opacity', '0');
@@ -164,6 +178,40 @@ const ThemeCustomizer = {
             root.style.removeProperty('--editor-bg-opacity');
         }
 
+        // Restore brightness values
+        if (this._savedAppBgBrightness) {
+            root.style.setProperty('--app-bg-brightness', this._savedAppBgBrightness);
+        } else if (activeTheme?.colors?.bgBrightness !== undefined) {
+            root.style.setProperty('--app-bg-brightness', (activeTheme.colors.bgBrightness / 100).toString());
+        } else {
+            root.style.removeProperty('--app-bg-brightness');
+        }
+
+        if (this._savedEditorBgBrightness) {
+            root.style.setProperty('--editor-bg-brightness', this._savedEditorBgBrightness);
+        } else if (activeTheme?.colors?.editorBgBrightness !== undefined) {
+            root.style.setProperty('--editor-bg-brightness', (activeTheme.colors.editorBgBrightness / 100).toString());
+        } else {
+            root.style.removeProperty('--editor-bg-brightness');
+        }
+
+        // Restore blur values
+        if (this._savedAppBgBlur) {
+            root.style.setProperty('--app-bg-blur', this._savedAppBgBlur);
+        } else if (activeTheme?.colors?.bgBlur !== undefined) {
+            root.style.setProperty('--app-bg-blur', activeTheme.colors.bgBlur + 'px');
+        } else {
+            root.style.removeProperty('--app-bg-blur');
+        }
+
+        if (this._savedEditorBgBlur) {
+            root.style.setProperty('--editor-bg-blur', this._savedEditorBgBlur);
+        } else if (activeTheme?.colors?.editorBgBlur !== undefined) {
+            root.style.setProperty('--editor-bg-blur', activeTheme.colors.editorBgBlur + 'px');
+        } else {
+            root.style.removeProperty('--editor-bg-blur');
+        }
+
         // Restore background images
         if (this._savedAppBgImage) {
             root.style.setProperty('--app-bg-image', this._savedAppBgImage);
@@ -191,6 +239,10 @@ const ThemeCustomizer = {
         this._savedEditorBgOpacity = null;
         this._savedAppBgImage = null;
         this._savedEditorBgImage = null;
+        this._savedAppBgBrightness = null;
+        this._savedEditorBgBrightness = null;
+        this._savedAppBgBlur = null;
+        this._savedEditorBgBlur = null;
 
         // Remove customizer-open class from body
         document.body.classList.remove('customizer-open');
@@ -1974,6 +2026,8 @@ const ThemeCustomizer = {
             .tc6-syntax-function { color: var(--syntax-function, #dcdcaa); }
             .tc6-syntax-number { color: var(--syntax-number, #b5cea8); }
             .tc6-syntax-variable { color: var(--syntax-variable, #9cdcfe); }
+            .tc6-syntax-operator { color: var(--syntax-operator, #d4d4d4); }
+            .tc6-syntax-bracket { color: var(--syntax-bracket, #ffd700); }
             .tc6-line-number { 
                 color: var(--text-muted, #666); 
                 margin-right: 12px; 
@@ -2149,6 +2203,8 @@ const ThemeCustomizer = {
                         ${this._renderColorItem('syntaxNumber', 'Numbers')}
                         ${this._renderColorItem('syntaxComment', 'Comments')}
                         ${this._renderColorItem('syntaxVariable', 'Variables')}
+                        ${this._renderColorItem('syntaxOperator', 'Operators')}
+                        ${this._renderColorItem('syntaxBracket', 'Brackets')}
                     </div>
                 </div>
             </div>
@@ -2172,10 +2228,10 @@ const ThemeCustomizer = {
                         </div>
                     </div>
                     <div class="tc6-field">
-                        <label class="tc6-field-label">Opacity</label>
+                        <label class="tc6-field-label">Brightness</label>
                         <div class="tc6-slider-row">
-                            <input type="range" min="0" max="100" value="${c.bgOpacity ?? 50}" id="tc6-app-opacity">
-                            <span class="tc6-slider-val" id="tc6-app-opacity-val">${c.bgOpacity ?? 50}%</span>
+                            <input type="range" min="0" max="100" value="${c.bgBrightness ?? 100}" id="tc6-app-brightness">
+                            <span class="tc6-slider-val" id="tc6-app-brightness-val">${c.bgBrightness ?? 100}%</span>
                         </div>
                     </div>
                     <div class="tc6-field">
@@ -2204,10 +2260,10 @@ const ThemeCustomizer = {
                         </div>
                     </div>
                     <div class="tc6-field">
-                        <label class="tc6-field-label">Opacity</label>
+                        <label class="tc6-field-label">Brightness</label>
                         <div class="tc6-slider-row">
-                            <input type="range" min="0" max="100" value="${c.editorBgOpacity ?? 15}" id="tc6-editor-opacity">
-                            <span class="tc6-slider-val" id="tc6-editor-opacity-val">${c.editorBgOpacity ?? 15}%</span>
+                            <input type="range" min="0" max="100" value="${c.editorBgBrightness ?? 100}" id="tc6-editor-brightness">
+                            <span class="tc6-slider-val" id="tc6-editor-brightness-val">${c.editorBgBrightness ?? 100}%</span>
                         </div>
                     </div>
                     <div class="tc6-field">
@@ -2494,7 +2550,6 @@ const ThemeCustomizer = {
             this._updateBgHints();
             this._renderPreview();
         });
-
         // App background drag button
         const appBgDrag = container.querySelector('#tc6-app-bg-drag');
         appBgDrag?.addEventListener('click', () => {
@@ -2530,7 +2585,6 @@ const ThemeCustomizer = {
             this._updateBgHints();
             this._renderPreview();
         });
-
         // Editor background drag button
         const editorBgDrag = container.querySelector('#tc6-editor-bg-drag');
         editorBgDrag?.addEventListener('click', () => {
@@ -2553,9 +2607,9 @@ const ThemeCustomizer = {
         });
 
         // Sliders
-        this._bindSlider('#tc6-app-opacity', 'bgOpacity', '%', '#tc6-app-opacity-val');
+        this._bindSlider('#tc6-app-brightness', 'bgBrightness', '%', '#tc6-app-brightness-val');
         this._bindSlider('#tc6-app-blur', 'bgBlur', 'px', '#tc6-app-blur-val');
-        this._bindSlider('#tc6-editor-opacity', 'editorBgOpacity', '%', '#tc6-editor-opacity-val');
+        this._bindSlider('#tc6-editor-brightness', 'editorBgBrightness', '%', '#tc6-editor-brightness-val');
         this._bindSlider('#tc6-editor-blur', 'editorBgBlur', 'px', '#tc6-editor-blur-val');
 
         // Color group clicks - change multiple colors at once
@@ -3165,7 +3219,7 @@ const ThemeCustomizer = {
 
             // Use the target set by drag button clicks
             const isEditor = this._bgDragTarget === 'editor';
-            
+
             e.preventDefault();
             isDragging = true;
             startX = e.clientX;
@@ -3206,7 +3260,7 @@ const ThemeCustomizer = {
                 this.workingTheme.colors[posKey] = `${Math.round(newX)}% ${Math.round(newY)}%`;
 
                 // Direct DOM manipulation for smoother updates
-                const bgEl = isEditor 
+                const bgEl = isEditor
                     ? this.popup?.querySelector('.tc6-editor-bg')
                     : this.popup?.querySelector('.tc6-ide-bg');
                 if (bgEl) {
@@ -3228,7 +3282,8 @@ const ThemeCustomizer = {
             }
         };
 
-        // Store handlers for cleanup
+        // Store handlers for cleanup BEFORE adding event listeners
+        // This prevents duplicate registration if _setupBgDrag is called multiple times rapidly
         wrapper._dragHandlers = {
             dblclick: dblClickHandler,
             mousedown: mouseDownHandler,
@@ -3248,13 +3303,19 @@ const ThemeCustomizer = {
      */
     _cleanupBgDrag() {
         const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
-        if (!wrapper || !wrapper._dragHandlers) return;
+        if (!wrapper) return;
+
+        if (!wrapper._dragHandlers) return;
 
         const handlers = wrapper._dragHandlers;
         wrapper.removeEventListener('dblclick', handlers.dblclick);
         wrapper.removeEventListener('mousedown', handlers.mousedown);
         document.removeEventListener('mousemove', handlers.mousemove);
         document.removeEventListener('mouseup', handlers.mouseup);
+
+        // Cancel any pending RAF
+        const rafId = handlers.rafId?.();
+        if (rafId) cancelAnimationFrame(rafId);
 
         wrapper._dragHandlers = null;
     },
@@ -3389,7 +3450,11 @@ const ThemeCustomizer = {
             bgEl.style.backgroundPosition = c.bgPosition || 'center center';
             bgEl.style.opacity = (c.bgOpacity ?? 50) / 100;
             const appBlur = c.bgBlur ?? 0;
-            bgEl.style.filter = appBlur > 0 ? `blur(${appBlur}px)` : 'none';
+            const appBrightness = (c.bgBrightness ?? 100) / 100;
+            const appFilters = [];
+            if (appBlur > 0) appFilters.push(`blur(${appBlur}px)`);
+            if (appBrightness !== 1) appFilters.push(`brightness(${appBrightness})`);
+            bgEl.style.filter = appFilters.length ? appFilters.join(' ') : 'none';
         }
 
         if (editorBgEl && c.editorBackground) {
@@ -3401,7 +3466,11 @@ const ThemeCustomizer = {
             editorBgEl.style.backgroundPosition = c.editorBgPosition || 'center center';
             const blur = c.editorBgBlur ?? 0;
             editorBgEl.style.opacity = (c.editorBgOpacity ?? 15) / 100;
-            editorBgEl.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
+            const editorBrightness = (c.editorBgBrightness ?? 100) / 100;
+            const editorFilters = [];
+            if (blur > 0) editorFilters.push(`blur(${blur}px)`);
+            if (editorBrightness !== 1) editorFilters.push(`brightness(${editorBrightness})`);
+            editorBgEl.style.filter = editorFilters.length ? editorFilters.join(' ') : 'none';
             // Extend inset to prevent blur edge artifacts
             editorBgEl.style.inset = blur > 0 ? `-${blur}px` : '0';
         }
@@ -3421,16 +3490,26 @@ const ThemeCustomizer = {
         const editorBg = c.editorBackground || '';
         const bgOpacity = (c.bgOpacity ?? 50) / 100;
         const bgBlur = c.bgBlur ?? 0;
+        const bgBrightness = (c.bgBrightness ?? 100) / 100;
+        const appFilters = [];
+        if (bgBlur > 0) appFilters.push('blur(' + bgBlur + 'px)');
+        if (bgBrightness !== 1) appFilters.push('brightness(' + bgBrightness + ')');
+        const appFilterStr = appFilters.length ? appFilters.join(' ') : 'none';
         const bgPos = c.bgPosition || 'center center';
         const editorOpacity = (c.editorBgOpacity ?? 15) / 100;
         const editorBlur = c.editorBgBlur ?? 0;
+        const editorBrightness = (c.editorBgBrightness ?? 100) / 100;
+        const editorFilters = [];
+        if (editorBlur > 0) editorFilters.push('blur(' + editorBlur + 'px)');
+        if (editorBrightness !== 1) editorFilters.push('brightness(' + editorBrightness + ')');
+        const editorFilterStr = editorFilters.length ? editorFilters.join(' ') : 'none';
 
         // Get editor background position
         const editorBgPos = c.editorBgPosition || 'center center';
 
         wrapper.innerHTML = `
             <div class="tc6-ide ${this.bgDragMode ? 'tc6-drag-mode' : ''}">
-                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${bgBlur > 0 ? 'blur(' + bgBlur + 'px)' : 'none'};"></div>` : ''}
+                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${appFilterStr};"></div>` : ''}
                 
                 <div class="tc6-ide-content ${this.bgDragMode ? 'tc6-dimmed' : ''}">
                     <!-- Header - Uses CSS variable via tc6-header-main class -->
@@ -3459,7 +3538,7 @@ const ThemeCustomizer = {
                             <!-- Editor -->
                             <div class="tc6-clickable tc6-ui-element tc6-editor-bg-container" 
                                  data-key="editorBg" data-label="Editor Background">
-                                ${editorBg ? `<div class="tc6-editor-bg" style="position: absolute; inset: ${editorBlur > 0 ? -editorBlur + 'px' : '0'}; background-image: ${editorBg.startsWith('data:') ? `url("${editorBg}")` : `url('${editorBg.replace(/'/g, "\\'")}')`}; background-size: cover; background-position: ${editorBgPos}; opacity: ${editorOpacity}; filter: ${editorBlur > 0 ? 'blur(' + editorBlur + 'px)' : 'none'}; pointer-events: none;"></div>` : ''}
+                                ${editorBg ? `<div class="tc6-editor-bg" style="position: absolute; inset: ${editorBlur > 0 ? -editorBlur + 'px' : '0'}; background-image: ${editorBg.startsWith('data:') ? `url("${editorBg}")` : `url('${editorBg.replace(/'/g, "\\'")}')`}; background-size: cover; background-position: ${editorBgPos}; opacity: ${editorOpacity}; filter: ${editorFilterStr}; pointer-events: none;"></div>` : ''}
                                 <div class="tc6-code-content">
                                     <div class="tc6-code-line">
                                         <span class="tc6-clickable tc6-line-number" data-key="textMuted" data-label="Line Numbers">1</span>
@@ -3477,13 +3556,13 @@ const ThemeCustomizer = {
                                     <div class="tc6-code-line">
                                         <span class="tc6-line-number">4</span>
                                         <span class="tc6-clickable tc6-syntax-type" data-key="syntaxType" data-label="Types">int</span>
-                                        <span class="tc6-clickable tc6-syntax-function" data-key="syntaxFunction" data-label="Functions">main</span>() {
+                                        <span class="tc6-clickable tc6-syntax-function" data-key="syntaxFunction" data-label="Functions">main</span><span class="tc6-clickable tc6-syntax-operator" data-key="syntaxOperator" data-label="Operators">()</span> <span class="tc6-clickable tc6-syntax-bracket" data-key="syntaxBracket" data-label="Brackets">{</span>
                                     </div>
                                     <div class="tc6-code-line">
                                         <span class="tc6-line-number">5</span>
                                         <span>    </span>
                                         <span class="tc6-clickable tc6-syntax-variable" data-key="syntaxVariable" data-label="Variables">cout</span>
-                                        <span> &lt;&lt; </span>
+                                        <span class="tc6-clickable tc6-syntax-operator" data-key="syntaxOperator" data-label="Operators"> &lt;&lt; </span>
                                         <span class="tc6-syntax-string">"hello"</span>;
                                     </div>
                                     <div class="tc6-code-line">
@@ -3493,7 +3572,7 @@ const ThemeCustomizer = {
                                         <span class="tc6-clickable tc6-syntax-number" data-key="syntaxNumber" data-label="Numbers">0</span>;
                                     </div>
                                     <div class="tc6-code-line">
-                                        <span class="tc6-line-number">7</span>}
+                                        <span class="tc6-line-number">7</span><span class="tc6-clickable tc6-syntax-bracket" data-key="syntaxBracket" data-label="Brackets">}</span>
                                     </div>
                                 </div>
                             </div>
@@ -3518,8 +3597,7 @@ const ThemeCustomizer = {
                             <div class="tc6-clickable tc6-ui-element tc6-panel-input" 
                                  data-key="bgPanel-input" data-label="Input Panel">
                                 <div class="tc6-panel-title tc6-accent-text">INPUT</div>
-                                <div class="tc6-clickable tc6-input-area" 
-                                     data-key="bgInput" data-label="Input Background">
+                                <div class="tc6-panel-body tc6-text-muted">
                                     Nhập dữ liệu test...
                                 </div>
                             </div>
@@ -4083,14 +4161,6 @@ const ThemeCustomizer = {
     _renderPropertyIcons(elementKey) {
         const properties = [];
 
-        // Opacity control (for all elements)
-        properties.push({
-            icon: '<span style="font-size: 16px; font-weight: 700;">α</span>',
-            property: 'opacity',
-            label: 'Opacity',
-            getValue: () => this._getOpacity(elementKey) ?? 100
-        });
-
         // Blur control (for backgrounds and terminal - acrylic effect)
         if (elementKey === 'appBackground' || elementKey === 'editorBackground' || elementKey === 'terminalBg') {
             properties.push({
@@ -4106,18 +4176,6 @@ const ThemeCustomizer = {
                     if (elementKey === 'terminalBg') return c.terminalBgBlur ?? 0;
                     return 0;
                 }
-            });
-        }
-
-        // Border control (for supported elements)
-        if (this._supportsBorder(elementKey)) {
-            properties.push({
-                icon: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <rect x="4" y="4" width="16" height="16" rx="2"/>
-                </svg>`,
-                property: 'border',
-                label: 'Border Width',
-                getValue: () => this.workingTheme?.colors?.borderWidth ?? 1
             });
         }
 
@@ -4451,6 +4509,10 @@ const ThemeCustomizer = {
             this._savedEditorBgOpacity = null;
             this._savedAppBgImage = null;
             this._savedEditorBgImage = null;
+            this._savedAppBgBrightness = null;
+            this._savedEditorBgBrightness = null;
+            this._savedAppBgBlur = null;
+            this._savedEditorBgBlur = null;
 
             // Close customizer after save (Save & Close behavior)
             this.close();
@@ -4475,10 +4537,12 @@ const ThemeCustomizer = {
         const bgSettings = {
             appBackground: this.workingTheme.colors?.appBackground,
             bgOpacity: this.workingTheme.colors?.bgOpacity,
+            bgBrightness: this.workingTheme.colors?.bgBrightness,
             bgBlur: this.workingTheme.colors?.bgBlur,
             bgPosition: this.workingTheme.colors?.bgPosition,
             editorBackground: this.workingTheme.colors?.editorBackground,
             editorBgOpacity: this.workingTheme.colors?.editorBgOpacity,
+            editorBgBrightness: this.workingTheme.colors?.editorBgBrightness,
             editorBgBlur: this.workingTheme.colors?.editorBgBlur,
             editorBgPosition: this.workingTheme.colors?.editorBgPosition
         };
@@ -4496,7 +4560,7 @@ const ThemeCustomizer = {
 
             // Get theme name for notification
             const activeTheme = ThemeManager.themes.get(this.sourceThemeId);
-            
+
             // Re-apply the theme to show changes (setTheme will load from localStorage)
             ThemeManager.setTheme(this.sourceThemeId);
 
@@ -4505,6 +4569,8 @@ const ThemeCustomizer = {
             this._savedEditorBgOpacity = null;
             this._savedAppBgImage = null;
             this._savedEditorBgImage = null;
+            this._savedAppBgBlur = null;
+            this._savedEditorBgBlur = null;
 
             // Show success notification
             this._showSaveNotification(`Background cho "${activeTheme?.name || this.sourceThemeId}" đã được lưu!`);
@@ -4528,6 +4594,118 @@ const ThemeCustomizer = {
         });
         window.dispatchEvent(event);
         console.log('[Customizer] Dispatched themeCustomizerSave event', themeData.meta);
+    },
+
+    /**
+     * Reset theme to default
+     * - For built-in themes: Clears saved background from localStorage and restores hardcoded theme
+     * - For custom themes: Resets to the last saved state
+     */
+    _reset() {
+        if (!confirm('Reset về mặc định? Tất cả thay đổi chưa lưu sẽ bị mất.')) {
+            return;
+        }
+
+        const isBuiltin = ThemeManager.builtinThemeIds.includes(this.sourceThemeId);
+
+        if (isBuiltin) {
+            // For built-in themes: Clear saved background from localStorage
+            const storageKey = `theme-bg-${this.sourceThemeId}`;
+            localStorage.removeItem(storageKey);
+            console.log(`[Customizer] Cleared saved background for: ${this.sourceThemeId}`);
+
+            // Restore hardcoded theme (without saved background)
+            ThemeManager._restoreBuiltinTheme(this.sourceThemeId);
+
+            // Re-apply theme to update UI
+            ThemeManager.setTheme(this.sourceThemeId);
+
+            // Reload customizer with clean theme
+            this.close();
+            setTimeout(() => this.open(this.sourceThemeId), 100);
+        } else {
+            // For custom themes: Reset to original saved theme data
+            const originalTheme = ThemeManager.themes.get(this.sourceThemeId);
+            if (originalTheme) {
+                this.workingTheme = this._deepClone(originalTheme);
+
+                // Ensure structure
+                if (!this.workingTheme.colors) this.workingTheme.colors = {};
+                if (!this.workingTheme.editor) this.workingTheme.editor = { syntax: {} };
+
+                // Reset history stack
+                this.historyStack = [this._deepClone(this.workingTheme)];
+                this.historyIndex = 0;
+                this._updateHistoryButtons();
+
+                // Re-render controls and preview
+                this._renderControls();
+                this._renderPreview();
+                this._updateBgStyles();
+                this._updateBgHints();
+
+                console.log(`[Customizer] Reset custom theme: ${this.sourceThemeId}`);
+            }
+        }
+    },
+
+    /**
+     * Apply background settings to document root (real app, not preview)
+     * Used after saving to immediately show changes on the actual app
+     * @param {object} bgSettings - Background settings object
+     */
+    _applyBackgroundVarsToRoot(bgSettings) {
+        const root = document.documentElement;
+
+        // App background
+        if (bgSettings.appBackground) {
+            const bgUrl = bgSettings.appBackground.startsWith('data:')
+                ? `url("${bgSettings.appBackground}")`
+                : `url('${bgSettings.appBackground.replace(/'/g, "\\'")}')`;
+            root.style.setProperty('--app-bg-image', bgUrl);
+        }
+
+        if (bgSettings.bgOpacity !== undefined) {
+            root.style.setProperty('--app-bg-opacity', (bgSettings.bgOpacity / 100).toString());
+        }
+
+        if (bgSettings.bgBrightness !== undefined) {
+            root.style.setProperty('--app-bg-brightness', (bgSettings.bgBrightness / 100).toString());
+        }
+
+        if (bgSettings.bgBlur !== undefined) {
+            root.style.setProperty('--app-bg-blur', bgSettings.bgBlur + 'px');
+        }
+
+        if (bgSettings.bgPosition) {
+            root.style.setProperty('--app-bg-position', bgSettings.bgPosition);
+        }
+
+        // Editor background
+        if (bgSettings.editorBackground) {
+            const bgUrl = bgSettings.editorBackground.startsWith('data:')
+                ? `url("${bgSettings.editorBackground}")`
+                : `url('${bgSettings.editorBackground.replace(/'/g, "\\'")}')`;
+            root.style.setProperty('--editor-bg-image', bgUrl);
+        }
+
+        if (bgSettings.editorBgOpacity !== undefined) {
+            root.style.setProperty('--editor-bg-opacity', (bgSettings.editorBgOpacity / 100).toString());
+        }
+
+        if (bgSettings.editorBgBrightness !== undefined) {
+            root.style.setProperty('--editor-bg-brightness', (bgSettings.editorBgBrightness / 100).toString());
+        }
+
+        if (bgSettings.editorBgBlur !== undefined) {
+            root.style.setProperty('--editor-bg-blur', bgSettings.editorBgBlur + 'px');
+        }
+
+        if (bgSettings.editorBgPosition) {
+            root.style.setProperty('--editor-bg-position', bgSettings.editorBgPosition);
+        }
+
+        console.log('[Customizer] Applied background vars to root:', bgSettings);
     },
 
     /**
@@ -4791,8 +4969,10 @@ const ThemeCustomizer = {
             'bgPosition': '--app-bg-position',
             'editorBgPosition': '--editor-bg-position',
             'bgOpacity': '--app-bg-opacity',
+            'bgBrightness': '--app-bg-brightness',
             'bgBlur': '--app-bg-blur',
             'editorBgOpacity': '--editor-bg-opacity',
+            'editorBgBrightness': '--editor-bg-brightness',
             'editorBgBlur': '--editor-bg-blur',
             'terminalBg': '--terminal-bg',
             'terminalBgBlur': '--terminal-bg-blur',
@@ -4819,6 +4999,7 @@ const ThemeCustomizer = {
                         wrapper.style.setProperty(cssVar, value || 'none');
                     }
                 } else if (key === 'bgOpacity' || key === 'editorBgOpacity' ||
+                    key === 'bgBrightness' || key === 'editorBgBrightness' ||
                     key === 'terminalOpacity' || key === 'panelOpacity') {
                     wrapper.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
                 } else if (key === 'bgBlur' || key === 'editorBgBlur' || key === 'terminalBgBlur') {

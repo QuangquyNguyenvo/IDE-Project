@@ -47,3 +47,9 @@ yarn-error.log*
 *.tmp
 *.temp
 *.bak
+
+# ===== AI Agent =====
+.agent/
+.github/prompts/
+.shared/
+

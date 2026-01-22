@@ -1639,9 +1639,23 @@ function resetSettings() {
         clearThemeBackgroundOverrides();
         App.settings.appearance.perTheme = {};
         App.settings.appearance.bgUrl = '';
+        
+        // Force clear all background CSS variables and inline styles
+        const root = document.documentElement;
+        root.style.removeProperty('--app-bg-image');
+        root.style.removeProperty('--app-bg-opacity');
+        root.style.removeProperty('--app-bg-position');
+        root.style.removeProperty('--app-bg-blur');
+        root.style.removeProperty('--editor-bg-image');
+        root.style.removeProperty('--editor-bg-opacity');
+        document.body.style.background = '';
+        document.body.style.backgroundImage = '';
+        
         // Restore hardcoded built-in themes in memory (drop previous overrides)
         if (typeof ThemeManager !== 'undefined' && ThemeManager.restoreAllBuiltinThemes) {
             ThemeManager.restoreAllBuiltinThemes();
+            // Re-apply theme to load hardcoded backgrounds
+            ThemeManager.setTheme(DEFAULT_SETTINGS.appearance.theme);
         }
         applySettings();
         saveSettings();
@@ -1973,9 +1987,6 @@ function applySettings() {
 
 
     applyTheme(App.settings.appearance.theme);
-
-
-    applyBackgroundSettings();
 }
 
 // ============================================================================
@@ -2074,24 +2085,22 @@ function applyBackgroundSettings() {
     const themeObj = ThemeManager.themes.get(theme);
     const themeDefaultBg = themeObj?.colors?.appBackground; // e.g. 'assets/pink.gif'
 
+    console.log('[BG] Theme:', theme, 'User BG:', userThemeBg, 'Default BG:', themeDefaultBg);
 
     if (userThemeBg) {
-        // Use CSS variable for background-position (set by ThemeManager)
-        // Don't override background-position in inline style - let CSS variable handle it
         document.body.style.backgroundImage = `url('${userThemeBg.replace(/'/g, "\\'")}')`;
         document.body.style.backgroundRepeat = 'no-repeat';
-        // background-position is handled by CSS variable --app-bg-position
+        document.body.style.backgroundPosition = 'center center';
         document.body.style.backgroundAttachment = 'fixed';
         document.body.style.backgroundSize = 'cover';
     } else if (themeDefaultBg) {
         document.body.style.backgroundImage = `url('${themeDefaultBg.replace(/'/g, "\\'")}')`;
         document.body.style.backgroundRepeat = 'no-repeat';
-        // background-position is handled by CSS variable --app-bg-position
+        document.body.style.backgroundPosition = 'center center';
         document.body.style.backgroundAttachment = 'fixed';
         document.body.style.backgroundSize = 'cover';
     } else {
         document.body.style.background = themeConfig.default;
-        // Clear background-image when using gradient
         document.body.style.backgroundImage = 'none';
     }
 

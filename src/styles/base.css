@@ -64,17 +64,27 @@ body {
 }
 
 /* App background image with opacity support using pseudo-element */
+/* 
+ * Opacity and blur are applied to the same layer. This is intentional:
+ * - When opacity = 100%, you see the full blurred image
+ * - When opacity = 50%, the blurred image is 50% transparent
+ * - Blur affects the image BEFORE opacity is applied
+ * 
+ * To have a very visible blur with low opacity on the image itself,
+ * increase both blur AND opacity together.
+ */
 body::before {
     content: '';
     position: fixed;
-    inset: 0;
+    inset: calc(-1 * var(--app-bg-blur, 0px));
+    /* Extend beyond viewport to prevent blur edge artifacts */
     background-image: var(--app-bg-image, url('../assets/background.jpg'));
     background-repeat: no-repeat;
     background-position: var(--app-bg-position, center center);
     background-size: cover;
     background-attachment: fixed;
     opacity: var(--app-bg-opacity, 0.5);
-    filter: blur(var(--app-bg-blur, 0px));
+    filter: blur(var(--app-bg-blur, 0px)) brightness(var(--app-bg-brightness, 1));
     z-index: -1;
     pointer-events: none;
 }
@@ -100,7 +110,7 @@ body::after {
     flex-direction: column;
     height: 100vh;
     background: radial-gradient(circle at center, transparent 0%, rgba(188, 226, 245, 0.3) 100%);
-    backdrop-filter: blur(2px);
+    /* backdrop-filter: blur(2px); REMOVED: Causes 4K backgrounds to look blurry */
     position: relative;
     z-index: 1;
 }
@@ -198,7 +208,7 @@ body::after {
     align-items: center;
     gap: 10px;
     overflow: hidden;
-    -webkit-app-region: no-drag;
+    -webkit-app-region: drag;
     padding-left: 10px;
 }
 
@@ -207,6 +217,7 @@ body::after {
     gap: 8px;
     overflow-x: auto;
     padding: 4px 0;
+    -webkit-app-region: no-drag;
 }
 
 .tabs-container::-webkit-scrollbar {

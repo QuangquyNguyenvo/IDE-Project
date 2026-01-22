@@ -595,6 +595,55 @@
     background-repeat: no-repeat;
 }
 
+/* Terminal section - kawaii-light (needs light text on dark terminal bg) */
+[data-theme="kawaii-light"] .terminal-section {
+    background: var(--bg-panel);
+    border: 2px solid var(--border);
+}
+
+[data-theme="kawaii-light"] .terminal-body {
+    background: var(--terminal-bg);
+    color: var(--terminal-text, #e0f0ff);
+    opacity: var(--terminal-opacity, 1);
+    backdrop-filter: blur(var(--terminal-bg-blur, 0px));
+    -webkit-backdrop-filter: blur(var(--terminal-bg-blur, 0px));
+}
+
+[data-theme="kawaii-light"] .terminal-body .line.success {
+    color: #a3d9a5;
+}
+
+[data-theme="kawaii-light"] .terminal-body .line.error {
+    color: #ff8fab;
+}
+
+[data-theme="kawaii-light"] .terminal-body .line.warning {
+    color: #ebcb8b;
+}
+
+[data-theme="kawaii-light"] .terminal-body .line.info {
+    color: #88c9ea;
+}
+
+[data-theme="kawaii-light"] .terminal-body .line.system {
+    color: #6a8a9a;
+}
+
+[data-theme="kawaii-light"] .terminal-input {
+    background: var(--terminal-bg);
+    border-top-color: var(--border);
+}
+
+[data-theme="kawaii-light"] .terminal-input input,
+[data-theme="kawaii-light"] .terminal-input textarea {
+    color: var(--terminal-text, #e0f0ff);
+}
+
+[data-theme="kawaii-light"] .terminal-input input::placeholder,
+[data-theme="kawaii-light"] .terminal-input textarea::placeholder {
+    color: #6a8a9a;
+}
+
 /* Terminal section */
 [data-theme="kawaii-dark"] .terminal-section,
 [data-theme="dracula"] .terminal-section,

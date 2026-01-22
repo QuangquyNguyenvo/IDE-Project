@@ -24,7 +24,9 @@ function init() {
                 originX: x,
                 originY: y,
                 x: x,
-                y: y
+                y: y,
+                vx: 0,
+                vy: 0
             });
         }
     }
@@ -58,38 +60,47 @@ function animate() {
     ctx.fillStyle = window.dotColor || 'rgba(100, 181, 246, 0.36)';
     ctx.beginPath();
 
-    const maxDist = 300;
+    const maxDist = 150; // Reduced interaction radius
     const maxDistSq = maxDist * maxDist;
+    const stiffness = 0.03; // Spring stiffness
+    const damping = 0.9;    // Friction
+    const mouseForce = 30;  // Reduced force
 
     for (let i = 0; i < points.length; i++) {
         const p = points[i];
+
+        // Calculate distance to mouse
         const dx = mouse.x - p.x;
         const dy = mouse.y - p.y;
         const distSq = dx * dx + dy * dy;
 
+        // Mouse interaction (Repulsion)
         if (distSq < maxDistSq) {
             const dist = Math.sqrt(distSq);
-            const force = (maxDist - dist) / maxDist;
+            // Non-linear interaction for smoother feel
+            const force = Math.pow((maxDist - dist) / maxDist, 2) * mouseForce;
             const angle = Math.atan2(dy, dx);
-            const move = force * 60;
-            p.x = p.originX - Math.cos(angle) * move;
-            p.y = p.originY - Math.sin(angle) * move;
-        } else {
-            const k = 0.1;
-            const diffX = p.originX - p.x;
-            const diffY = p.originY - p.y;
 
-            if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1) {
-                p.x = p.originX;
-                p.y = p.originY;
-            } else {
-                p.x += diffX * k;
-                p.y += diffY * k;
-            }
+            p.vx -= Math.cos(angle) * force;
+            p.vy -= Math.sin(angle) * force;
         }
 
-        ctx.moveTo(p.x + 2, p.y);
-        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        // Spring Force (Return to origin)
+        const dxHome = p.originX - p.x;
+        const dyHome = p.originY - p.y;
+
+        p.vx += dxHome * stiffness;
+        p.vy += dyHome * stiffness;
+
+        // Apply Velocity & Damping
+        p.vx *= damping;
+        p.vy *= damping;
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        ctx.moveTo(p.x + 1.5, p.y);
+        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
     }
 
     ctx.fill();
@@ -224,7 +235,12 @@ function smoothScrollTo(targetY, duration = 1000) {
         const progress = Math.min(elapsed / duration, 1);
         const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
 
-        window.scrollTo(0, startY + diff * ease);
+        // Force behavior: 'auto' to bypass any CSS smooth scrolling that might persist
+        window.scrollTo({
+            top: startY + diff * ease,
+            left: 0,
+            behavior: "auto"
+        });
 
         if (progress < 1) {
             requestAnimationFrame(scrollStep);
@@ -273,7 +289,10 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             smoothScrollTo(offsetPosition);
 
             // Optional: Update URL without jumping
-            history.pushState(null, null, '#' + targetId);
+            // Optional: Update URL without jumping (deferred to avoid stutter)
+            if (history.pushState) {
+                history.pushState(null, null, '#' + targetId);
+            }
         }
     });
 });
