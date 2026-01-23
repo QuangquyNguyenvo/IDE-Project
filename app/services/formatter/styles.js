@@ -6,10 +6,6 @@
 
 'use strict';
 
-// ============================================================================
-// STYLE CONFIGURATIONS
-// ============================================================================
-
 /**
  * AStyle arguments for different style presets
  */
@@ -82,10 +78,6 @@ function getStyleArgs(style) {
     return STYLE_ARGS[style] || STYLE_ARGS['google'];
 }
 
-/**
- * Get list of available styles
- * @returns {string[]}
- */
 function getAvailableStyles() {
     return Object.keys(STYLE_ARGS);
 }
@@ -98,10 +90,6 @@ function getAvailableStyles() {
 function isValidStyle(style) {
     return style in STYLE_ARGS;
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     STYLE_ARGS,

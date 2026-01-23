@@ -12,10 +12,6 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const { getDetectedCompiler } = require('../compiler/detector');
 
-// ============================================================================
-// SYNTAX CHECK
-// ============================================================================
-
 /**
  * Check syntax using GCC (g++ -fsyntax-only)
  * Provides semantic error checking
@@ -96,10 +92,6 @@ function parseGccOutput(output) {
 
     return diagnostics;
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     checkSyntax,

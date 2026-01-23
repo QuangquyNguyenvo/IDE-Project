@@ -11,14 +11,8 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 
-// ============================================================================
-// STATE
-// ============================================================================
-
-/** @type {string|null} */
 let detectedCompiler = null;
 
-/** @type {import('../../../shared/types').CompilerInfo} */
 let compilerInfo = {
     name: 'Unknown',
     version: '',
@@ -27,14 +21,6 @@ let compilerInfo = {
     hasLLD: false
 };
 
-// ============================================================================
-// PATH UTILITIES
-// ============================================================================
-
-/**
- * Get the correct base path (handles both dev and packaged app)
- * @returns {string}
- */
 function getBasePath() {
     // When packaged, __dirname points to app.asar, but unpacked files are in app.asar.unpacked
     if (__dirname.includes('app.asar')) {
@@ -44,10 +30,6 @@ function getBasePath() {
     return path.join(__dirname, '..', '..', '..');
 }
 
-/**
- * Get resources path for extraResources (packaged app)
- * @returns {string}
- */
 function getResourcesPath() {
     if (app.isPackaged) {
         return path.join(process.resourcesPath);
@@ -57,10 +39,6 @@ function getResourcesPath() {
 
 const basePath = getBasePath();
 const resourcesPath = getResourcesPath();
-
-// ============================================================================
-// COMPILER PATHS
-// ============================================================================
 
 /**
  * Bundled MinGW paths (inside app folder - HIGHEST PRIORITY)
@@ -90,14 +68,6 @@ const SYSTEM_COMPILER_PATHS = [
     'C:\\Program Files (x86)\\Dev-Cpp\\MinGW64\\bin\\g++.exe',
 ];
 
-// ============================================================================
-// DETECTION FUNCTIONS
-// ============================================================================
-
-/**
- * Find the best available compiler
- * @returns {string} Path to g++ or 'g++' for PATH fallback
- */
 function detectCompiler() {
     // PRIORITY 1: Check bundled MinGW in app folder (no installation needed!)
     for (const compilerPath of BUNDLED_MINGW_PATHS) {
@@ -153,10 +123,6 @@ function detectCompiler() {
     return 'g++';
 }
 
-/**
- * Get compiler version
- * @returns {Promise<string>}
- */
 async function getCompilerVersion() {
     return new Promise((resolve) => {
         const compiler = detectedCompiler || 'g++';
@@ -176,26 +142,14 @@ async function getCompilerVersion() {
     });
 }
 
-/**
- * Get detected compiler path
- * @returns {string|null}
- */
 function getDetectedCompiler() {
     return detectedCompiler;
 }
 
-/**
- * Get compiler info object
- * @returns {import('../../../shared/types').CompilerInfo}
- */
 function getCompilerInfo() {
     return { ...compilerInfo };
 }
 
-/**
- * Get compiler binary directory
- * @returns {string}
- */
 function getCompilerBinDir() {
     if (detectedCompiler && path.isAbsolute(detectedCompiler)) {
         return path.dirname(detectedCompiler);
@@ -203,10 +157,6 @@ function getCompilerBinDir() {
     return '';
 }
 
-/**
- * Create environment with compiler path
- * @returns {Object}
- */
 function getCompilerEnv() {
     const env = { ...process.env };
     const binDir = getCompilerBinDir();
@@ -215,10 +165,6 @@ function getCompilerEnv() {
     }
     return env;
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     detectCompiler,

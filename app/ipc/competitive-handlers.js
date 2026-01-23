@@ -9,17 +9,8 @@
 const { ipcMain } = require('electron');
 const competitive = require('../services/competitive');
 
-/** @type {import('electron').BrowserWindow|null} */
 let mainWindow = null;
 
-// ============================================================================
-// SETUP
-// ============================================================================
-
-/**
- * Set main window reference
- * @param {import('electron').BrowserWindow} window
- */
 function setMainWindow(window) {
     mainWindow = window;
 
@@ -41,10 +32,6 @@ function setMainWindow(window) {
         }
     });
 }
-
-// ============================================================================
-// IPC HANDLERS
-// ============================================================================
 
 /**
  * Register all competitive programming IPC handlers
@@ -74,10 +61,6 @@ function registerHandlers() {
 
 
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     registerHandlers,

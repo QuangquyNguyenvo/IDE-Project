@@ -1,19 +1,9 @@
-/**
- * IPC Handlers for Auto Updates
- * Handles update checking, downloading, and installing
- * @module app/ipc/update-handlers
- */
-
 'use strict';
 
 const { ipcMain } = require('electron');
 const autoUpdateService = require('../services/auto-update-service');
 
-/**
- * Register all update-related IPC handlers
- */
 function registerUpdateHandlers() {
-    // Check for updates
     ipcMain.handle('check-for-updates', async (event) => {
         try {
             await autoUpdateService.checkForUpdates(true);
@@ -26,7 +16,6 @@ function registerUpdateHandlers() {
         }
     });
 
-    // Download update
     ipcMain.handle('download-update', async (event) => {
         try {
             await autoUpdateService.downloadUpdate();
@@ -39,13 +28,11 @@ function registerUpdateHandlers() {
         }
     });
 
-    // Quit and install update
     ipcMain.handle('quit-and-install', (event) => {
         autoUpdateService.quitAndInstall();
         return { success: true };
     });
 
-    // Get update status
     ipcMain.handle('get-update-status', (event) => {
         return autoUpdateService.getStatus();
     });

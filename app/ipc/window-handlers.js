@@ -7,12 +7,8 @@
 'use strict';
 
 const { ipcMain } = require('electron');
-const { IPC } = require('../../shared/constants');
-const { minimizeWindow, toggleMaximize, closeWindow } = require('../core/window-manager');
-
-// ============================================================================
-// IPC HANDLERS
-// ============================================================================
+const { IPC } = require('../shared/constants');
+const { minimizeWindow, toggleMaximize, closeWindow } = require('../windows/main-window');
 
 /**
  * Register all window-related IPC handlers
@@ -32,10 +28,6 @@ function registerHandlers() {
 
 
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     registerHandlers,

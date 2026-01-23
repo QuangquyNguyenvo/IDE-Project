@@ -9,45 +9,23 @@
 const { ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { IPC } = require('../../shared/constants');
+const { IPC } = require('../shared/constants');
 
-/** @type {import('electron').BrowserWindow|null} */
 let mainWindow = null;
 
-/** @type {string|null} */
 let currentFile = null;
 
 /** @type {Map<string, {watcher: fs.FSWatcher, mtime: number}>} */
 const fileWatchers = new Map();
 
-// ============================================================================
-// SETUP
-// ============================================================================
-
-/**
- * Set main window reference
- * @param {import('electron').BrowserWindow} window
- */
 function setMainWindow(window) {
     mainWindow = window;
 }
 
-/**
- * Get current file path
- * @returns {string|null}
- */
 function getCurrentFile() {
     return currentFile;
 }
 
-// ============================================================================
-// FILE WATCHING
-// ============================================================================
-
-/**
- * Watch a file for external changes
- * @param {string} filePath
- */
 function watchFile(filePath) {
     if (!filePath || fileWatchers.has(filePath)) return;
 
@@ -80,10 +58,6 @@ function watchFile(filePath) {
     }
 }
 
-/**
- * Stop watching a file
- * @param {string} filePath
- */
 function unwatchFile(filePath) {
     const entry = fileWatchers.get(filePath);
     if (entry) {
@@ -92,10 +66,6 @@ function unwatchFile(filePath) {
     }
 }
 
-/**
- * Update file watcher mtime (call after saving)
- * @param {string} filePath
- */
 function updateFileWatcherMtime(filePath) {
     const entry = fileWatchers.get(filePath);
     if (entry) {
@@ -106,15 +76,10 @@ function updateFileWatcherMtime(filePath) {
     }
 }
 
-// ============================================================================
-// IPC HANDLERS
-// ============================================================================
-
 /**
  * Register all file-related IPC handlers
  */
 function registerHandlers() {
-    // Open file dialog
     ipcMain.handle(IPC.FILE.OPEN_DIALOG, async () => {
         const result = await dialog.showOpenDialog(mainWindow, {
             properties: ['openFile', 'multiSelections'],
@@ -133,7 +98,6 @@ function registerHandlers() {
         }
     });
 
-    // Save file
     ipcMain.handle(IPC.FILE.SAVE, async (event, { path: filePath, content }) => {
         try {
             fs.writeFileSync(filePath, content, 'utf-8');
@@ -145,7 +109,6 @@ function registerHandlers() {
         }
     });
 
-    // Save file dialog
     ipcMain.handle(IPC.FILE.SAVE_DIALOG, async (event, content) => {
         const result = await dialog.showSaveDialog(mainWindow, {
             filters: [
@@ -167,7 +130,6 @@ function registerHandlers() {
         return { success: false, canceled: true };
     });
 
-    // Read file
     ipcMain.handle(IPC.FILE.READ, async (event, filePath) => {
         try {
             const content = fs.readFileSync(filePath, 'utf-8');
@@ -177,7 +139,6 @@ function registerHandlers() {
         }
     });
 
-    // Read directory
     ipcMain.handle(IPC.FILE.READ_DIR, async (event, dirPath) => {
         try {
             const entries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -192,7 +153,6 @@ function registerHandlers() {
         }
     });
 
-    // Delete file
     ipcMain.handle(IPC.FILE.DELETE, async (event, filePath) => {
         try {
             fs.unlinkSync(filePath);
@@ -202,7 +162,6 @@ function registerHandlers() {
         }
     });
 
-    // Rename file
     ipcMain.handle(IPC.FILE.RENAME, async (event, { oldPath, newPath }) => {
         try {
             fs.renameSync(oldPath, newPath);
@@ -212,7 +171,6 @@ function registerHandlers() {
         }
     });
 
-    // Watch/Unwatch file
     ipcMain.handle(IPC.FILE.WATCH, async (event, filePath) => {
         watchFile(filePath);
         return { success: true };
@@ -223,7 +181,6 @@ function registerHandlers() {
         return { success: true };
     });
 
-    // Reload file
     ipcMain.handle(IPC.FILE.RELOAD, async (event, filePath) => {
         try {
             const content = fs.readFileSync(filePath, 'utf-8');
@@ -234,7 +191,6 @@ function registerHandlers() {
         }
     });
 
-    // Show in folder
     ipcMain.handle(IPC.FILE.SHOW_IN_FOLDER, async (event, filePath) => {
         try {
             shell.showItemInFolder(filePath);
@@ -246,10 +202,6 @@ function registerHandlers() {
 
 
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     registerHandlers,

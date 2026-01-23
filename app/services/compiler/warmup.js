@@ -10,10 +10,6 @@ const path = require('path');
 const { spawn } = require('child_process');
 const { getDetectedCompiler, getCompilerInfo, getCompilerEnv } = require('./detector');
 
-// ============================================================================
-// WARMUP FUNCTIONS
-// ============================================================================
-
 /**
  * Perform compiler warmup
  * Background compilation to force Windows to cache g++.exe, cc1plus.exe, as.exe, ld.exe into RAM
@@ -69,10 +65,6 @@ function performCompilerWarmup(delay = 1000) {
 function quickWarmup() {
     performCompilerWarmup(0);
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     performCompilerWarmup,

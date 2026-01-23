@@ -10,10 +10,6 @@ const path = require('path');
 const fs = require('fs');
 const { spawn, exec } = require('child_process');
 
-// ============================================================================
-// TEST RUNNING
-// ============================================================================
-
 /**
  * Run a single test case
  * 
@@ -171,10 +167,6 @@ async function runBatchTests({ exePath, tests, timeLimit = 3000, cwd, onProgress
     return results;
 }
 
-// ============================================================================
-// HELPERS
-// ============================================================================
-
 /**
  * Normalize output for comparison
  * @param {string} s
@@ -194,10 +186,6 @@ function truncate(s, maxLen) {
     if (s.length <= maxLen) return s;
     return s.substring(0, maxLen) + '...';
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     runTest,

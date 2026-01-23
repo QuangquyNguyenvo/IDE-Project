@@ -7,26 +7,13 @@
 'use strict';
 
 const { ipcMain, dialog } = require('electron');
-const { IPC } = require('../../shared/constants');
+const { IPC } = require('../shared/constants');
 
-/** @type {import('electron').BrowserWindow|null} */
 let mainWindow = null;
 
-// ============================================================================
-// SETUP
-// ============================================================================
-
-/**
- * Set main window reference
- * @param {import('electron').BrowserWindow} window
- */
 function setMainWindow(window) {
     mainWindow = window;
 }
-
-// ============================================================================
-// IPC HANDLERS
-// ============================================================================
 
 /**
  * Register all dialog-related IPC handlers
@@ -46,10 +33,6 @@ function registerHandlers() {
 
 
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     registerHandlers,

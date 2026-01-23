@@ -6,21 +6,8 @@
 
 'use strict';
 
-// ============================================================================
-// STATE
-// ============================================================================
-
-/** @type {Object|null} */
 let parser = null;
 
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-/**
- * Initialize Tree-sitter parser
- * @returns {boolean} Whether initialization succeeded
- */
 function initTreeSitter() {
     if (parser) return true;
 
@@ -37,25 +24,13 @@ function initTreeSitter() {
     }
 }
 
-/**
- * Get parser instance
- * @returns {Object|null}
- */
 function getParser() {
     return parser;
 }
 
-/**
- * Check if Tree-sitter is available
- * @returns {boolean}
- */
 function isAvailable() {
     return parser !== null;
 }
-
-// ============================================================================
-// PARSING
-// ============================================================================
 
 /**
  * Parse C++ code and find syntax errors
@@ -76,11 +51,7 @@ function checkSyntax(content) {
     try {
         const tree = parser.parse(content);
 
-        /**
-         * Traverse AST to find errors
-         * @param {Object} node
-         */
-        const traverse = (node) => {
+                const traverse = (node) => {
             // node.hasError is a property in native bindings
             if (node.hasError || node.type === 'ERROR') {
                 if (node.type === 'ERROR') {
@@ -141,10 +112,6 @@ function parse(content) {
         return null;
     }
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     initTreeSitter,

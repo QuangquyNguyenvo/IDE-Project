@@ -7,20 +7,11 @@
 'use strict';
 
 const { ipcMain } = require('electron');
-const { IPC } = require('../../shared/constants');
+const { IPC } = require('../shared/constants');
 const compiler = require('../services/compiler');
 
-/** @type {import('electron').BrowserWindow|null} */
 let mainWindow = null;
 
-// ============================================================================
-// SETUP
-// ============================================================================
-
-/**
- * Set main window reference
- * @param {import('electron').BrowserWindow} window
- */
 function setMainWindow(window) {
     mainWindow = window;
 
@@ -31,10 +22,6 @@ function setMainWindow(window) {
         }
     });
 }
-
-// ============================================================================
-// IPC HANDLERS
-// ============================================================================
 
 /**
  * Register all compiler-related IPC handlers
@@ -74,10 +61,6 @@ function registerHandlers() {
 
 
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     registerHandlers,

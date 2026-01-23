@@ -15,10 +15,6 @@ const log = require('electron-log');
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 
-// ============================================================================
-// AUTO-UPDATER CONFIGURATION
-// ============================================================================
-
 class AutoUpdateService {
     constructor() {
         this.mainWindow = null;
@@ -37,11 +33,7 @@ class AutoUpdateService {
         this.setupEventHandlers();
     }
 
-    /**
-     * Initialize the update service with main window
-     * @param {BrowserWindow} mainWindow - The main application window
-     */
-    initialize(mainWindow) {
+        initialize(mainWindow) {
         this.mainWindow = mainWindow;
         log.info('[AutoUpdate] Service initialized');
         
@@ -131,11 +123,7 @@ class AutoUpdateService {
         }
     }
 
-    /**
-     * Check for updates manually or silently
-     * @param {boolean} showNoUpdateDialog - Show dialog when no updates available
-     */
-    async checkForUpdates(showNoUpdateDialog = true) {
+        async checkForUpdates(showNoUpdateDialog = true) {
         try {
             log.info('[AutoUpdate] Checking for updates manually...');
             
@@ -210,11 +198,7 @@ class AutoUpdateService {
         }
     }
 
-    /**
-     * Get current update status
-     * @returns {object} Current update status
-     */
-    getStatus() {
+        getStatus() {
         return {
             updateDownloaded: this.updateDownloaded,
             updateInfo: this.updateInfo,

@@ -9,10 +9,6 @@
 const treeSitter = require('./tree-sitter');
 const gccChecker = require('./gcc-checker');
 
-// ============================================================================
-// COMBINED SYNTAX CHECK
-// ============================================================================
-
 /**
  * Perform combined syntax check using Tree-sitter and GCC
  * Tree-sitter provides fast syntax errors, GCC provides semantic errors
@@ -46,10 +42,6 @@ async function checkSyntax(content, filePath = null) {
         diagnostics: allDiagnostics
     };
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     // Combined

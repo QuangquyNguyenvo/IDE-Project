@@ -9,14 +9,8 @@
 const http = require('http');
 const { shell } = require('electron');
 
-// ============================================================================
-// STATE
-// ============================================================================
-
-/** @type {import('http').Server|null} */
 let ccServer = null;
 
-/** @type {'stopped'|'starting'|'running'|'error'} */
 let ccServerStatus = 'stopped';
 
 /** @type {Function|null} - Callback to send received problems to renderer */
@@ -25,33 +19,16 @@ let onProblemReceived = null;
 /** @type {Function|null} - Callback to focus main window */
 let onFocusWindow = null;
 
-/** @type {number} */
 const CC_PORT = 27121;
 
-// ============================================================================
-// SERVER MANAGEMENT
-// ============================================================================
-
-/**
- * Set callback for when a problem is received
- * @param {Function} callback - (problem: Object) => void
- */
 function setOnProblemReceived(callback) {
     onProblemReceived = callback;
 }
 
-/**
- * Set callback for focusing window
- * @param {Function} callback - () => void
- */
 function setOnFocusWindow(callback) {
     onFocusWindow = callback;
 }
 
-/**
- * Start Competitive Companion HTTP server
- * @returns {Promise<{success: boolean, status?: string, error?: string}>}
- */
 function startServer() {
     if (ccServer) {
         console.log('[CC] Server already running');
@@ -120,10 +97,6 @@ function startServer() {
     });
 }
 
-/**
- * Stop Competitive Companion server
- * @returns {{success: boolean, status: string}}
- */
 function stopServer() {
     if (ccServer) {
         ccServer.close();
@@ -134,10 +107,6 @@ function stopServer() {
     return { success: true, status: 'stopped' };
 }
 
-/**
- * Get server status
- * @returns {{status: string, running: boolean, port: number}}
- */
 function getStatus() {
     return {
         status: ccServerStatus,
@@ -153,10 +122,6 @@ function openExtensionPage() {
     shell.openExternal('https://chromewebstore.google.com/detail/competitive-companion/cjnmckjndlpiamhfimnnjmnckgghkjbl');
     return { success: true };
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     startServer,

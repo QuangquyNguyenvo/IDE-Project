@@ -11,16 +11,7 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const { getBasePath, getResourcesPath } = require('../compiler/detector');
 
-// ============================================================================
-// STATE
-// ============================================================================
-
-/** @type {string|false|null} */
 let detectedAStyle = null;
-
-// ============================================================================
-// DETECTION
-// ============================================================================
 
 /**
  * Detect AStyle executable
@@ -52,10 +43,6 @@ function detectAStyle() {
     return null;
 }
 
-/**
- * Get or detect AStyle path (lazy detection)
- * @returns {string|false}
- */
 function getAStylePath() {
     if (detectedAStyle === null) {
         detectedAStyle = detectAStyle() || false;
@@ -63,10 +50,6 @@ function getAStylePath() {
     return detectedAStyle;
 }
 
-/**
- * Check if AStyle is available
- * @returns {{available: boolean, path: string|null}}
- */
 function checkAStyle() {
     const astylePath = getAStylePath();
     return {
@@ -74,10 +57,6 @@ function checkAStyle() {
         path: astylePath || null
     };
 }
-
-// ============================================================================
-// FORMATTING
-// ============================================================================
 
 /**
  * Format code using AStyle
@@ -141,10 +120,6 @@ async function formatCode(code, style = 'google') {
         astyle.stdin.end();
     });
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     detectAStyle,

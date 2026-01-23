@@ -13,20 +13,12 @@ const { spawn, exec } = require('child_process');
 const { getDetectedCompiler, getCompilerInfo, getCompilerEnv, getBasePath } = require('./detector');
 const { ensurePCH } = require('./pch-manager');
 
-// ============================================================================
-// STATE
-// ============================================================================
-
-/** @type {import('child_process').ChildProcess|null} */
 let runningProcess = null;
 
-/** @type {number|null} */
 let lastRunningPID = null;
 
-/** @type {string|null} */
 let runningExeName = null;
 
-/** @type {NodeJS.Timeout|null} */
 let runningMemoryPollInterval = null;
 
 /** @type {Function|null} - Callback for file watcher mtime update */
@@ -35,22 +27,10 @@ let updateFileWatcherMtimeCallback = null;
 /** @type {Function|null} - Callback for sending messages to renderer */
 let sendToRendererCallback = null;
 
-// ============================================================================
-// SETUP
-// ============================================================================
-
-/**
- * Set callback for updating file watcher mtime
- * @param {Function} callback
- */
 function setFileWatcherCallback(callback) {
     updateFileWatcherMtimeCallback = callback;
 }
 
-/**
- * Set callback for sending messages to renderer
- * @param {Function} callback
- */
 function setSendToRendererCallback(callback) {
     sendToRendererCallback = callback;
 }
@@ -65,10 +45,6 @@ function sendToRenderer(channel, data) {
         sendToRendererCallback(channel, data);
     }
 }
-
-// ============================================================================
-// COMPILE
-// ============================================================================
 
 /**
  * Compile C++ source code
@@ -254,10 +230,6 @@ async function compile({ filePath, content, flags, useLLD }) {
     });
 }
 
-// ============================================================================
-// RUN
-// ============================================================================
-
 /**
  * Run compiled executable
  * 
@@ -350,10 +322,6 @@ async function run({ exePath, cwd }) {
     return { success: true, started: true, pid };
 }
 
-// ============================================================================
-// PROCESS CONTROL
-// ============================================================================
-
 /**
  * Send input to running process
  * @param {string} input
@@ -413,25 +381,13 @@ function stopProcess() {
     sendToRenderer('process-stopped');
 }
 
-/**
- * Check if a process is running
- * @returns {boolean}
- */
 function isProcessRunning() {
     return runningProcess !== null;
 }
 
-/**
- * Get running process
- * @returns {import('child_process').ChildProcess|null}
- */
 function getRunningProcess() {
     return runningProcess;
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     compile,

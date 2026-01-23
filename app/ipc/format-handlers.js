@@ -7,13 +7,9 @@
 'use strict';
 
 const { ipcMain } = require('electron');
-const { IPC } = require('../../shared/constants');
+const { IPC } = require('../shared/constants');
 const formatter = require('../services/formatter');
 const syntax = require('../services/syntax');
-
-// ============================================================================
-// IPC HANDLERS
-// ============================================================================
 
 /**
  * Register all format-related IPC handlers
@@ -36,10 +32,6 @@ function registerHandlers() {
 
 
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     registerHandlers,

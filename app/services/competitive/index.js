@@ -1,8 +1,3 @@
-/**
- * Sameko Dev C++ IDE - Competitive Programming Services Index
- * @module app/services/competitive
- */
-
 'use strict';
 
 const companionServer = require('./companion-server');

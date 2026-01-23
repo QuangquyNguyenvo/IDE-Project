@@ -9,20 +9,11 @@
 const { ipcMain, app } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { IPC } = require('../../shared/constants');
+const { IPC } = require('../shared/constants');
 
-// Settings file path
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
-// ============================================================================
-// IPC HANDLERS
-// ============================================================================
-
-/**
- * Register all settings-related IPC handlers
- */
 function registerHandlers() {
-    // Save settings
     ipcMain.handle(IPC.SETTINGS.SAVE, async (event, settings) => {
         try {
             fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
@@ -33,7 +24,6 @@ function registerHandlers() {
         }
     });
 
-    // Load settings (synchronous)
     ipcMain.on(IPC.SETTINGS.LOAD, (event) => {
         try {
             if (fs.existsSync(settingsPath)) {
@@ -48,28 +38,11 @@ function registerHandlers() {
         }
     });
 
-    // Get current app version
     ipcMain.handle('get-current-version', async () => {
         return app.getVersion();
     });
 
-    // Check for updates (placeholder - can be expanded with GitHub API)
-    ipcMain.handle('check-for-updates', async () => {
-        // For now, just return no updates available
-        // Future: Check GitHub releases API
-        return {
-            hasUpdate: false,
-            currentVersion: app.getVersion(),
-            latestVersion: app.getVersion()
-        };
-    });
-
-
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     registerHandlers,

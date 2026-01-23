@@ -12,16 +12,7 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const { getDetectedCompiler, getCompilerInfo, getCompilerEnv } = require('./detector');
 
-// ============================================================================
-// STATE
-// ============================================================================
-
-/** @type {string} */
 const pchDir = path.join(app.getPath('temp'), 'cpp-ide-pch');
-
-// ============================================================================
-// PCH FUNCTIONS
-// ============================================================================
 
 /**
  * Generate PCH key based on compiler flags
@@ -149,17 +140,9 @@ function cleanPCHCache() {
     }
 }
 
-/**
- * Get PCH directory path
- * @returns {string}
- */
 function getPCHDir() {
     return pchDir;
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 module.exports = {
     ensurePCH,

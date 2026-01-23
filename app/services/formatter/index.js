@@ -1,8 +1,3 @@
-/**
- * Sameko Dev C++ IDE - Formatter Services Index
- * @module app/services/formatter
- */
-
 'use strict';
 
 const astyle = require('./astyle');
