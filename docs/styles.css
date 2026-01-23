@@ -5,7 +5,8 @@
     --text-main: #1A202C;
     --text-light: #2D3748;
     /* Darker than #4A5568 */
-    --text-muted: #4A5568;
+    /* Darker than #718096 */
+    --text-muted: #2D3748;
     /* Darker than #718096 */
     --card-bg: #FFFFFF;
     --body-bg: #F5F7FA;
@@ -1876,5 +1877,11 @@ kbd {
 }
 
 /* Accessibility Fixes */
-footer { opacity: 1 !important; }
-footer p { color: var(--text-muted); opacity: 1; }
+footer {
+    opacity: 1 !important;
+}
+
+footer p {
+    color: var(--text-muted);
+    opacity: 1;
+}
