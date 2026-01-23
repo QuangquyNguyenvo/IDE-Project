@@ -27,7 +27,8 @@
             <div class="logo">C++</div>
 
             <!-- Explorer toggle button (temporarily hidden due to bugs) -->
-            <button class="toggle-btn explorer-toggle" id="btn-toggle-explorer" title="File Explorer (Ctrl+E)" style="display:none">
+            <button class="toggle-btn explorer-toggle" id="btn-toggle-explorer" title="File Explorer (Ctrl+E)"
+                style="display:none">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
                     <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
@@ -161,7 +162,7 @@
         </div>
         <div class="dropdown" id="menu-view">
             <div class="dropdown-item" data-action="toggleexplorer" style="display:none"><span>File Explorer</span><span
-                class="key">Ctrl+E</span></div>
+                    class="key">Ctrl+E</span></div>
             <div class="dropdown-item" data-action="toggleio"><span>Input/Output</span></div>
             <div class="dropdown-item" data-action="toggleterm"><span>Terminal</span></div>
             <div class="dropdown-item" data-action="toggleproblems"><span>Problems</span><span class="key">Ctrl+J</span>
@@ -527,6 +528,14 @@
                                         title="Enable -Wall -Wextra for potential issues">?</span></label>
                                 <label class="switch">
                                     <input type="checkbox" id="set-warnings" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
+                                <label>Use LLD Linker <span class="tooltip"
+                                        title="Use LLVM Linker (lld) for much faster linking times. Built into Sameko GCC.">?</span></label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-useLLD" checked>
                                     <span class="slider"></span>
                                 </label>
                             </div>

@@ -10,8 +10,9 @@ const { app } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-// Import services (these will be created in later phases)
-// const { detectCompiler, performCompilerWarmup } = require('../services/compiler/detector');
+// Import services
+const { detectCompiler } = require('../services/compiler/detector');
+const { performCompilerWarmup } = require('../services/compiler/warmup');
 
 // Tree-sitter for syntax checking
 let tsParser = null;
@@ -25,10 +26,10 @@ function initTreeSitter() {
         const Cpp = require('tree-sitter-cpp');
         tsParser = new Parser();
         tsParser.setLanguage(Cpp);
-            // console.log('[TreeSitter] Initialized successfully');
+        // console.log('[TreeSitter] Initialized successfully');
         return true;
     } catch (e) {
-            // console.log('[TreeSitter] Not available, falling back to g++ only:', e.message);
+        // console.log('[TreeSitter] Not available, falling back to g++ only:', e.message);
         return false;
     }
 }
@@ -73,11 +74,13 @@ async function initializeApp() {
     // 2. Ensure directories exist
     ensureDirectories();
 
-    // 3. Initialize compiler (will be done in Phase 4)
-    // detectCompiler();
-    // performCompilerWarmup();
+    // 3. Initialize compiler
+    console.log('[App] Detecting compiler...');
+    detectCompiler();
+    console.log('[App] Warming up compiler...');
+    performCompilerWarmup();
 
-    // console.log('[App] Initialization complete');
+    console.log('[App] Initialization complete');
 }
 
 /**

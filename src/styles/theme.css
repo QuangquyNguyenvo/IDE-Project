@@ -110,6 +110,13 @@ body.performance-mode {
     --transition-duration: 0.1s;
 }
 
+/* Hard disable animations for critical UI components in performance mode */
+body.performance-mode .action-btn.primary.building,
+body.performance-mode .status-bar.building .dot,
+body.performance-mode .action-btn.run-all.running {
+    animation: none !important;
+}
+
 /* Solid backgrounds for performance mode (replaces glass effect) */
 body.performance-mode .app-container {
     background: linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 100%);
@@ -325,11 +332,13 @@ body.customizer-open::before {
     overflow-x: auto;
     padding: 6px 4px;
     /* Inherit drag from parent, empty space remains draggable */
-    pointer-events: none; /* Allow drag on empty space */
+    pointer-events: none;
+    /* Allow drag on empty space */
 }
 
-.tabs-container > * {
-    pointer-events: auto; /* Re-enable clicks on children (tabs, buttons) */
+.tabs-container>* {
+    pointer-events: auto;
+    /* Re-enable clicks on children (tabs, buttons) */
 }
 
 .tabs-container::-webkit-scrollbar {
@@ -352,7 +361,8 @@ body.customizer-open::before {
     transition: transform var(--transition-duration) var(--transition-timing), box-shadow var(--transition-duration), color var(--transition-duration);
     box-shadow: 0 2px 4px rgba(136, 201, 234, 0.15);
     flex-shrink: 0;
-    -webkit-app-region: no-drag; /* Tabs are clickable */
+    -webkit-app-region: no-drag;
+    /* Tabs are clickable */
 }
 
 .tab:hover {

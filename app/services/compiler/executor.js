@@ -79,7 +79,7 @@ function sendToRenderer(channel, data) {
  * @param {string} [options.flags] - Compiler flags
  * @returns {Promise<import('../../../shared/types').CompileResult>}
  */
-async function compile({ filePath, content, flags }) {
+async function compile({ filePath, content, flags, useLLD }) {
     const startTime = Date.now();
 
     // Kill any running process first (to release .exe lock)
@@ -106,7 +106,7 @@ async function compile({ filePath, content, flags }) {
     // OPTIMIZATION: Only write file if different
     let needsWrite = true;
     try {
-        if (!usingTempFile && fs.existsSync(actualFilePath)) {
+        if (fs.existsSync(actualFilePath)) {
             const existingContent = fs.readFileSync(actualFilePath, 'utf-8');
             if (existingContent === content) {
                 needsWrite = false;
@@ -190,7 +190,7 @@ async function compile({ filePath, content, flags }) {
     const compilerInfo = getCompilerInfo();
 
     // LLD Linker support
-    if (compilerInfo.hasLLD) {
+    if (useLLD !== false && compilerInfo.hasLLD) {
         args.push('-fuse-ld=lld');
     }
 
@@ -237,6 +237,7 @@ async function compile({ filePath, content, flags }) {
                     outputPath: outputPath,
                     warnings: stderr || '',
                     compiler: compilerInfo.name,
+                    linker: (useLLD !== false && compilerInfo.hasLLD) ? 'LLD' : null,
                     time: compileTime,
                     linkedFiles: linkedFiles
                 });

@@ -41,8 +41,8 @@ function setMainWindow(window) {
  */
 function registerHandlers() {
     // Compile
-    ipcMain.handle(IPC.COMPILER.COMPILE, async (event, { filePath, content, flags }) => {
-        return await compiler.compile({ filePath, content, flags });
+    ipcMain.handle(IPC.COMPILER.COMPILE, async (event, { filePath, content, flags, useLLD }) => {
+        return await compiler.compile({ filePath, content, flags, useLLD });
     });
 
     // Run

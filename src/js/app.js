@@ -33,7 +33,8 @@ const DEFAULT_SETTINGS = {
     compiler: {
         cppStandard: '',
         optimization: '',
-        warnings: false
+        warnings: false,
+        useLLD: true
     },
     execution: {
         timeLimitEnabled: false,
@@ -1497,6 +1498,8 @@ function openSettings() {
     document.getElementById('set-cppStandard').value = App.settings.compiler.cppStandard;
     document.getElementById('set-optimization').value = App.settings.compiler.optimization;
     document.getElementById('set-warnings').checked = App.settings.compiler.warnings;
+    const lldToggle = document.getElementById('set-useLLD');
+    if (lldToggle) lldToggle.checked = App.settings.compiler.useLLD !== false;
 
     document.getElementById('set-timeLimitEnabled').checked = App.settings.execution.timeLimitEnabled;
     document.getElementById('set-timeLimitSeconds').value = App.settings.execution.timeLimitSeconds;
@@ -1581,6 +1584,8 @@ function saveSettingsAndClose() {
     App.settings.compiler.cppStandard = document.getElementById('set-cppStandard').value;
     App.settings.compiler.optimization = document.getElementById('set-optimization').value;
     App.settings.compiler.warnings = document.getElementById('set-warnings').checked;
+    const lldToggle = document.getElementById('set-useLLD');
+    if (lldToggle) App.settings.compiler.useLLD = lldToggle.checked;
 
     App.settings.execution.timeLimitEnabled = document.getElementById('set-timeLimitEnabled').checked;
     App.settings.execution.timeLimitSeconds = parseInt(document.getElementById('set-timeLimitSeconds').value);
@@ -1640,7 +1645,7 @@ function resetSettings() {
         clearThemeBackgroundOverrides();
         App.settings.appearance.perTheme = {};
         App.settings.appearance.bgUrl = '';
-        
+
         // Force clear all background CSS variables and inline styles
         const root = document.documentElement;
         root.style.removeProperty('--app-bg-image');
@@ -1651,7 +1656,7 @@ function resetSettings() {
         root.style.removeProperty('--editor-bg-opacity');
         document.body.style.background = '';
         document.body.style.backgroundImage = '';
-        
+
         // Restore hardcoded built-in themes in memory (drop previous overrides)
         if (typeof ThemeManager !== 'undefined' && ThemeManager.restoreAllBuiltinThemes) {
             ThemeManager.restoreAllBuiltinThemes();
@@ -3608,7 +3613,8 @@ async function buildRun() {
         const r = await window.electronAPI.compile({
             filePath: tab.path,
             content: tab.content,
-            flags: flags.join(' ')
+            flags: flags.join(' '),
+            useLLD: App.settings.compiler.useLLD !== false
         });
         const ms = Date.now() - t0;
 
@@ -5292,7 +5298,7 @@ let updateDownloaded = false;
 
 function handleUpdateStatus(data) {
     const { status, data: updateData, currentVersion } = data;
-    
+
     console.log('[Update]', status, updateData);
 
     const overlay = document.getElementById('update-overlay');
@@ -5311,7 +5317,7 @@ function handleUpdateStatus(data) {
 
         case 'update-available':
             console.log('[Update] Update available:', updateData.version);
-            
+
             // Show badges
             const badgeMain = document.getElementById('badge-settings-main');
             const badgeTab = document.getElementById('badge-settings-tab');
@@ -5328,14 +5334,14 @@ function handleUpdateStatus(data) {
 
             // Update title
             if (title) {
-                title.textContent = updateData.isPrerelease ? 
-                    'Pre-release Update Available' : 
+                title.textContent = updateData.isPrerelease ?
+                    'Pre-release Update Available' :
                     'Update Available';
             }
 
             // Show overlay if checking manually
             if (overlay) overlay.style.display = 'flex';
-            
+
             // Reset UI state
             if (downloadBtn) {
                 downloadBtn.style.display = 'flex';
@@ -5347,7 +5353,7 @@ function handleUpdateStatus(data) {
 
         case 'update-not-available':
             console.log('[Update] No updates available');
-            
+
             if (updateData.showMessage) {
                 alert('You are using the latest version!');
             }
@@ -5355,7 +5361,7 @@ function handleUpdateStatus(data) {
 
         case 'download-started':
             console.log('[Update] Download started');
-            
+
             if (title) title.textContent = 'Downloading Update...';
             if (downloadBtn) downloadBtn.disabled = true;
             if (progress) {
@@ -5367,7 +5373,7 @@ function handleUpdateStatus(data) {
 
         case 'download-progress':
             console.log('[Update] Download progress:', updateData.percent + '%');
-            
+
             if (progressFill) progressFill.style.width = updateData.percent + '%';
             if (progressText) progressText.textContent = `Downloading: ${updateData.percent}%`;
             break;
@@ -5375,7 +5381,7 @@ function handleUpdateStatus(data) {
         case 'update-downloaded':
             console.log('[Update] Update downloaded');
             updateDownloaded = true;
-            
+
             if (title) title.textContent = 'Update Ready to Install';
             if (downloadBtn) downloadBtn.style.display = 'none';
             if (restartBtn) restartBtn.style.display = 'flex';
@@ -5385,11 +5391,11 @@ function handleUpdateStatus(data) {
 
         case 'update-error':
             console.error('[Update] Error:', updateData.message);
-            
+
             if (updateData.showMessage) {
                 alert('Failed to check for updates: ' + updateData.message);
             }
-            
+
             if (downloadBtn) downloadBtn.disabled = false;
             if (progress) progress.style.display = 'none';
             break;
