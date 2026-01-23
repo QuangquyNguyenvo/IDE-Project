@@ -157,13 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initCompetitiveCompanion();
     updateUI();
 
-    // Initialize File Explorer
-    // Temporarily disabled: File Explorer init (buggy)
-    // if (typeof FileExplorer !== 'undefined') {
-    //     FileExplorer.init();
-    // }
-
-
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
@@ -890,18 +883,15 @@ function initSettings() {
             const bgUrlInput = document.getElementById('set-bgUrl');
             if (bgUrlInput) bgUrlInput.value = themeBgUrl;
 
-            // Force apply background settings immediately to preview
             const oldTheme = App.settings.appearance.theme;
             App.settings.appearance.theme = newTheme;
             applyBackgroundSettings();
             App.settings.appearance.theme = oldTheme;
 
-            // Also update color preview
             updateThemePreview();
         }
     };
 
-    // Background file upload (optional - may not exist if Background section removed)
     const bgFileInput = document.getElementById('set-bgFile');
     if (bgFileInput) {
         bgFileInput.onchange = e => {
@@ -2089,7 +2079,7 @@ function applyBackgroundSettings() {
 
     // Get theme-specific background from THEME definition (default)
     const themeObj = ThemeManager.themes.get(theme);
-    const themeDefaultBg = themeObj?.colors?.appBackground; // e.g. 'assets/pink.gif'
+    const themeDefaultBg = themeObj?.colors?.appBackground; // e.g. 'assets/backgrounds/pink.gif'
 
     console.log('[BG] Theme:', theme, 'User BG:', userThemeBg, 'Default BG:', themeDefaultBg);
 

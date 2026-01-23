@@ -1,8 +1,8 @@
-<img src="src/assets/readme-header.svg" width="100%" />
+<img src="src/assets/docs/readme-header.svg" width="100%" />
 
 <div align="center">
   <br />
-  <img src="src/assets/logo.svg" alt="Sameko Logo" width="420" />
+  <img src="src/assets/vectors/logo.svg" alt="Sameko Logo" width="420" />
   <br />
 
   # 🐟 Sameko IDE ⚓
@@ -35,7 +35,7 @@
 <br />
 
 <div align="center">
-  <img src="src/assets/divider.svg" width="80%" alt="divider" />
+  <img src="src/assets/vectors/divider.svg" width="80%" alt="divider" />
 </div>
 
 <br />
@@ -61,7 +61,7 @@
       <blockquote>💡 Think of it as a modern Dev-C++ alternative: simple interface, fast compilation, works out of the box.</blockquote>
     </td>
     <td width="30%" align="center">
-      <img src="src/assets/fish.png" alt="Sameko Fish" width="180" />
+      <img src="src/assets/icons/fish.png" alt="Sameko Fish" width="180" />
     </td>
   </tr>
 </table>
@@ -177,7 +177,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
   </p>
 </div>
 
-<img src="src/assets/readme-footer.svg" width="100%" />
+<img src="src/assets/docs/readme-footer.svg" width="100%" />
 
 ---
 

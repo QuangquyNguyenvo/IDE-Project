@@ -1,8 +1,8 @@
-<img src="src/assets/readme-header.svg" width="100%" />
+<img src="src/assets/docs/readme-header.svg" width="100%" />
 
 <div align="center">
   <br />
-  <img src="src/assets/logo.svg" alt="Sameko Logo" width="400" />
+  <img src="src/assets/vectors/logo.svg" alt="Sameko Logo" width="400" />
   <br />
   
   # 🤝 Contributing to Sameko IDE ⚓
@@ -129,4 +129,4 @@ Just open an issue or ask in Discussions! We're friendly~ 🐟
   <br/><br/>
 </div>
 
-<img src="src/assets/readme-footer.svg" width="100%" />
+<img src="src/assets/docs/readme-footer.svg" width="100%" />

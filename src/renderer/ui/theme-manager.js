@@ -123,7 +123,7 @@ const ThemeManager = {
             'kawaii-dark': {
                 meta: { id: 'kawaii-dark', name: 'Kawaii Dark', type: 'dark' },
                 colors: {
-                    appBackground: 'assets/background.jpg',
+                    appBackground: 'assets/backgrounds/background.jpg',
                     bgOceanLight: '#1a3a50',
                     bgOceanMedium: '#152535',
                     bgOceanDeep: '#88c9ea',
@@ -183,7 +183,7 @@ const ThemeManager = {
             'kawaii-light': {
                 meta: { id: 'kawaii-light', name: 'Kawaii Light', type: 'light' },
                 colors: {
-                    appBackground: 'assets/background.jpg',
+                    appBackground: 'assets/backgrounds/background.jpg',
                     bgOceanLight: '#e8f4fc',
                     bgOceanMedium: '#d0e8f5',
                     bgOceanDeep: '#4a9bc9',
@@ -243,7 +243,7 @@ const ThemeManager = {
             'sakura': {
                 meta: { id: 'sakura', name: 'Sakura', type: 'light' },
                 colors: {
-                    appBackground: 'assets/pink.gif',
+                    appBackground: 'assets/backgrounds/pink.gif',
                     bgOceanLight: '#fff5f8',
                     bgOceanMedium: '#ffe4e1',
                     bgOceanDeep: '#ffb7c5',
