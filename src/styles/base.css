@@ -187,7 +187,7 @@ body::after {
     align-items: center;
     height: var(--header-height);
     background: var(--bg-glass-heavy);
-    border-bottom: 2px solid white;
+    border-bottom: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
     box-shadow: 0 4px 20px rgba(136, 201, 234, 0.1);
     padding: 0 16px;
     gap: 16px;
@@ -202,7 +202,7 @@ body::after {
     color: white;
     padding: 8px 16px;
     background: var(--bg-ocean-deep);
-    border: 2px solid white;
+    border: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
     border-radius: 30px;
     box-shadow: 0 2px 8px rgba(136, 201, 234, 0.4);
     -webkit-app-region: no-drag;
@@ -273,7 +273,7 @@ body::after {
     gap: 8px;
     padding: 6px 16px;
     background: white;
-    border: 2px solid white;
+    border: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
     border-radius: 20px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -459,7 +459,7 @@ body::after {
     flex-direction: column;
     min-width: 300px;
     background: var(--bg-glass);
-    border: 2px solid white;
+    border: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
     border-radius: var(--radius);
     box-shadow: var(--shadow-soft);
     backdrop-filter: blur(10px);
@@ -488,13 +488,13 @@ body::after {
     border-radius: var(--radius-sm);
     margin: 6px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--border-glass-edge, rgba(255, 255, 255, 0.8));
 }
 
 /* Panels (Problems, Terminal) */
 .problems-panel {
     background: var(--bg-glass-heavy);
-    border-top: 2px solid white;
+    border-top: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -506,7 +506,7 @@ body::after {
     gap: 12px;
     padding: 8px 16px;
     background: var(--bg-panel, rgba(239, 248, 254, 0.8));
-    border-bottom: 2px solid white;
+    border-bottom: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
 }
 
 .panel-title {
@@ -528,7 +528,7 @@ body::after {
 .terminal-section,
 .io-section {
     background: var(--bg-glass-heavy);
-    border: 2px solid white;
+    border: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
     display: flex;
@@ -618,7 +618,7 @@ body::after {
 }
 
 .welcome-btn {
-    background: var(--bg-ocean-light);
+    background: rgba(255, 255, 255, 0.2);
     border: 2px solid var(--bg-ocean-medium);
     border-radius: 20px;
     color: var(--bg-ocean-dark);

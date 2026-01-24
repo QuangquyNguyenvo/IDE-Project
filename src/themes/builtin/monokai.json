@@ -35,7 +35,7 @@
         "shadowSoft": "0 8px 32px rgba(0, 0, 0, 0.5)",
         "shadowCard": "0 4px 12px rgba(0, 0, 0, 0.4)",
         "glow": "0 0 15px rgba(166, 226, 46, 0.3)",
-        "bgHeader": "rgba(30, 31, 28, 0.97)",
+        "bgHeader": "rgba(30, 31, 28, 0.4)",
         "bgPanel": "rgba(39, 40, 34, 0.95)",
         "bgInput": "#272822",
         "bgButton": "#3e3d32",

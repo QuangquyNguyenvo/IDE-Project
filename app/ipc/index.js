@@ -8,6 +8,7 @@ const settingsHandlers = require('./settings-handlers');
 const formatHandlers = require('./format-handlers');
 const competitiveHandlers = require('./competitive-handlers');
 const updateHandlers = require('./update-handlers');
+const historyHandlers = require('./history-handlers');
 
 function registerAllHandlers(mainWindow) {
     fileHandlers.setMainWindow(mainWindow);
@@ -23,6 +24,7 @@ function registerAllHandlers(mainWindow) {
     formatHandlers.registerHandlers();
     competitiveHandlers.registerHandlers();
     updateHandlers();
+    historyHandlers.registerHistoryHandlers();
 }
 
 module.exports = registerAllHandlers;

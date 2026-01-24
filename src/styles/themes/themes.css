@@ -42,17 +42,20 @@
     --border: #3a6075;
     --border-strong: #88c9ea;
 
+    /* Darker glass edge for dark theme */
+    --border-glass-edge: rgba(255, 255, 255, 0.1);
+
     --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
 
-    --bg-header: rgba(21, 37, 53, 0.97);
+    --bg-header: rgba(21, 37, 53, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: var(--bg-header);
+    --bg-header-statusbar: rgba(21, 37, 53, 0.95);
 
-    --bg-panel: rgba(26, 37, 48, 0.95);
+    --bg-page: rgba(26, 37, 48, 0.4);
     /* Panel Variants - Inherit from base unless overridden */
-    --bg-panel-problems: var(--bg-panel);
+    --bg-panel: rgba(26, 37, 48, 0.95);
     --bg-panel-input: var(--bg-panel);
     --bg-panel-expected: var(--bg-panel);
 
@@ -115,10 +118,10 @@
     --shadow-soft: 0 8px 16px rgba(255, 182, 193, 0.25);
     --shadow-card: 0 4px 8px rgba(255, 105, 180, 0.15);
 
-    --bg-header: rgba(255, 228, 225, 0.97);
+    --bg-header: rgba(255, 228, 225, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: var(--bg-header);
+    --bg-header-statusbar: rgba(255, 228, 225, 0.95);
 
     --bg-panel: rgba(255, 245, 248, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -175,14 +178,15 @@
 
     --border: #6272a4;
     --border-strong: #bd93f9;
+    --border-glass-edge: rgba(255, 255, 255, 0.1);
 
     --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
 
-    --bg-header: rgba(33, 34, 44, 0.97);
+    --bg-header: rgba(33, 34, 44, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: var(--bg-header);
+    --bg-header-statusbar: rgba(33, 34, 44, 0.95);
 
     --bg-panel: rgba(40, 42, 54, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -234,14 +238,15 @@
 
     --border: #75715e;
     --border-strong: #a6e22e;
+    --border-glass-edge: rgba(255, 255, 255, 0.1);
 
     --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
 
-    --bg-header: rgba(30, 31, 28, 0.97);
+    --bg-header: rgba(30, 31, 28, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: var(--bg-header);
+    --bg-header-statusbar: rgba(30, 31, 28, 0.95);
 
     --bg-panel: rgba(39, 40, 34, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -293,14 +298,15 @@
 
     --border: #81a1c1;
     --border-strong: #88c0d0;
+    --border-glass-edge: rgba(255, 255, 255, 0.1);
 
     --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
 
-    --bg-header: rgba(36, 41, 51, 0.97);
+    --bg-header: rgba(36, 41, 51, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: var(--bg-header);
+    --bg-header-statusbar: rgba(36, 41, 51, 0.95);
 
     --bg-panel: rgba(46, 52, 64, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -556,7 +562,7 @@
 [data-theme="monokai"] .editor-section,
 [data-theme="nord"] .editor-section {
     background: var(--editor-bg);
-    border: 2px solid var(--border) !important;
+    border: 2px solid transparent !important;
 }
 
 [data-theme="kawaii-dark"] .editor-pane,
@@ -786,7 +792,7 @@
 [data-theme="dracula"] .status-bar,
 [data-theme="monokai"] .status-bar,
 [data-theme="nord"] .status-bar {
-    background: var(--bg-header);
+    background: var(--bg-header-statusbar);
     border-top-color: var(--border);
     color: var(--text-secondary);
 }
@@ -1008,7 +1014,6 @@
 
 /* Welcome screen */
 [data-theme="kawaii-dark"] .welcome-box {
-    background: rgba(26, 37, 48, 0.98);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border-color: var(--border-strong, var(--border));
@@ -1018,7 +1023,6 @@
 }
 
 [data-theme="dracula"] .welcome-box {
-    background: rgba(40, 42, 54, 0.98);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border-color: var(--border-strong, var(--border));
@@ -1028,7 +1032,6 @@
 }
 
 [data-theme="monokai"] .welcome-box {
-    background: rgba(39, 40, 34, 0.98);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border-color: var(--border-strong, var(--border));
@@ -1038,7 +1041,6 @@
 }
 
 [data-theme="nord"] .welcome-box {
-    background: rgba(46, 52, 64, 0.98);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border-color: var(--border-strong, var(--border));
@@ -1051,9 +1053,10 @@
 [data-theme="dracula"] .welcome-box h1,
 [data-theme="monokai"] .welcome-box h1,
 [data-theme="nord"] .welcome-box h1 {
-    background: linear-gradient(135deg, var(--bg-ocean-deep), var(--accent));
-    -webkit-background-clip: text;
-    background-clip: text;
+    background: linear-gradient(135deg, var(--bg-ocean-deep), var(--accent)) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
 }
 
 [data-theme="kawaii-dark"] .welcome-box p,
@@ -1958,7 +1961,7 @@ html[data-theme="nord"] .setting-row>label:not(.switch) {
 
 /* Sakura Status Bar */
 [data-theme="sakura"] .status-bar {
-    background: var(--bg-header);
+    background: var(--bg-header-statusbar);
     border-top-color: var(--border);
     color: var(--text-secondary);
 }

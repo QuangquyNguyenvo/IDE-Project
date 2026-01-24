@@ -119,12 +119,12 @@ body.performance-mode .action-btn.run-all.running {
 
 /* Solid backgrounds for performance mode (replaces glass effect) */
 body.performance-mode .app-container {
-    background: linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 100%);
+    background: var(--bg-ocean-light);
     backdrop-filter: none !important;
 }
 
 body.performance-mode .editor-section {
-    background: #f0f8ff;
+    background: var(--bg-panel);
     backdrop-filter: none !important;
 }
 
@@ -136,8 +136,8 @@ body.performance-mode .settings-overlay {
 /* Fix resizer in performance mode */
 body.performance-mode #resizer-split {
     background: var(--bg-ocean-light) !important;
-    border-left: 1px solid white;
-    border-right: 1px solid white;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
 }
 
 /* Force clipping on panels */
@@ -178,8 +178,24 @@ body {
     position: relative;
 }
 
-/* App background is now set via inline styles in app.js, not pseudo-element */
-/* This ensures reset properly clears old backgrounds */
+/* Re-enable pseudo-element for better performance with GIFs (will-change) */
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--app-bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: var(--app-bg-opacity, 1);
+    z-index: -1;
+    will-change: transform;
+    transform: translateZ(0);
+    pointer-events: none;
+}
 
 /* Hide any leftover pseudo-element backgrounds when customizer is open */
 body.customizer-open::before {
@@ -233,10 +249,10 @@ body.customizer-open::before {
     display: flex;
     align-items: center;
     height: var(--header-height);
-    background: var(--bg-header-main, var(--bg-header, var(--bg-glass-heavy)));
+    background: var(--bg-header-main, var(--bg-header, rgba(230, 240, 250, 0.4)));
     backdrop-filter: var(--blur-filter-light);
     /* Apply blur only here */
-    border-bottom: 2px solid white;
+    border-bottom: 2px solid var(--border);
     box-shadow: 0 4px 20px rgba(136, 201, 234, 0.1);
     padding: 0 16px;
     gap: 16px;
@@ -251,7 +267,7 @@ body.customizer-open::before {
     color: white;
     padding: 8px 16px;
     background: var(--bg-ocean-deep);
-    border: 2px solid white;
+    border: 2px solid var(--border);
     border-radius: 30px;
     box-shadow: 0 2px 8px rgba(136, 201, 234, 0.4);
     -webkit-app-region: no-drag;
@@ -636,7 +652,7 @@ body.customizer-open::before {
 /* Panels (Problems, Terminal) */
 .problems-panel {
     background: var(--bg-glass-heavy);
-    border-top: 2px solid white;
+    border-top: 2px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -652,7 +668,7 @@ body.customizer-open::before {
     gap: 6px;
     padding: 6px 10px 6px 12px;
     background: var(--bg-glass-heavy, rgba(239, 248, 254, 0.8));
-    border-bottom: 2px solid var(--border, white);
+    border-bottom: 2px solid var(--border);
     flex-wrap: nowrap;
     min-height: 32px;
 }
@@ -677,7 +693,7 @@ body.customizer-open::before {
 
 .terminal-section {
     background: var(--bg-glass-heavy);
-    border: 2px solid var(--border, white);
+    border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-card);
     display: flex;
@@ -772,7 +788,7 @@ body.customizer-open::before {
 
 .welcome-box {
     text-align: center;
-    background: var(--bg-panel, rgba(255, 255, 255, 0.95));
+    background: transparent !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     padding: 40px 60px;
@@ -794,6 +810,11 @@ body.customizer-open::before {
     background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 10px;
+    font-weight: 800;
+    /* Added outline and deeper shadow for legibility */
+    -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.1);
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .welcome-box p {
@@ -803,7 +824,7 @@ body.customizer-open::before {
 }
 
 .welcome-btn {
-    background: var(--bg-panel, rgba(255, 255, 255, 0.8));
+    background: transparent;
     border: 1px solid var(--border-strong, var(--accent, #5a9fc8));
     border-radius: 20px;
     color: var(--text-primary, #2a5a75);
@@ -841,7 +862,7 @@ Let's check if .welcome-btn uses flex.
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: var(--bg-panel, rgba(255, 255, 255, 0.8));
+    background: transparent !important;
     border: 2px solid var(--border-strong, var(--accent, #5a9fc8));
     /* Slightly thicker border */
     border-radius: 20px;
@@ -869,13 +890,14 @@ Let's check if .welcome-btn uses flex.
 .welcome-btn:hover {
     transform: translateY(-5px);
     border-color: var(--accent);
-    /* Remove background change to prevent "white flash" */
-    /* background: var(--bg-panel-hover, white); */
+    /* Fix: Explicitly set background to prevent white flash on some rendering engines */
+    background: transparent;
 
     /* Use a strong blurry shadow instead */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px var(--bg-glass-heavy);
-    filter: brightness(1.05);
+    filter: brightness(1.1);
     /* Very subtle lift */
+    backface-visibility: hidden;
 }
 
 .welcome-btn:hover svg {

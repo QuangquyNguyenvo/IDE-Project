@@ -2224,7 +2224,7 @@ const ThemeCustomizer = {
                             </button>
                             <button class="tc6-upload-btn" id="tc6-app-bg-btn">Upload</button>
                             <button class="tc6-clear-btn" id="tc6-app-bg-clear">✕</button>
-                            <input type="file" id="tc6-app-bg-file" accept="image/*" style="display:none">
+                            <input type="file" id="tc6-app-bg-file" accept="image/*,video/*" style="display:none">
                         </div>
                     </div>
                     <div class="tc6-field">
@@ -3125,6 +3125,15 @@ const ThemeCustomizer = {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Performance warning for GIFs
+        if (file.type === 'image/gif') {
+            const confirmed = confirm('Khuyến nghị: Sử dụng hình nền GIF có thể làm ứng dụng chạy chậm và chiếm nhiều bộ nhớ (RAM).\n\nBạn nên sử dụng định dạng Video để có trải nghiệm mượt mà nhất. Bạn vẫn muốn tiếp tục chọn file này chứ?');
+            if (!confirmed) {
+                e.target.value = '';
+                return;
+            }
+        }
+
         const reader = new FileReader();
         reader.onload = (ev) => {
             if (!this.workingTheme.colors) this.workingTheme.colors = {};
@@ -3264,7 +3273,12 @@ const ThemeCustomizer = {
                     ? this.popup?.querySelector('.tc6-editor-bg')
                     : this.popup?.querySelector('.tc6-ide-bg');
                 if (bgEl) {
-                    bgEl.style.backgroundPosition = this.workingTheme.colors[posKey];
+                    const video = bgEl.querySelector('video');
+                    if (video) {
+                        video.style.objectPosition = this.workingTheme.colors[posKey];
+                    } else {
+                        bgEl.style.backgroundPosition = this.workingTheme.colors[posKey];
+                    }
                 }
             });
         };
@@ -3442,35 +3456,57 @@ const ThemeCustomizer = {
         const c = this.workingTheme?.colors || {};
 
         if (bgEl && c.appBackground) {
-            // Use double quotes for data URLs to avoid escaping issues
-            const bgUrl = c.appBackground.startsWith('data:')
-                ? `url("${c.appBackground}")`
-                : `url('${c.appBackground.replace(/'/g, "\\'")}')`;
-            bgEl.style.backgroundImage = bgUrl;
-            bgEl.style.backgroundPosition = c.bgPosition || 'center center';
-            bgEl.style.opacity = (c.bgOpacity ?? 50) / 100;
+            const isVideo = c.appBackground.endsWith('.webm') || c.appBackground.endsWith('.mp4') || c.appBackground.startsWith('data:video/');
             const appBlur = c.bgBlur ?? 0;
             const appBrightness = (c.bgBrightness ?? 100) / 100;
             const appFilters = [];
             if (appBlur > 0) appFilters.push(`blur(${appBlur}px)`);
             if (appBrightness !== 1) appFilters.push(`brightness(${appBrightness})`);
-            bgEl.style.filter = appFilters.length ? appFilters.join(' ') : 'none';
+            const filterStr = appFilters.length ? appFilters.join(' ') : 'none';
+
+            if (isVideo) {
+                const video = bgEl.querySelector('video');
+                if (video) {
+                    video.style.objectPosition = c.bgPosition || 'center center';
+                    video.style.filter = filterStr; // Apply filter directly to video
+                }
+            } else {
+                const bgUrl = c.appBackground.startsWith('data:')
+                    ? `url("${c.appBackground}")`
+                    : `url('${c.appBackground.replace(/'/g, "\\'")}')`;
+                bgEl.style.backgroundImage = bgUrl;
+                bgEl.style.backgroundPosition = c.bgPosition || 'center center';
+                bgEl.style.filter = filterStr;
+            }
+
+            bgEl.style.opacity = (c.bgOpacity ?? 50) / 100;
         }
 
         if (editorBgEl && c.editorBackground) {
-            // Use double quotes for data URLs to avoid escaping issues
-            const bgUrl = c.editorBackground.startsWith('data:')
-                ? `url("${c.editorBackground}")`
-                : `url('${c.editorBackground.replace(/'/g, "\\'")}')`;
-            editorBgEl.style.backgroundImage = bgUrl;
-            editorBgEl.style.backgroundPosition = c.editorBgPosition || 'center center';
+            const isVideo = c.editorBackground.endsWith('.webm') || c.editorBackground.endsWith('.mp4') || c.editorBackground.startsWith('data:video/');
             const blur = c.editorBgBlur ?? 0;
-            editorBgEl.style.opacity = (c.editorBgOpacity ?? 15) / 100;
             const editorBrightness = (c.editorBgBrightness ?? 100) / 100;
             const editorFilters = [];
             if (blur > 0) editorFilters.push(`blur(${blur}px)`);
             if (editorBrightness !== 1) editorFilters.push(`brightness(${editorBrightness})`);
-            editorBgEl.style.filter = editorFilters.length ? editorFilters.join(' ') : 'none';
+            const filterStr = editorFilters.length ? editorFilters.join(' ') : 'none';
+
+            if (isVideo) {
+                const video = editorBgEl.querySelector('video');
+                if (video) {
+                    video.style.objectPosition = c.editorBgPosition || 'center center';
+                    video.style.filter = filterStr; // Apply filter directly to video
+                }
+            } else {
+                const bgUrl = c.editorBackground.startsWith('data:')
+                    ? `url("${c.editorBackground}")`
+                    : `url('${c.editorBackground.replace(/'/g, "\\'")}')`;
+                editorBgEl.style.backgroundImage = bgUrl;
+                editorBgEl.style.backgroundPosition = c.editorBgPosition || 'center center';
+                editorBgEl.style.filter = filterStr;
+            }
+
+            editorBgEl.style.opacity = (c.editorBgOpacity ?? 15) / 100;
             // Extend inset to prevent blur edge artifacts
             editorBgEl.style.inset = blur > 0 ? `-${blur}px` : '0';
         }
@@ -3509,7 +3545,10 @@ const ThemeCustomizer = {
 
         wrapper.innerHTML = `
             <div class="tc6-ide ${this.bgDragMode ? 'tc6-drag-mode' : ''}">
-                ${appBg ? `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${appFilterStr};"></div>` : ''}
+                ${appBg ? (appBg.endsWith('.webm') || appBg.endsWith('.mp4') || appBg.startsWith('data:video/')
+                ? `<div class="tc6-ide-bg" style="opacity: ${bgOpacity}; filter: ${appFilterStr};"><video src="${appBg}" autoplay loop muted style="width: 100%; height: 100%; object-fit: cover; object-position: ${bgPos};"></video></div>`
+                : `<div class="tc6-ide-bg" style="background-image: ${appBg.startsWith('data:') ? `url("${appBg}")` : `url('${appBg.replace(/'/g, "\\'")}')`}; background-position: ${bgPos}; opacity: ${bgOpacity}; filter: ${appFilterStr};"></div>`)
+                : ''}
                 
                 <div class="tc6-ide-content ${this.bgDragMode ? 'tc6-dimmed' : ''}">
                     <!-- Header - Uses CSS variable via tc6-header-main class -->
@@ -3538,7 +3577,10 @@ const ThemeCustomizer = {
                             <!-- Editor -->
                             <div class="tc6-clickable tc6-ui-element tc6-editor-bg-container" 
                                  data-key="editorBg" data-label="Editor Background">
-                                ${editorBg ? `<div class="tc6-editor-bg" style="position: absolute; inset: ${editorBlur > 0 ? -editorBlur + 'px' : '0'}; background-image: ${editorBg.startsWith('data:') ? `url("${editorBg}")` : `url('${editorBg.replace(/'/g, "\\'")}')`}; background-size: cover; background-position: ${editorBgPos}; opacity: ${editorOpacity}; filter: ${editorFilterStr}; pointer-events: none;"></div>` : ''}
+                                ${editorBg ? (editorBg.endsWith('.webm') || editorBg.endsWith('.mp4') || editorBg.startsWith('data:video/')
+                ? `<div class="tc6-editor-bg" style="position: absolute; inset: ${editorBlur > 0 ? -editorBlur + 'px' : '0'}; opacity: ${editorOpacity}; filter: ${editorFilterStr}; pointer-events: none;"><video src="${editorBg}" autoplay loop muted style="width: 100%; height: 100%; object-fit: cover; object-position: ${editorBgPos};"></video></div>`
+                : `<div class="tc6-editor-bg" style="position: absolute; inset: ${editorBlur > 0 ? -editorBlur + 'px' : '0'}; background-image: ${editorBg.startsWith('data:') ? `url("${editorBg}")` : `url('${editorBg.replace(/'/g, "\\'")}')`}; background-size: cover; background-position: ${editorBgPos}; opacity: ${editorOpacity}; filter: ${editorFilterStr}; pointer-events: none;"></div>`)
+                : ''}
                                 <div class="tc6-code-content">
                                     <div class="tc6-code-line">
                                         <span class="tc6-clickable tc6-line-number" data-key="textMuted" data-label="Line Numbers">1</span>

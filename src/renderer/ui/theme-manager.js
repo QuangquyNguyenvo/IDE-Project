@@ -123,7 +123,7 @@ const ThemeManager = {
             'kawaii-dark': {
                 meta: { id: 'kawaii-dark', name: 'Kawaii Dark', type: 'dark' },
                 colors: {
-                    appBackground: 'assets/backgrounds/background.jpg',
+                    appBackground: 'assets/backgrounds/darkblue.webm',
                     bgOceanLight: '#1a3a50',
                     bgOceanMedium: '#152535',
                     bgOceanDeep: '#88c9ea',
@@ -144,7 +144,7 @@ const ThemeManager = {
                     shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.4)',
                     shadowCard: '0 4px 12px rgba(0, 0, 0, 0.3)',
                     glow: '0 0 15px rgba(136, 201, 234, 0.4)',
-                    bgHeader: 'rgba(21, 37, 53, 0.97)',
+                    bgHeader: 'rgba(21, 37, 53, 0.4)',
                     bgPanel: 'rgba(26, 37, 48, 0.95)',
                     bgInput: '#1a2a3a',
                     bgButton: '#243040',
@@ -204,7 +204,7 @@ const ThemeManager = {
                     shadowSoft: '0 8px 32px rgba(74, 155, 201, 0.2)',
                     shadowCard: '0 4px 12px rgba(74, 155, 201, 0.15)',
                     glow: '0 0 15px rgba(74, 155, 201, 0.3)',
-                    bgHeader: 'rgba(208, 232, 245, 0.97)',
+                    bgHeader: 'rgba(208, 232, 245, 0.4)',
                     bgPanel: 'rgba(232, 244, 252, 0.95)',
                     bgInput: '#ffffff',
                     bgButton: '#e8f4fc',
@@ -243,7 +243,7 @@ const ThemeManager = {
             'sakura': {
                 meta: { id: 'sakura', name: 'Sakura', type: 'light' },
                 colors: {
-                    appBackground: 'assets/backgrounds/pink.gif',
+                    appBackground: 'assets/backgrounds/pink.webm',
                     bgOceanLight: '#fff5f8',
                     bgOceanMedium: '#ffe4e1',
                     bgOceanDeep: '#ffb7c5',
@@ -264,7 +264,7 @@ const ThemeManager = {
                     shadowSoft: '0 8px 32px rgba(255, 182, 193, 0.25)',
                     shadowCard: '0 4px 12px rgba(255, 105, 180, 0.15)',
                     glow: '0 0 15px rgba(255, 182, 193, 0.4)',
-                    bgHeader: 'rgba(255, 228, 225, 0.97)',
+                    bgHeader: 'rgba(255, 228, 225, 0.4)',
                     bgPanel: 'rgba(255, 245, 248, 0.95)',
                     bgInput: '#fffafa',
                     bgButton: '#fff0f5',
@@ -307,6 +307,7 @@ const ThemeManager = {
             'dracula': {
                 meta: { id: 'dracula', name: 'Dracula', type: 'dark' },
                 colors: {
+                    appBackground: 'assets/backgrounds/dracula.webm',
                     bgOceanLight: '#44475a',
                     bgOceanMedium: '#383a59',
                     bgOceanDeep: '#bd93f9',
@@ -327,7 +328,7 @@ const ThemeManager = {
                     shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.5)',
                     shadowCard: '0 4px 12px rgba(0, 0, 0, 0.4)',
                     glow: '0 0 15px rgba(189, 147, 249, 0.4)',
-                    bgHeader: 'rgba(33, 34, 44, 0.97)',
+                    bgHeader: 'rgba(33, 34, 44, 0.4)',
                     bgPanel: 'rgba(40, 42, 54, 0.95)',
                     bgInput: '#282a36',
                     bgButton: '#44475a',
@@ -363,6 +364,7 @@ const ThemeManager = {
             'monokai': {
                 meta: { id: 'monokai', name: 'Monokai', type: 'dark' },
                 colors: {
+                    appBackground: 'assets/backgrounds/monokai.webm',
                     bgOceanLight: '#3e3d32',
                     bgOceanMedium: '#272822',
                     bgOceanDeep: '#a6e22e',
@@ -383,7 +385,7 @@ const ThemeManager = {
                     shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.5)',
                     shadowCard: '0 4px 12px rgba(0, 0, 0, 0.4)',
                     glow: '0 0 15px rgba(166, 226, 46, 0.4)',
-                    bgHeader: 'rgba(30, 31, 28, 0.97)',
+                    bgHeader: 'rgba(30, 31, 28, 0.4)',
                     bgPanel: 'rgba(39, 40, 34, 0.95)',
                     bgInput: '#272822',
                     bgButton: '#3e3d32',
@@ -419,6 +421,7 @@ const ThemeManager = {
             'nord': {
                 meta: { id: 'nord', name: 'Nord', type: 'dark' },
                 colors: {
+                    appBackground: 'assets/backgrounds/nord.webm',
                     bgOceanLight: '#3b4252',
                     bgOceanMedium: '#2e3440',
                     bgOceanDeep: '#88c0d0',
@@ -439,7 +442,7 @@ const ThemeManager = {
                     shadowSoft: '0 8px 32px rgba(0, 0, 0, 0.4)',
                     shadowCard: '0 4px 12px rgba(0, 0, 0, 0.3)',
                     glow: '0 0 15px rgba(136, 192, 208, 0.3)',
-                    bgHeader: 'rgba(36, 41, 51, 0.97)',
+                    bgHeader: 'rgba(36, 41, 51, 0.4)',
                     bgPanel: 'rgba(46, 52, 64, 0.95)',
                     bgInput: '#2e3440',
                     bgButton: '#3b4252',
@@ -637,7 +640,10 @@ const ThemeManager = {
         // 2. Inject CSS variables if theme provides them
         this._applyCSSVariables(theme);
 
-        // 3. Apply Monaco Editor theme
+        // 3. Update Background Video support
+        this._updateBackground(theme);
+
+        // 4. Apply Monaco Editor theme
         if (typeof monaco !== 'undefined') {
             try {
                 monaco.editor.setTheme(themeId);
@@ -791,6 +797,34 @@ const ThemeManager = {
             };
         } catch (e) {
             return { success: false, message: `Parse error: ${e.message}` };
+        }
+    },
+
+    /**
+     * Update background video element if theme has a video background
+     * @param {Object} theme 
+     */
+    _updateBackground(theme) {
+        const bgVideo = document.getElementById('app-bg-video');
+        if (!bgVideo) return;
+
+        const bgPath = theme.colors?.appBackground;
+
+        // Supported video extensions or data URI
+        if (bgPath && (
+            bgPath.endsWith('.webm') ||
+            bgPath.endsWith('.mp4') ||
+            bgPath.startsWith('data:video/')
+        )) {
+            bgVideo.src = bgPath;
+            bgVideo.style.display = 'block';
+            // Disable CSS image background to avoid conflict/double-rendering
+            document.documentElement.style.setProperty('--app-bg-image', 'none');
+        } else {
+            bgVideo.style.display = 'none';
+            bgVideo.src = '';
+            bgVideo.removeAttribute('src'); // Ensure it stops buffering
+            bgVideo.load(); // Force browser to release video resources
         }
     },
 

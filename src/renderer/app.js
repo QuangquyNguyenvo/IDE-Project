@@ -505,6 +505,14 @@ function closeSplit() {
         if (App.editor) App.editor.layout();
         resizer.removeEventListener('transitionend', onTransitionEnd);
     }, 350);
+
+    // Reset pane 1 to full width
+    const pane1 = document.getElementById('editor-pane-1');
+    if (pane1) {
+        pane1.style.flex = '1';
+        pane1.style.width = '';
+        pane1.style.maxWidth = '';
+    }
 }
 
 // Swap files between left and right editors
@@ -758,12 +766,24 @@ function setupSplitResizer() {
         if (rafId) return;
         rafId = requestAnimationFrame(() => {
             const dx = e.clientX - startX;
-            const newW1 = Math.max(200, startW1 + dx);
-            const newW2 = Math.max(200, startW2 - dx);
+            const totalWidth = startW1 + startW2;
+
+            // Calc new width for pane1, clamping min 200px
+            let newW1 = startW1 + dx;
+
+            // Constraint: pane1 min 200px
+            if (newW1 < 200) newW1 = 200;
+            // Constraint: pane2 min 200px (meaning pane1 max = total - 200)
+            if (newW1 > totalWidth - 200) newW1 = totalWidth - 200;
+
+            // Convert to percentage
+            const p1 = (newW1 / totalWidth) * 100;
+            const p2 = 100 - p1;
+
             pane1.style.flex = 'none';
             pane2.style.flex = 'none';
-            pane1.style.width = newW1 + 'px';
-            pane2.style.width = newW2 + 'px';
+            pane1.style.width = `${p1}%`;
+            pane2.style.width = `${p2}%`;
 
             // Layout immediately during resize for responsiveness
             if (App.editor) App.editor.layout();
