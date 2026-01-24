@@ -86,8 +86,8 @@
     --blur-filter: blur(8px);
     --blur-filter-light: blur(2px);
     /* Professional sleek easing, no bounce for better performance feeling */
-    --transition-timing: cubic-bezier(0.2, 0.8, 0.2, 1);
-    --transition-duration: 0.2s;
+    --transition-timing: var(--ease-standard);
+    --transition-duration: var(--duration-fast);
 
     --header-height: 54px;
     --statusbar-height: 28px;
@@ -131,6 +131,21 @@ body.performance-mode .editor-section {
 body.performance-mode .settings-overlay {
     backdrop-filter: none !important;
     background: rgba(0, 0, 0, 0.6);
+}
+
+/* Fix resizer in performance mode */
+body.performance-mode #resizer-split {
+    background: var(--bg-ocean-light) !important;
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+}
+
+/* Force clipping on panels */
+.problems-panel,
+.terminal-section {
+    z-index: 10;
+    /* Fix for corner gaps on some renderers */
+    transform: translateZ(0);
 }
 
 /* Respect user's reduced motion preference */
@@ -625,6 +640,9 @@ body.customizer-open::before {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    /* Fix corner gaps */
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
 }
 
 .panel-head {
@@ -721,7 +739,7 @@ body.customizer-open::before {
 
 .dropdown.show {
     display: block;
-    animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: scaleIn var(--duration-fast) var(--ease-out-expo);
 }
 
 .dropdown-item {
@@ -732,7 +750,7 @@ body.customizer-open::before {
     display: flex;
     justify-content: space-between;
     cursor: pointer;
-    transition: 0.1s;
+    transition: var(--duration-instant);
 }
 
 .dropdown-item:hover {
@@ -740,17 +758,7 @@ body.customizer-open::before {
     color: var(--bg-ocean-dark);
 }
 
-@keyframes popIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.95);
-    }
 
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
 
 /* Welcome Screen */
 .welcome {

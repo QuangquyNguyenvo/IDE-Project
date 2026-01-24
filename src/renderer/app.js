@@ -157,14 +157,42 @@ document.addEventListener('DOMContentLoaded', () => {
     initCompetitiveCompanion();
     updateUI();
 
-    let resizeTimer;
+    let resizeRequestId = null;
     window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
+        if (resizeRequestId) return;
+        resizeRequestId = requestAnimationFrame(() => {
             if (App.editor) App.editor.layout();
             if (App.editor2) App.editor2.layout();
-        }, 100);
+            resizeRequestId = null;
+        });
     });
+
+    // Staggered Entrance Animation
+    const header = document.querySelector('.header-bar');
+    const main = document.querySelector('.main');
+
+    // Prepare for animation
+    if (header) {
+        header.style.opacity = '0';
+        header.classList.add('animate-slide-up');
+        // Reset after animation to avoid conflicts
+        header.addEventListener('animationend', () => {
+            header.style.opacity = '';
+            header.classList.remove('animate-slide-up');
+        }, { once: true });
+    }
+
+    if (main) {
+        main.style.opacity = '0';
+        // Small delay for main content
+        setTimeout(() => {
+            main.classList.add('animate-slide-up');
+            main.addEventListener('animationend', () => {
+                main.style.opacity = '';
+                main.classList.remove('animate-slide-up');
+            }, { once: true });
+        }, 100);
+    }
 });
 
 function initMonaco() {
@@ -425,10 +453,22 @@ function openSplit() {
     }
 
 
+    // Use transitionend to trigger layout exactly when animation finishes
+    const onTransitionEnd = (e) => {
+        if (e.propertyName === 'width' || e.propertyName === 'flex-grow') {
+            if (App.editor) App.editor.layout();
+            if (App.editor2) App.editor2.layout();
+            pane2.removeEventListener('transitionend', onTransitionEnd);
+        }
+    };
+    pane2.addEventListener('transitionend', onTransitionEnd);
+
+    // Fallback in case transition doesn't fire (e.g. hidden)
     setTimeout(() => {
         if (App.editor) App.editor.layout();
         if (App.editor2) App.editor2.layout();
-    }, 100);
+        pane2.removeEventListener('transitionend', onTransitionEnd);
+    }, 350); // Slightly longer than CSS transition time
 }
 
 function closeSplit() {
@@ -453,9 +493,18 @@ function closeSplit() {
     if (App.editor) App.editor.updateOptions({ minimap: { enabled: minimapEnabled } });
 
 
+    const resizer = document.getElementById('resizer-split');
+    const onTransitionEnd = (e) => {
+        if (App.editor) App.editor.layout();
+        resizer.removeEventListener('transitionend', onTransitionEnd);
+    };
+    resizer.addEventListener('transitionend', onTransitionEnd);
+
+    // Fallback
     setTimeout(() => {
         if (App.editor) App.editor.layout();
-    }, 50);
+        resizer.removeEventListener('transitionend', onTransitionEnd);
+    }, 350);
 }
 
 // Swap files between left and right editors
@@ -516,6 +565,27 @@ function initTabDrag() {
         }
     });
 
+    // Cache for drag operations to prevent layout thrashing
+    let cachedTabs = [];
+
+    container.addEventListener('dragstart', e => {
+        const tab = e.target.closest('.tab');
+        if (tab) {
+            draggedTabId = tab.dataset.id;
+            draggedTabEl = tab;
+            e.dataTransfer.effectAllowed = 'move';
+            tab.classList.add('dragging');
+            e.dataTransfer.setDragImage(tab, tab.offsetWidth / 2, tab.offsetHeight / 2);
+
+            // Cache positions once at start
+            cachedTabs = [...container.querySelectorAll('.tab:not(.dragging)')].map(child => ({
+                element: child,
+                rect: child.getBoundingClientRect(),
+                offset: 0
+            }));
+        }
+    });
+
     container.addEventListener('dragend', e => {
         const tab = e.target.closest('.tab');
         if (tab) tab.classList.remove('dragging');
@@ -526,32 +596,36 @@ function initTabDrag() {
             dropIndicator.parentNode.removeChild(dropIndicator);
         }
 
+        cachedTabs = []; // Clear cache
         container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
     });
 
 
+    let dragOverRafId = null;
     container.addEventListener('dragover', e => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
 
         if (!draggedTabEl) return;
 
-        const afterElement = getDragAfterElement(container, e.clientX);
-        const indicator = createDropIndicator();
+        if (dragOverRafId) return;
 
+        dragOverRafId = requestAnimationFrame(() => {
+            const afterElement = getDragAfterElement(container, e.clientX);
+            const indicator = createDropIndicator();
 
-        container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over-left', 'drag-over-right'));
 
-        if (afterElement) {
-
-            afterElement.classList.add('drag-over-left');
-        } else {
-
-            const lastTab = container.querySelector('.tab:last-of-type');
-            if (lastTab && lastTab !== draggedTabEl) {
-                lastTab.classList.add('drag-over-right');
+            if (afterElement) {
+                afterElement.classList.add('drag-over-left');
+            } else {
+                const lastTab = container.querySelector('.tab:last-of-type');
+                if (lastTab && lastTab !== draggedTabEl) {
+                    lastTab.classList.add('drag-over-right');
+                }
             }
-        }
+            dragOverRafId = null;
+        });
     });
 
     container.addEventListener('dragleave', e => {
@@ -603,14 +677,19 @@ function initTabDrag() {
 
 
     function getDragAfterElement(container, x) {
-        const draggableElements = [...container.querySelectorAll('.tab:not(.dragging)')];
+        // Use cached tabs if available, otherwise query (fallback)
+        const elementsInfo = cachedTabs.length > 0 ? cachedTabs :
+            [...container.querySelectorAll('.tab:not(.dragging)')].map(child => ({
+                element: child,
+                rect: child.getBoundingClientRect()
+            }));
 
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
+        return elementsInfo.reduce((closest, childInfo) => {
+            const box = childInfo.rect;
             const offset = x - box.left - box.width / 2;
 
             if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
+                return { offset: offset, element: childInfo.element };
             } else {
                 return closest;
             }
@@ -672,15 +751,26 @@ function setupSplitResizer() {
         e.preventDefault();
     };
 
+    let rafId = null;
     document.addEventListener('mousemove', e => {
         if (!dragging) return;
-        const dx = e.clientX - startX;
-        const newW1 = Math.max(200, startW1 + dx);
-        const newW2 = Math.max(200, startW2 - dx);
-        pane1.style.flex = 'none';
-        pane2.style.flex = 'none';
-        pane1.style.width = newW1 + 'px';
-        pane2.style.width = newW2 + 'px';
+
+        if (rafId) return;
+        rafId = requestAnimationFrame(() => {
+            const dx = e.clientX - startX;
+            const newW1 = Math.max(200, startW1 + dx);
+            const newW2 = Math.max(200, startW2 - dx);
+            pane1.style.flex = 'none';
+            pane2.style.flex = 'none';
+            pane1.style.width = newW1 + 'px';
+            pane2.style.width = newW2 + 'px';
+
+            // Layout immediately during resize for responsiveness
+            if (App.editor) App.editor.layout();
+            if (App.editor2) App.editor2.layout();
+
+            rafId = null;
+        });
     });
 
     document.addEventListener('mouseup', () => {

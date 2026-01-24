@@ -96,6 +96,22 @@ function createMainWindow() {
     });
 
     console.log('[Window] Main window created');
+
+    // Enable DevTools shortcut (Ctrl+Shift+I) - ONLY IN DEVELOPMENT
+    if (!app.isPackaged) {
+        mainWindow.webContents.on('before-input-event', (event, input) => {
+            if (input.control && input.shift && input.key.toLowerCase() === 'i') {
+                mainWindow.webContents.toggleDevTools();
+                event.preventDefault();
+            }
+            // F12 support
+            if (input.key === 'F12') {
+                mainWindow.webContents.toggleDevTools();
+                event.preventDefault();
+            }
+        });
+    }
+
     return mainWindow;
 }
 
