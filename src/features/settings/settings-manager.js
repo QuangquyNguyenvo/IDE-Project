@@ -30,7 +30,7 @@ const DEFAULT_SETTINGS = {
         showConsole: true
     },
     appearance: {
-        theme: 'kawaii-dark'
+        theme: 'monokai'
     },
     history: {
         enabled: true,

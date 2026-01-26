@@ -133,7 +133,8 @@ class AutoUpdateService {
             
             const result = await autoUpdater.checkForUpdates();
             
-            if (showNoUpdateDialog && !result.updateInfo) {
+            // Handle null/undefined result safely
+            if (showNoUpdateDialog && (!result || !result.updateInfo)) {
                 this.sendStatusToRenderer('update-not-available', {
                     version: app.getVersion(),
                     showMessage: true
@@ -146,7 +147,7 @@ class AutoUpdateService {
             
             if (showNoUpdateDialog) {
                 this.sendStatusToRenderer('update-error', {
-                    message: error.message,
+                    message: error.message || 'Update check failed',
                     showMessage: true
                 });
             }

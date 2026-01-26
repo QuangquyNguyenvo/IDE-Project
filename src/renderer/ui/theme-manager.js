@@ -75,16 +75,22 @@ const ThemeManager = {
 
     /**
      * Load JSON themes in background (non-blocking)
+     * NOTE: In Electron, fetch() doesn't work well with relative paths.
+     * Hardcoded themes are already loaded and work perfectly, so JSON loading
+     * is disabled to avoid console errors. Enable only if using a web server.
      */
     _loadJSONThemesInBackground() {
-        // Don't await - let it run in background
-        this._loadBuiltinThemesAsync().catch(e => {
-            console.warn('[ThemeManager] Background JSON load failed:', e.message);
-        });
+        // Disabled: In Electron packaged app, fetch() can't access local files
+        // via relative paths. Hardcoded themes already provide full functionality.
+        // This would only be useful for dynamic theme hot-reloading during dev.
+        
+        // Uncomment below for development with a local server:
+        // this._loadBuiltinThemesAsync().catch(() => {});
     },
 
     /**
      * Load builtin themes from JSON files (async, non-blocking)
+     * NOTE: Currently disabled - see _loadJSONThemesInBackground()
      */
     async _loadBuiltinThemesAsync() {
         const promises = this.builtinThemeIds.map(async (themeId) => {
@@ -98,7 +104,6 @@ const ThemeManager = {
                 }
             } catch (error) {
                 // Silent fail - hardcoded version already loaded
-                console.warn(`[ThemeManager] Failed to load JSON for ${themeId}:`, error.message);
             }
         });
         await Promise.all(promises);
@@ -613,16 +618,22 @@ const ThemeManager = {
      * @param {string} themeId 
      */
     setTheme(themeId) {
+        // Auto-initialize if themes not loaded yet (called before init())
+        if (this.themes.size === 0) {
+            this._loadAllHardcodedThemes();
+        }
+
         let theme = this.themes.get(themeId);
 
         if (!theme) {
-            console.warn(`[ThemeManager] Theme '${themeId}' not found, falling back to kawaii-dark`);
+            // Silent fallback - don't warn if theme just hasn't loaded yet
             themeId = 'kawaii-dark';
             theme = this.themes.get(themeId);
         }
 
         if (!theme) {
-            console.error('[ThemeManager] No themes available!');
+            // This should never happen now, but keep as safety net
+            console.warn('[ThemeManager] Themes not initialized, deferring...');
             return;
         }
 
@@ -632,6 +643,12 @@ const ThemeManager = {
         // Load saved background settings for built-in themes
         if (this.builtinThemeIds.includes(themeId)) {
             this._loadSavedBackground(themeId, theme);
+
+            // Ensure kawaii-light always restores its default image when no override is saved
+            if (themeId === 'kawaii-light' && (!theme.colors || !theme.colors.appBackground)) {
+                if (!theme.colors) theme.colors = {};
+                theme.colors.appBackground = 'assets/backgrounds/background.jpg';
+            }
         }
 
         // 1. Set data-theme attribute for CSS

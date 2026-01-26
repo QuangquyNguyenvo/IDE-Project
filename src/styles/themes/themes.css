@@ -36,11 +36,18 @@
     --text-muted: #7990a0;
 
     --success: #7dcea0;
+    --success-dark: #4caf50;
+    --success-hover: #45a045;
     --error: #ff6b6b;
+    --error-dark: #ff4444;
     --warning: #fcd5ce;
 
     --border: #3a6075;
     --border-strong: #88c9ea;
+
+    /* Explorer Icons */
+    --folder-icon-closed: #f0c674;
+    --folder-icon-open: #f5b942;
 
     /* Darker glass edge for dark theme */
     --border-glass-edge: rgba(255, 255, 255, 0.1);
@@ -117,11 +124,18 @@
     --text-muted: #bc8f8f;
 
     --success: #b8e2b8;
+    --success-dark: #4caf50;
+    --success-hover: #45a045;
     --error: #ffb3b3;
+    --error-dark: #e06060;
     --warning: #fff9c4;
 
     --border: #ffcad4;
     --border-strong: #ffb7c5;
+
+    /* Explorer Icons */
+    --folder-icon-closed: #ffb7c5;
+    --folder-icon-open: #ff9aaf;
 
     --shadow-soft: 0 8px 16px rgba(255, 182, 193, 0.25);
     --shadow-card: 0 4px 8px rgba(255, 105, 180, 0.15);
@@ -185,12 +199,19 @@
     --text-muted: #6272a4;
 
     --success: #50fa7b;
+    --success-dark: #2ecc71;
+    --success-hover: #27ae60;
     --error: #ff5555;
+    --error-dark: #ff3333;
     --warning: #ffb86c;
 
     --border: #6272a4;
     --border-strong: #bd93f9;
     --border-glass-edge: rgba(255, 255, 255, 0.1);
+
+    /* Explorer Icons */
+    --folder-icon-closed: #f1fa8c;
+    --folder-icon-open: #ffb86c;
 
     --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
@@ -251,12 +272,19 @@
     --text-muted: #75715e;
 
     --success: #a6e22e;
+    --success-dark: #8cc919;
+    --success-hover: #7ab918;
     --error: #f92672;
+    --error-dark: #d91862;
     --warning: #fd971f;
 
     --border: #75715e;
     --border-strong: #a6e22e;
     --border-glass-edge: rgba(255, 255, 255, 0.1);
+
+    /* Explorer Icons */
+    --folder-icon-closed: #e6db74;
+    --folder-icon-open: #fd971f;
 
     --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.4);
@@ -317,12 +345,19 @@
     --text-muted: #d8dee9;
 
     --success: #a3be8c;
+    --success-dark: #8fbf6a;
+    --success-hover: #7daf5a;
     --error: #bf616a;
+    --error-dark: #a5545c;
     --warning: #ebcb8b;
 
     --border: #81a1c1;
     --border-strong: #88c0d0;
     --border-glass-edge: rgba(255, 255, 255, 0.1);
+
+    /* Explorer Icons */
+    --folder-icon-closed: #ebcb8b;
+    --folder-icon-open: #d08770;
 
     --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.4);
     --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -443,7 +478,8 @@
 [data-theme="nord"] .tab-add {
     background: var(--bg-button);
     border-color: var(--border);
-    color: var(--bg-ocean-deep);
+    border-style: dashed;
+    color: var(--accent);
 }
 
 [data-theme="kawaii-dark"] .tab-add:hover,
@@ -451,6 +487,8 @@
 [data-theme="monokai"] .tab-add:hover,
 [data-theme="nord"] .tab-add:hover {
     background: var(--bg-ocean-medium);
+    border-color: var(--accent);
+    border-style: solid;
 }
 
 /* Tab drag and drop indicators for dark themes */
@@ -527,7 +565,7 @@
 [data-theme="monokai"] .toggle-btn,
 [data-theme="nord"] .toggle-btn {
     background: var(--bg-button);
-    color: var(--bg-ocean-deep);
+    color: var(--accent);
 }
 
 [data-theme="kawaii-dark"] .toggle-btn:hover,
@@ -535,6 +573,7 @@
 [data-theme="monokai"] .toggle-btn:hover,
 [data-theme="nord"] .toggle-btn:hover {
     background: var(--bg-button-hover);
+    color: var(--text-primary);
 }
 
 [data-theme="kawaii-dark"] .toggle-btn.active,
@@ -542,7 +581,7 @@
 [data-theme="monokai"] .toggle-btn.active,
 [data-theme="nord"] .toggle-btn.active {
     background: var(--bg-ocean-deep);
-    color: var(--bg-ocean-dark);
+    color: var(--btn-primary-text, #fff);
 }
 
 [data-theme="kawaii-dark"] .action-btn,
@@ -567,7 +606,7 @@
 [data-theme="nord"] .action-btn.primary {
     background: var(--bg-ocean-deep);
     border-color: var(--bg-ocean-deep);
-    color: var(--bg-ocean-dark);
+    color: var(--btn-primary-text, #fff);
 }
 
 /* Window buttons */
@@ -1044,44 +1083,40 @@
 
 /* Welcome screen */
 [data-theme="kawaii-dark"] .welcome-box {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     background: var(--welcome-box-bg, rgba(37, 64, 90, 0.4));
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 25px 80px rgba(0, 0, 0, 0.7),
-        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
-        0 8px 32px rgba(136, 201, 234, 0.25);
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 [data-theme="dracula"] .welcome-box {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 25px 80px rgba(0, 0, 0, 0.7),
-        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
-        0 8px 32px rgba(189, 147, 249, 0.2);
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 [data-theme="monokai"] .welcome-box {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 25px 80px rgba(0, 0, 0, 0.7),
-        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
-        0 8px 32px rgba(166, 226, 46, 0.2);
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 [data-theme="nord"] .welcome-box {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 25px 80px rgba(0, 0, 0, 0.7),
-        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
-        0 8px 32px rgba(136, 192, 208, 0.2);
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 [data-theme="kawaii-dark"] .welcome-box h1,
@@ -1255,7 +1290,15 @@
 [data-theme="monokai"] .settings-tab.active,
 [data-theme="nord"] .settings-tab.active {
     background: var(--bg-ocean-deep) !important;
-    color: var(--bg-ocean-dark) !important;
+    color: var(--btn-primary-text, #fff) !important;
+    box-shadow: none;
+}
+
+[data-theme="kawaii-dark"] .settings-tab.active svg,
+[data-theme="dracula"] .settings-tab.active svg,
+[data-theme="monokai"] .settings-tab.active svg,
+[data-theme="nord"] .settings-tab.active svg {
+    color: var(--btn-primary-text, #fff);
 }
 
 /* Settings content area */
@@ -1483,7 +1526,7 @@ html[data-theme="nord"] .setting-row>label:not(.switch) {
 [data-theme="monokai"] .cc-step-num,
 [data-theme="nord"] .cc-step-num {
     background: var(--bg-ocean-deep);
-    color: var(--bg-ocean-dark);
+    color: var(--btn-primary-text, #fff);
     box-shadow: none;
 }
 
@@ -1498,7 +1541,7 @@ html[data-theme="nord"] .setting-row>label:not(.switch) {
 [data-theme="dracula"] .cc-step-text strong,
 [data-theme="monokai"] .cc-step-text strong,
 [data-theme="nord"] .cc-step-text strong {
-    color: var(--bg-ocean-deep);
+    color: var(--accent);
 }
 
 [data-theme="kawaii-dark"] .cc-footer,
@@ -2065,6 +2108,10 @@ html[data-theme="nord"] .setting-row>label:not(.switch) {
     color: white;
 }
 
+[data-theme="sakura"] .settings-tab.active svg {
+    color: white;
+}
+
 [data-theme="sakura"] .settings-section h3 {
     color: var(--accent);
     border-bottom-color: var(--border);
@@ -2152,6 +2199,20 @@ html[data-theme="nord"] .setting-row>label:not(.switch) {
 
 [data-theme="sakura"] .docked-terminal-body {
     color: var(--terminal-text);
+}
+
+/* Sakura CC Popup */
+[data-theme="sakura"] .cc-step-num {
+    background: var(--accent);
+    color: #fff;
+}
+
+[data-theme="sakura"] .cc-step-text {
+    color: var(--text-primary);
+}
+
+[data-theme="sakura"] .cc-step-text strong {
+    color: var(--accent);
 }
 
 /* Sakura Scrollbars */
@@ -3117,8 +3178,8 @@ html[data-theme="nord"] .setting-row>label:not(.switch) {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(16px);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
 }
 
 .tc-container {
@@ -3132,7 +3193,7 @@ html[data-theme="nord"] .setting-row>label:not(.switch) {
     max-height: 900px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
     transform: scale(0.95);
     transition: transform 0.3s ease;
 }

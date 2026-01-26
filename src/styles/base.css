@@ -190,7 +190,6 @@ body::after {
     height: var(--header-height);
     background: var(--bg-glass-heavy);
     border-bottom: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
-    box-shadow: 0 4px 20px rgba(136, 201, 234, 0.1);
     padding: 0 16px;
     gap: 16px;
     -webkit-app-region: drag;
@@ -206,10 +205,8 @@ body::after {
     background: var(--bg-ocean-deep);
     border: 2px solid var(--border-glass-edge, rgba(255, 255, 255, 0.4));
     border-radius: 30px;
-    box-shadow: 0 2px 8px rgba(136, 201, 234, 0.4);
     -webkit-app-region: no-drag;
     letter-spacing: 0.5px;
-    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
 }
 
 .menu-group {
@@ -283,12 +280,12 @@ body::after {
     font-weight: 700;
     white-space: nowrap;
     transition: all var(--duration-fast) var(--ease-standard);
-    box-shadow: 0 2px 4px rgba(136, 201, 234, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .tab:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(136, 201, 234, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     color: var(--bg-ocean-dark);
 }
 
@@ -348,7 +345,7 @@ body::after {
 .tab-add:hover {
     background: var(--bg-ocean-medium);
     border-style: solid;
-    border-color: white;
+    border-color: var(--border-strong);
     transform: rotate(90deg);
 }
 
@@ -413,7 +410,7 @@ body::after {
 
 .action-btn.primary:hover {
     background: var(--bg-ocean-dark);
-    box-shadow: 0 4px 12px rgba(58, 124, 165, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .win-btns {
