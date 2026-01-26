@@ -114,13 +114,9 @@ const LocalHistory = {
                 maxAgeDays: this.settings.maxAgeDays
             });
 
-            if (result.success) {
-                console.log(`[LocalHistory] Backup created: ${result.backupPath}`);
-            }
-
             return result;
         } catch (error) {
-            console.error('[LocalHistory] Backup failed:', error);
+            console.error('[LocalHistory] Backup error:', error);
             return { success: false, reason: 'error', error: error.message };
         }
     },
@@ -135,7 +131,7 @@ const LocalHistory = {
 
         try {
             const result = await window.electronAPI.getFileHistory(filePath);
-            return result.success ? result.entries : [];
+            return result.success && result.entries ? result.entries : [];
         } catch (error) {
             console.error('[LocalHistory] Get history failed:', error);
             return [];
@@ -205,7 +201,10 @@ const LocalHistory = {
             return;
         }
 
+        console.log('[LocalHistory] Opening modal for:', filePath);
         const entries = await this.getHistory(filePath);
+        console.log('[LocalHistory] History entries:', entries);
+        
         const modal = document.getElementById('local-history-modal');
         const overlay = document.getElementById('local-history-overlay');
         const list = document.getElementById('local-history-list');
@@ -215,6 +214,8 @@ const LocalHistory = {
             console.error('[LocalHistory] Modal elements not found');
             return;
         }
+
+        console.log('[LocalHistory] Modal elements found, rendering...');
 
         // Update title with filename
         const fileName = filePath.split(/[\\/]/).pop();
@@ -270,8 +271,10 @@ const LocalHistory = {
         }
 
         // Show modal
+        console.log('[LocalHistory] Adding active class to overlay and modal');
         overlay.classList.add('active');
         modal.classList.add('active');
+        console.log('[LocalHistory] Modal should now be visible');
     },
 
     /**

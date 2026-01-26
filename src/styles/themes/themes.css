@@ -51,7 +51,7 @@
     --bg-header: rgba(21, 37, 53, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: rgba(21, 37, 53, 0.95);
+    --bg-header-statusbar: rgba(21, 37, 53, 1);
 
     --bg-page: rgba(26, 37, 48, 0.4);
     /* Panel Variants - Inherit from base unless overridden */
@@ -65,6 +65,12 @@
 
     --editor-bg: #1a2530;
     --terminal-bg: #1e2933;
+
+    /* Welcome Box */
+    --welcome-box-opacity: 0.4;
+    --welcome-box-bg: rgba(37, 64, 90, 0.4);
+    --welcome-btn-border: var(--border-strong, #88c9ea);
+    --welcome-btn-primary-border: var(--accent, #88c9ea);
 
     /* Button Variables - Dark Theme */
     --btn-bg: rgba(255, 255, 255, 0.1);
@@ -85,6 +91,8 @@
 [data-theme="kawaii-light"] {
     --terminal-bg: #1e2933;
     --terminal-text: #e0f0ff;
+    --welcome-btn-border: var(--border-strong, #b3e2fa);
+    --welcome-btn-primary-border: var(--accent, #88c9ea);
 }
 
 /* ============================================================================
@@ -121,7 +129,7 @@
     --bg-header: rgba(255, 228, 225, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: rgba(255, 228, 225, 0.95);
+    --bg-header-statusbar: rgba(255, 228, 225, 1);
 
     --bg-panel: rgba(255, 245, 248, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -137,7 +145,11 @@
     --terminal-bg: #251a26;
     --terminal-text: #f8e8f0;
 
-    /* Settings label text */
+    /* Welcome Box */
+    --welcome-box-opacity: 0.4;
+    --welcome-box-bg: rgba(37, 64, 90, 0.4);
+    --welcome-btn-border: var(--border-strong, #ffb7c5);
+    --welcome-btn-primary-border: var(--accent, #ff9aaf);
     --settings-label-color: #8b5f65;
     --settings-section-color: #ff9aaf;
 }
@@ -186,7 +198,7 @@
     --bg-header: rgba(33, 34, 44, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: rgba(33, 34, 44, 0.95);
+    --bg-header-statusbar: rgba(33, 34, 44, 1);
 
     --bg-panel: rgba(40, 42, 54, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -200,6 +212,12 @@
 
     --editor-bg: #282a36;
     --terminal-bg: #21222c;
+
+    /* Welcome Box */
+    --welcome-box-opacity: 0.4;
+    --welcome-box-bg: rgba(40, 42, 54, 0.4);
+    --welcome-btn-border: var(--border-strong, #bd93f9);
+    --welcome-btn-primary-border: var(--accent, #ff79c6);
 
     /* Button Variables - Dark Theme */
     --btn-bg: rgba(255, 255, 255, 0.1);
@@ -246,7 +264,7 @@
     --bg-header: rgba(30, 31, 28, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: rgba(30, 31, 28, 0.95);
+    --bg-header-statusbar: rgba(30, 31, 28, 1);
 
     --bg-panel: rgba(39, 40, 34, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -260,6 +278,12 @@
 
     --editor-bg: #272822;
     --terminal-bg: #1e1f1c;
+
+    /* Welcome Box */
+    --welcome-box-opacity: 0.4;
+    --welcome-box-bg: rgba(39, 40, 34, 0.4);
+    --welcome-btn-border: var(--border-strong, #a6e22e);
+    --welcome-btn-primary-border: var(--accent, #f92672);
 
     /* Button Variables - Dark Theme */
     --btn-bg: rgba(255, 255, 255, 0.08);
@@ -306,7 +330,7 @@
     --bg-header: rgba(36, 41, 51, 0.4);
     /* Header Variants - Inherit from base unless overridden */
     --bg-header-main: var(--bg-header);
-    --bg-header-statusbar: rgba(36, 41, 51, 0.95);
+    --bg-header-statusbar: rgba(36, 41, 51, 1);
 
     --bg-panel: rgba(46, 52, 64, 0.95);
     /* Panel Variants - Inherit from base unless overridden */
@@ -320,6 +344,12 @@
 
     --editor-bg: #2e3440;
     --terminal-bg: #242931;
+
+    /* Welcome Box */
+    --welcome-box-opacity: 0.4;
+    --welcome-box-bg: rgba(46, 52, 64, 0.4);
+    --welcome-btn-border: var(--border-strong, #88c0d0);
+    --welcome-btn-primary-border: var(--accent, #88c0d0);
 
     /* Button Variables - Dark Theme */
     --btn-bg: rgba(255, 255, 255, 0.08);
@@ -1014,39 +1044,44 @@
 
 /* Welcome screen */
 [data-theme="kawaii-dark"] .welcome-box {
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: var(--welcome-box-bg, rgba(37, 64, 90, 0.4));
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        0 25px 80px rgba(0, 0, 0, 0.7),
+        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
+        0 8px 32px rgba(136, 201, 234, 0.25);
 }
 
 [data-theme="dracula"] .welcome-box {
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        0 25px 80px rgba(0, 0, 0, 0.7),
+        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
+        0 8px 32px rgba(189, 147, 249, 0.2);
 }
 
 [data-theme="monokai"] .welcome-box {
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        0 25px 80px rgba(0, 0, 0, 0.7),
+        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
+        0 8px 32px rgba(166, 226, 46, 0.2);
 }
 
 [data-theme="nord"] .welcome-box {
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-color: var(--border-strong, var(--border));
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        0 25px 80px rgba(0, 0, 0, 0.7),
+        0 0 0 2px rgba(255, 255, 255, 0.15) inset,
+        0 8px 32px rgba(136, 192, 208, 0.2);
 }
 
 [data-theme="kawaii-dark"] .welcome-box h1,

@@ -48,6 +48,7 @@
 
     /* Base UI Colors (Light Theme Defaults) */
     --bg-header: rgba(245, 250, 255, 0.95);
+    --bg-header-statusbar: rgba(245, 250, 255, 1);
     --bg-panel: #e8f4fc;
     --bg-input: #ffffff;
     --bg-button: #ffffff;
@@ -59,6 +60,12 @@
     --editor-bg: #ffffff;
     --terminal-bg: #1e2933;
     /* Terminal usually keeps dark for better contrast */
+
+    /* Welcome Box */
+    --welcome-box-opacity: 0.4;
+    --welcome-box-bg: rgba(245, 250, 255, var(--welcome-box-opacity, 0.4));
+    --welcome-btn-border: var(--border-strong, #b3e2fa);
+    --welcome-btn-primary-border: var(--accent, #88c9ea);
 
     /* Button Variables - Theme-Aware */
     --btn-bg: #ffffff;
@@ -119,12 +126,7 @@ body.performance-mode .action-btn.run-all.running {
 
 /* Solid backgrounds for performance mode (replaces glass effect) */
 body.performance-mode .app-container {
-    background: var(--bg-ocean-light);
-    backdrop-filter: none !important;
-}
-
-body.performance-mode .editor-section {
-    background: var(--bg-panel);
+    background: linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 100%);
     backdrop-filter: none !important;
 }
 
@@ -133,11 +135,22 @@ body.performance-mode .settings-overlay {
     background: rgba(0, 0, 0, 0.6);
 }
 
-/* Fix resizer in performance mode */
+/* Fix resizer in performance mode by ensuring background is present */
 body.performance-mode #resizer-split {
     background: var(--bg-ocean-light) !important;
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+}
+
+/* Ensure editor and panels have background in performance mode (not transparent) */
+body.performance-mode .editor-section,
+body.performance-mode .terminal-section,
+body.performance-mode .problems-panel {
+    background-color: var(--editor-bg) !important;
+    /* Or a slightly tinted background if preferred, but user suggested editor-bg/theme bg */
+    background: var(--bg-glass-heavy) !important;
+    /* Use the solid approximate color */
+    backdrop-filter: none !important;
 }
 
 /* Force clipping on panels */
@@ -178,24 +191,8 @@ body {
     position: relative;
 }
 
-/* Re-enable pseudo-element for better performance with GIFs (will-change) */
-body::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: var(--app-bg-image);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: var(--app-bg-opacity, 1);
-    z-index: -1;
-    will-change: transform;
-    transform: translateZ(0);
-    pointer-events: none;
-}
+/* App background is now set via inline styles in app.js, not pseudo-element */
+/* This ensures reset properly clears old backgrounds */
 
 /* Hide any leftover pseudo-element backgrounds when customizer is open */
 body.customizer-open::before {
@@ -249,10 +246,10 @@ body.customizer-open::before {
     display: flex;
     align-items: center;
     height: var(--header-height);
-    background: var(--bg-header-main, var(--bg-header, rgba(230, 240, 250, 0.4)));
+    background: var(--bg-header-main, var(--bg-header, var(--bg-glass-heavy)));
     backdrop-filter: var(--blur-filter-light);
     /* Apply blur only here */
-    border-bottom: 2px solid var(--border);
+    border-bottom: 2px solid white;
     box-shadow: 0 4px 20px rgba(136, 201, 234, 0.1);
     padding: 0 16px;
     gap: 16px;
@@ -267,7 +264,7 @@ body.customizer-open::before {
     color: white;
     padding: 8px 16px;
     background: var(--bg-ocean-deep);
-    border: 2px solid var(--border);
+    border: 2px solid white;
     border-radius: 30px;
     box-shadow: 0 2px 8px rgba(136, 201, 234, 0.4);
     -webkit-app-region: no-drag;
@@ -652,7 +649,7 @@ body.customizer-open::before {
 /* Panels (Problems, Terminal) */
 .problems-panel {
     background: var(--bg-glass-heavy);
-    border-top: 2px solid var(--border);
+    border-top: 2px solid white;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -668,7 +665,7 @@ body.customizer-open::before {
     gap: 6px;
     padding: 6px 10px 6px 12px;
     background: var(--bg-glass-heavy, rgba(239, 248, 254, 0.8));
-    border-bottom: 2px solid var(--border);
+    border-bottom: 2px solid var(--border, white);
     flex-wrap: nowrap;
     min-height: 32px;
 }
@@ -693,7 +690,7 @@ body.customizer-open::before {
 
 .terminal-section {
     background: var(--bg-glass-heavy);
-    border: 2px solid var(--border);
+    border: 2px solid var(--border, white);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-card);
     display: flex;
@@ -788,14 +785,15 @@ body.customizer-open::before {
 
 .welcome-box {
     text-align: center;
-    background: transparent !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: var(--welcome-box-bg, rgba(245, 250, 255, 0.4));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 40px 60px;
     border-radius: 30px;
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.3),
-        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+        0 25px 80px rgba(0, 0, 0, 0.5),
+        0 0 0 2px rgba(255, 255, 255, 0.3) inset,
+        0 8px 32px rgba(136, 201, 234, 0.35);
     border: 4px solid var(--border-strong, var(--bg-ocean-light));
     max-width: 500px;
     position: relative;
@@ -804,83 +802,53 @@ body.customizer-open::before {
 
 .welcome-box h1 {
     font-family: 'Fredoka', cursive;
-    font-size: 42px;
-    background: linear-gradient(135deg, var(--bg-ocean-deep), var(--bg-ocean-dark));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 10px;
-    font-weight: 800;
-    /* Added outline and deeper shadow for legibility */
-    -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.1);
-    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
-    text-shadow: 0 0 1px rgba(255, 255, 255, 0.2);
+    font-size: 48px;
+    font-weight: 600;
+    color: var(--text-secondary, #8fbcbb);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
 }
 
 .welcome-box p {
-    color: var(--text-secondary);
+    color: var(--text-secondary, #8fbcbb);
     font-size: 16px;
-    margin-bottom: 30px;
-}
-
-.welcome-btn {
-    background: transparent;
-    border: 1px solid var(--border-strong, var(--accent, #5a9fc8));
-    border-radius: 20px;
-    color: var(--text-primary, #2a5a75);
-    font-weight: 700;
-    padding: 16px 28px;
-    width: 140px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    font-weight: 400;
+    margin-bottom: 35px;
+    letter-spacing: 0.3px;
     text-shadow: none;
-    backdrop-filter: blur(5px);
 }
-
-.welcome-btn svg {
-    width: 24px;
-    height: 24px;
-    stroke: currentColor;
-    stroke-width: 2.5px;
-    filter: none;
-    margin-bottom: 8px;
-    /* Assuming icon is above text or flex? No, flex row. */
-    /* Icon is usually inline or flex. Let's keep it simple. */
-    display: block;
-    margin: 0 auto 8px auto;
-    /* Center icon if flex-direction is column? Checking HTML... */
-}
-
-/* Wait, HTML structure:
-<button ...> <svg>...</svg> Text </button>
-Flex direction? theme.css doesn't show flex.
-Let's check if .welcome-btn uses flex. 
-/* Vertical layout for welcome buttons */
 
 .welcome-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: transparent !important;
-    border: 2px solid var(--border-strong, var(--accent, #5a9fc8));
-    /* Slightly thicker border */
+    background: transparent;
+    border: 2px solid var(--welcome-btn-border, #b3e2fa);
     border-radius: 20px;
     color: var(--text-primary, #2a5a75);
-    font-weight: 700;
+    font-weight: 600;
     padding: 16px 28px;
     width: 140px;
     height: 120px;
-    /* Give it some height for vertical look */
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     text-shadow: none;
     gap: 12px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* First button is primary action - slightly enhanced */
+.welcome-btn:first-of-type {
+    background: transparent;
+    border: 2px solid var(--welcome-btn-primary-border, #88c9ea);
+    font-weight: 600;
 }
 
 .welcome-btn svg {
     width: 32px;
-    /* Larger icon for vertical layout */
     height: 32px;
     stroke: currentColor;
     stroke-width: 2.5px;
@@ -888,16 +856,16 @@ Let's check if .welcome-btn uses flex.
 }
 
 .welcome-btn:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-    /* Fix: Explicitly set background to prevent white flash on some rendering engines */
-    background: transparent;
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent, #88c9ea);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
 
-    /* Use a strong blurry shadow instead */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px var(--bg-glass-heavy);
-    filter: brightness(1.1);
-    /* Very subtle lift */
-    backface-visibility: hidden;
+.welcome-btn:first-of-type:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent, #88c9ea);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .welcome-btn:hover svg {
@@ -1875,8 +1843,8 @@ input[type="color"] {
     align-items: center;
     height: var(--statusbar-height);
     padding: 0 16px;
-    background: var(--bg-header-statusbar, var(--bg-header, var(--bg-glass-heavy)));
-    border-top: 2px solid white;
+    background: var(--bg-header-statusbar);
+    border-top: 2px solid var(--border, #e0f0ff);
     font-size: 12px;
     color: var(--text-secondary);
 }

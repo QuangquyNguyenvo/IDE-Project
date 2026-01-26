@@ -11,6 +11,17 @@
  * @author Sameko Team
  */
 
+// Normalize a color to an opaque RGBA value (forces alpha to 1 if rgb/rgba)
+const makeOpaque = (color) => {
+    if (!color) return color;
+    const match = color.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/i);
+    if (match) {
+        const [, r, g, b] = match;
+        return `rgba(${r}, ${g}, ${b}, 1)`;
+    }
+    return color;
+};
+
 const ThemeCustomizer = {
     // State
     sourceThemeId: null,
@@ -61,6 +72,10 @@ const ThemeCustomizer = {
         if (c.editorBgOpacity === undefined) c.editorBgOpacity = 100;
         if (c.editorBgBrightness === undefined) c.editorBgBrightness = 100;
         if (c.editorBgBlur === undefined) c.editorBgBlur = 0;
+    // Initialize new CSS variables with defaults if not present
+    if (c.welcomeBoxOpacity === undefined) c.welcomeBoxOpacity = 0.4;
+    if (c.welcomeBtnBorder === undefined) c.welcomeBtnBorder = c.borderStrong || c.border || '#88c9ea';
+    if (c.welcomeBtnPrimaryBorder === undefined) c.welcomeBtnPrimaryBorder = c.accent || '#88c9ea';
 
         // Load saved background settings from localStorage for built-in themes
         // This ensures customizer shows the user's saved background, not the default
@@ -271,7 +286,7 @@ const ThemeCustomizer = {
             colors['bgHeader-main'] = colors.bgHeader;
         }
         if (!colors['bgHeader-statusbar'] && colors.bgHeader) {
-            colors['bgHeader-statusbar'] = colors.bgHeader;
+            colors['bgHeader-statusbar'] = makeOpaque(colors.bgHeader);
         }
 
         // Panel variants: if not set, inherit from base
@@ -3114,7 +3129,18 @@ const ThemeCustomizer = {
             if (valEl) valEl.textContent = val + suffix;
             if (!this.workingTheme.colors) this.workingTheme.colors = {};
             this.workingTheme.colors[key] = val;
-            this._updateBgStyles();
+            
+            // For brightness and blur sliders, we need to re-render the preview
+            // to update the inline filter styles on the video elements
+            if (key.includes('Brightness') || key.includes('Blur')) {
+                this._renderPreview();
+                // Then update the actual DOM elements after rendering
+                requestAnimationFrame(() => {
+                    this._updateBgStyles();
+                });
+            } else {
+                this._updateBgStyles();
+            }
         });
     },
 
@@ -4861,6 +4887,10 @@ const ThemeCustomizer = {
         // Prefer exact key for variants, then fall back to base key
         if (c[key]) return c[key];
 
+        if (key === 'bgHeader-statusbar' && c.bgHeader) {
+            return makeOpaque(c.bgHeader);
+        }
+
         // Normalize unique keys to base keys
         const baseKey = this._getBaseKey(key);
 
@@ -4915,7 +4945,7 @@ const ThemeCustomizer = {
             // Sync variant colors when base keys change
             if (key === 'bgHeader') {
                 this.workingTheme.colors['bgHeader-main'] = value;
-                this.workingTheme.colors['bgHeader-statusbar'] = value;
+                this.workingTheme.colors['bgHeader-statusbar'] = makeOpaque(value);
             }
             if (key === 'bgPanel') {
                 this.workingTheme.colors['bgPanel-problems'] = value;
@@ -5059,7 +5089,7 @@ const ThemeCustomizer = {
             wrapper.style.setProperty('--bg-header-main', c.bgHeader);
         }
         if (!c['bgHeader-statusbar'] && c.bgHeader) {
-            wrapper.style.setProperty('--bg-header-statusbar', c.bgHeader);
+            wrapper.style.setProperty('--bg-header-statusbar', makeOpaque(c.bgHeader));
         }
         if (!c['bgPanel-problems'] && c.bgPanel) {
             wrapper.style.setProperty('--bg-panel-problems', c.bgPanel);

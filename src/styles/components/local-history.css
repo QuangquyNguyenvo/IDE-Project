@@ -141,13 +141,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 20px;
-    background: var(--bg-panel, #f8fbff);
+    background: transparent;
     border-bottom: 1px solid var(--border, rgba(136, 201, 234, 0.15));
     transition: background 0.15s ease;
 }
 
 .history-entry:hover {
-    background: var(--bg-hover, #e8f4fc);
+    background: var(--bg-button-hover, rgba(136, 201, 234, 0.1));
 }
 
 .history-entry:last-child {

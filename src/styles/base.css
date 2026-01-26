@@ -629,8 +629,8 @@ body::after {
 }
 
 .welcome-btn:hover {
-    transform: translateY(-5px) rotate(-2deg);
-    background: white;
-    border-color: var(--bg-ocean-deep);
-    box-shadow: 0 8px 20px rgba(136, 201, 234, 0.2);
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px var(--bg-glass-heavy);
+    filter: brightness(1.05);
 }

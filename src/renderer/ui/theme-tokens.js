@@ -10,6 +10,17 @@
  * @author Sameko Team
  */
 
+// Ensure surfaces that should be solid get an alpha of 1 even if the parent is translucent
+const toOpaque = (color) => {
+    if (!color) return color;
+    const match = color.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/i);
+    if (match) {
+        const [, r, g, b] = match;
+        return `rgba(${r}, ${g}, ${b}, 1)`;
+    }
+    return color;
+};
+
 const ThemeTokens = {
     /**
      * Token Definitions
@@ -83,6 +94,12 @@ const ThemeTokens = {
         btnSuccessText: { cssVar: '--btn-success-text', type: 'color', group: 'button' },
         btnErrorBg: { cssVar: '--btn-error-bg', type: 'color', group: 'button' },
         btnErrorText: { cssVar: '--btn-error-text', type: 'color', group: 'button' },
+
+        // ============= WELCOME BOX TOKENS =============
+        welcomeBoxBg: { cssVar: '--welcome-box-bg', type: 'color', group: 'welcome' },
+        welcomeBoxOpacity: { cssVar: '--welcome-box-opacity', type: 'opacity', group: 'welcome' },
+        welcomeBtnBorder: { cssVar: '--welcome-btn-border', type: 'color', group: 'welcome' },
+        welcomeBtnPrimaryBorder: { cssVar: '--welcome-btn-primary-border', type: 'color', group: 'welcome' },
 
         // ============= BACKGROUND IMAGES =============
         appBackground: { cssVar: '--app-bg-image', type: 'image' },
@@ -264,7 +281,10 @@ const ThemeTokens = {
         for (const [childKey, parentKey] of Object.entries(this.inheritance)) {
             const hasChild = colors[childKey] !== undefined && colors[childKey] !== null;
             if (!hasChild && colors[parentKey]) {
-                this.applyValue(element, childKey, colors[parentKey]);
+                const inherited = childKey === 'bgHeader-statusbar'
+                    ? toOpaque(colors[parentKey])
+                    : colors[parentKey];
+                this.applyValue(element, childKey, inherited);
             }
         }
     },

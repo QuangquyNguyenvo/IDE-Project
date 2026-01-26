@@ -65,6 +65,15 @@ const IPC = {
         STOP_TEST: 'stop-batch-test',
     },
 
+    // Local History
+    HISTORY: {
+        SAVE: 'history-save',
+        GET_HISTORY: 'history-get',
+        RESTORE: 'history-restore',
+        DELETE: 'history-delete',
+        CLEAR: 'history-clear',
+    },
+
     // Renderer Events (Main -> Renderer)
     EVENTS: {
         FILE_OPENED: 'file-opened',
