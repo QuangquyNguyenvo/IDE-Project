@@ -37,6 +37,15 @@ function registerUpdateHandlers() {
         return autoUpdateService.getStatus();
     });
 
+    // Get app info (portable detection)
+    ipcMain.handle('get-app-info', () => {
+        const isPortable = process.env.PORTABLE_EXECUTABLE_DIR !== undefined;
+        return {
+            isPortable: isPortable,
+            version: require('electron').app.getVersion()
+        };
+    });
+
     console.log('[IPC] Update handlers registered');
 }
 

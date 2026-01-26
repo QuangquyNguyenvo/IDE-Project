@@ -162,12 +162,7 @@ const ThemeManager = {
                     btnTextHover: '#88c9ea',
                     btnPrimaryBg: '#88c9ea',
                     btnPrimaryBgHover: '#5eb7e0',
-                    btnPrimaryText: '#ffffff',
-                    // Welcome box styling
-                    welcomeBoxOpacity: 0.4,
-                    welcomeBoxBg: 'rgba(26, 37, 48, 0.4)',
-                    welcomeBtnBorder: '#88c9ea',
-                    welcomeBtnPrimaryBorder: '#88c9ea'
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -227,12 +222,7 @@ const ThemeManager = {
                     btnTextHover: '#4a9bc9',
                     btnPrimaryBg: '#4a9bc9',
                     btnPrimaryBgHover: '#3a8ab8',
-                    btnPrimaryText: '#ffffff',
-                    // Welcome box styling
-                    welcomeBoxOpacity: 0.4,
-                    welcomeBoxBg: 'rgba(74, 155, 201, 0.4)',
-                    welcomeBtnBorder: '#b3e2fa',
-                    welcomeBtnPrimaryBorder: '#88c9ea'
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -292,12 +282,7 @@ const ThemeManager = {
                     btnTextHover: '#ff9aaf',
                     btnPrimaryBg: '#ff9aaf',
                     btnPrimaryBgHover: '#ff758f',
-                    btnPrimaryText: '#ffffff',
-                    // Welcome box styling
-                    welcomeBoxOpacity: 0.4,
-                    welcomeBoxBg: 'rgba(255, 182, 193, 0.4)',
-                    welcomeBtnBorder: '#ffb7c5',
-                    welcomeBtnPrimaryBorder: '#ff9aaf'
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -361,12 +346,7 @@ const ThemeManager = {
                     btnTextHover: '#ff79c6',
                     btnPrimaryBg: '#ff79c6',
                     btnPrimaryBgHover: '#ff92d0',
-                    btnPrimaryText: '#ffffff',
-                    // Welcome box styling
-                    welcomeBoxOpacity: 0.4,
-                    welcomeBoxBg: 'rgba(40, 42, 54, 0.4)',
-                    welcomeBtnBorder: '#bd93f9',
-                    welcomeBtnPrimaryBorder: '#ff79c6'
+                    btnPrimaryText: '#ffffff'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -423,12 +403,7 @@ const ThemeManager = {
                     btnTextHover: '#a6e22e',
                     btnPrimaryBg: '#a6e22e',
                     btnPrimaryBgHover: '#b8f32e',
-                    btnPrimaryText: '#272822',
-                    // Welcome box styling
-                    welcomeBoxOpacity: 0.4,
-                    welcomeBoxBg: 'rgba(39, 40, 34, 0.4)',
-                    welcomeBtnBorder: '#a6e22e',
-                    welcomeBtnPrimaryBorder: '#a6e22e'
+                    btnPrimaryText: '#272822'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,
@@ -485,12 +460,7 @@ const ThemeManager = {
                     btnTextHover: '#88c0d0',
                     btnPrimaryBg: '#88c0d0',
                     btnPrimaryBgHover: '#8fbcbb',
-                    btnPrimaryText: '#2e3440',
-                    // Welcome box styling
-                    welcomeBoxOpacity: 0.4,
-                    welcomeBoxBg: 'rgba(46, 52, 64, 0.4)',
-                    welcomeBtnBorder: '#88c0d0',
-                    welcomeBtnPrimaryBorder: '#88c0d0'
+                    btnPrimaryText: '#2e3440'
                 },
                 editor: {
                     base: 'vs-dark', inherit: true,

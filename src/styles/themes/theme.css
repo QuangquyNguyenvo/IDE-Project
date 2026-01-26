@@ -541,6 +541,26 @@ body.customizer-open::before {
     animation: pulse 0.8s infinite;
 }
 
+/* Update Ready button */
+.action-btn.update-ready {
+    background: var(--bg-ocean-deep);
+    border-color: var(--bg-ocean-deep);
+    color: white;
+    animation: pulse-update 2s infinite;
+    font-weight: 500;
+    padding: 8px 16px;
+}
+
+.action-btn.update-ready:hover {
+    background: var(--bg-ocean-dark);
+    box-shadow: 0 4px 12px rgba(58, 124, 165, 0.4);
+}
+
+@keyframes pulse-update {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 /* Run All Tests button */
 .action-btn.run-all {
     background: var(--success);

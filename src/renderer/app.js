@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSettings();
     initTabDrag();
     initCompetitiveCompanion();
+    detectPortableVersion();
     updateUI();
 
     let resizeRequestId = null;
@@ -917,6 +918,20 @@ function initSettings() {
     document.getElementById('settings-overlay').onclick = e => {
         if (e.target.id === 'settings-overlay') closeSettings();
     };
+    
+    // Header restart/update button
+    const headerUpdateBtn = document.getElementById('btn-restart-update');
+    if (headerUpdateBtn) {
+        headerUpdateBtn.onclick = () => {
+            if (isPortableVersion) {
+                // Portable: Open download page
+                window.electronAPI?.openReleasePage?.('https://github.com/nicolenathanael/sameko-cpp-ide/releases');
+            } else if (updateDownloaded && window.electronAPI?.quitAndInstall) {
+                // Installer: Restart to install
+                window.electronAPI.quitAndInstall();
+            }
+        };
+    }
 
     // Tab switching
     document.querySelectorAll('.settings-tab').forEach(tab => {
@@ -5388,16 +5403,44 @@ async function initAbout() {
     }
 
     // Listen for update status from main process
-    window.electronAPI.onUpdateStatus((data) => {
-        handleUpdateStatus(data);
-    });
+    if (window.electronAPI?.onUpdateStatus) {
+        console.log('[Update] Setup listener for update status');
+        window.electronAPI.onUpdateStatus((data) => {
+            console.log('[Update] Received status:', data);
+            handleUpdateStatus(data);
+        });
+    } else {
+        console.warn('[Update] onUpdateStatus not available');
+    }
 }
 
 // Update state
 let updateDownloaded = false;
+let isPortableVersion = false;
+let pendingUpdateVersion = null;
+
+// Detect portable version (non-blocking)
+function detectPortableVersion() {
+    if (!window.electronAPI?.getAppInfo) return;
+    
+    window.electronAPI.getAppInfo()
+        .then(info => {
+            isPortableVersion = info?.isPortable || false;
+            console.log('[Update] Portable version:', isPortableVersion);
+        })
+        .catch(() => {
+            console.log('[Update] Could not detect portable version');
+        });
+}
 
 function handleUpdateStatus(data) {
-    const { status, data: updateData, currentVersion } = data;
+    // Add null/undefined checks for data safety
+    if (!data) {
+        console.error('[Update] Received null or undefined update status data');
+        return;
+    }
+
+    const { status, data: updateData = {}, currentVersion } = data;
 
     console.log('[Update]', status, updateData);
 
@@ -5416,9 +5459,10 @@ function handleUpdateStatus(data) {
             break;
 
         case 'update-available':
-            console.log('[Update] Update available:', updateData.version);
+            console.log('[Update] Update available:', updateData?.version);
+            pendingUpdateVersion = updateData?.version;
 
-            // Show badges
+            // Show badges in header
             const badgeMain = document.getElementById('badge-settings-main');
             const badgeTab = document.getElementById('badge-settings-tab');
             const badgeBtn = document.getElementById('badge-update-btn');
@@ -5430,33 +5474,42 @@ function handleUpdateStatus(data) {
             const upCur = document.getElementById('update-current');
             const upNew = document.getElementById('update-new');
             if (upCur) upCur.textContent = 'v' + currentVersion;
-            if (upNew) upNew.textContent = 'v' + updateData.version;
+            if (upNew && updateData?.version) upNew.textContent = 'v' + updateData.version;
 
             // Update title
             if (title) {
-                title.textContent = updateData.isPrerelease ?
+                title.textContent = updateData?.isPrerelease ?
                     'Pre-release Update Available' :
                     'Update Available';
             }
 
-            // Show overlay if checking manually
-            if (overlay) overlay.style.display = 'flex';
-
-            // Reset UI state
-            if (downloadBtn) {
-                downloadBtn.style.display = 'flex';
-                downloadBtn.disabled = false;
+            if (isPortableVersion) {
+                // Portable: Show header button that links to download page
+                const headerUpdateBtn = document.getElementById('btn-restart-update');
+                if (headerUpdateBtn) {
+                    headerUpdateBtn.style.display = 'flex';
+                    headerUpdateBtn.querySelector('span').textContent = 'Download v' + updateData?.version;
+                }
+                // Don't show overlay for portable - just header notification
+                if (overlay) overlay.style.display = 'none';
+            } else {
+                // Installer: Auto-download in background
+                console.log('[Update] Auto-downloading update in background...');
+                if (window.electronAPI?.downloadUpdate) {
+                    window.electronAPI.downloadUpdate().catch(err => {
+                        console.error('[Update] Auto-download failed:', err);
+                    });
+                }
+                // Don't show overlay - silent download
+                if (overlay) overlay.style.display = 'none';
             }
-            if (restartBtn) restartBtn.style.display = 'none';
+
             if (progress) progress.style.display = 'none';
             break;
 
         case 'update-not-available':
             console.log('[Update] No updates available');
-
-            if (updateData.showMessage) {
-                alert('You are using the latest version!');
-            }
+            // Don't show popup when no update is available
             break;
 
         case 'download-started':
@@ -5472,32 +5525,31 @@ function handleUpdateStatus(data) {
             break;
 
         case 'download-progress':
-            console.log('[Update] Download progress:', updateData.percent + '%');
+            console.log('[Update] Download progress:', updateData?.percent + '%');
 
-            if (progressFill) progressFill.style.width = updateData.percent + '%';
-            if (progressText) progressText.textContent = `Downloading: ${updateData.percent}%`;
+            if (progressFill) progressFill.style.width = (updateData?.percent || 0) + '%';
+            if (progressText) progressText.textContent = `Downloading: ${updateData?.percent || 0}%`;
             break;
 
         case 'update-downloaded':
-            console.log('[Update] Update downloaded');
+            console.log('[Update] Update downloaded - ready to restart');
             updateDownloaded = true;
 
-            if (title) title.textContent = 'Update Ready to Install';
-            if (downloadBtn) downloadBtn.style.display = 'none';
-            if (restartBtn) restartBtn.style.display = 'flex';
-            if (laterBtn) laterBtn.textContent = 'Later';
+            // Hide overlay and progress
+            if (overlay) overlay.style.display = 'none';
             if (progress) progress.style.display = 'none';
+
+            // Show "Restart to Update" button in header (installer only)
+            const headerRestartBtn = document.getElementById('btn-restart-update');
+            if (headerRestartBtn) {
+                headerRestartBtn.style.display = 'flex';
+                headerRestartBtn.querySelector('span').textContent = 'Restart to Update';
+            }
             break;
 
         case 'update-error':
-            console.error('[Update] Error:', updateData.message);
-
-            if (updateData.showMessage) {
-                alert('Failed to check for updates: ' + updateData.message);
-            }
-
-            if (downloadBtn) downloadBtn.disabled = false;
-            if (progress) progress.style.display = 'none';
+            console.error('[Update] Error:', updateData?.message || 'Unknown error');
+            // Silent fail - don't show popup error messages
             break;
     }
 }
@@ -5509,7 +5561,6 @@ async function checkForUpdates() {
         await window.electronAPI.checkForUpdates();
     } catch (error) {
         console.error('[Update] Check failed:', error);
-        alert('Failed to check for updates');
     }
 }
 
@@ -5520,7 +5571,6 @@ async function downloadUpdate() {
         await window.electronAPI.downloadUpdate();
     } catch (error) {
         console.error('[Update] Download failed:', error);
-        alert('Failed to download update');
     }
 }
 

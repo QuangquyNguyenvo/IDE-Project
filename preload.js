@@ -86,6 +86,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
     getCurrentVersion: () => ipcRenderer.invoke('get-current-version'),
     openReleasePage: (url) => ipcRenderer.invoke('open-release-page', url),
+    onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, data) => callback(data)),
+    getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+    downloadUpdate: () => ipcRenderer.invoke('download-update'),
+    quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
 
     // Code formatting (AStyle)
     formatCode: (code, style) => ipcRenderer.invoke('format-code', { code, style }),

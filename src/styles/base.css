@@ -79,7 +79,7 @@ body::before {
     position: fixed;
     inset: calc(-1 * var(--app-bg-blur, 0px));
     /* Extend beyond viewport to prevent blur edge artifacts */
-    background-image: var(--app-bg-image, url('../assets/background.jpg'));
+    background-image: var(--app-bg-image);
     background-repeat: no-repeat;
     background-position: var(--app-bg-position, center center);
     background-size: cover;
@@ -90,7 +90,8 @@ body::before {
     pointer-events: none;
 }
 
-/* Mascot Decoration */
+/* Mascot Decoration - DISABLED: File not found, re-enable when mascot asset is added */
+/*
 body::after {
     content: '';
     position: fixed;
@@ -105,6 +106,7 @@ body::after {
     z-index: 0;
     transition: transform 0.3s ease;
 }
+*/
 
 .app-container {
     display: flex;
@@ -629,8 +631,8 @@ body::after {
 }
 
 .welcome-btn:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 15px var(--bg-glass-heavy);
-    filter: brightness(1.05);
+    transform: translateY(-5px) rotate(-2deg);
+    background: white;
+    border-color: var(--bg-ocean-deep);
+    box-shadow: 0 8px 20px rgba(136, 201, 234, 0.2);
 }
