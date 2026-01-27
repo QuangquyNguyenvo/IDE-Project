@@ -27,7 +27,8 @@ const DEFAULT_SETTINGS = {
     build: {
         compilerFlags: '-std=c++17',
         warnings: true,
-        showConsole: true
+        showConsole: true,
+        useExternalTerminal: false
     },
     appearance: {
         theme: 'monokai'

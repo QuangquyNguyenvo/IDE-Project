@@ -77,6 +77,17 @@ const ThemeCustomizer = {
     if (c.welcomeBtnBorder === undefined) c.welcomeBtnBorder = c.borderStrong || c.border || '#88c9ea';
     if (c.welcomeBtnPrimaryBorder === undefined) c.welcomeBtnPrimaryBorder = c.accent || '#88c9ea';
 
+        // Initialize button token colors if not present (fallback to base colors)
+        // These are needed for SVG icon colors in header and sidebar
+        if (c.btnBg === undefined) c.btnBg = c.bgButton || '#ffffff';
+        if (c.btnBgHover === undefined) c.btnBgHover = c.bgButtonHover || c.bgOceanLight || '#e8f4fc';
+        if (c.btnBorder === undefined) c.btnBorder = c.border || '#a0c8e0';
+        if (c.btnText === undefined) c.btnText = c.textSecondary || '#4a6a7a';
+        if (c.btnTextHover === undefined) c.btnTextHover = c.accent || '#4a9bc9';
+        if (c.btnPrimaryBg === undefined) c.btnPrimaryBg = c.accent || c.bgOceanDeep || '#4a9bc9';
+        if (c.btnPrimaryBgHover === undefined) c.btnPrimaryBgHover = c.accentHover || c.bgOceanMedium || '#3a8ab8';
+        if (c.btnPrimaryText === undefined) c.btnPrimaryText = c.buttonTextOnAccent || '#ffffff';
+
         // Load saved background settings from localStorage for built-in themes
         // This ensures customizer shows the user's saved background, not the default
         if (ThemeManager.builtinThemeIds?.includes(themeId)) {
@@ -248,6 +259,11 @@ const ThemeCustomizer = {
             root.style.setProperty('--editor-bg-image', bgUrl);
         } else {
             root.style.removeProperty('--editor-bg-image');
+        }
+
+        // Restore all other CSS color variables by re-applying the active theme
+        if (activeTheme && typeof ThemeTokens !== 'undefined') {
+            ThemeTokens.applyToElement(root, activeTheme.colors || {}, { clearFirst: false });
         }
 
         this._savedAppBgOpacity = null;
@@ -4992,14 +5008,15 @@ const ThemeCustomizer = {
     },
 
     /**
-     * Inject ALL CSS variables from workingTheme onto preview wrapper
-     * Called after _renderPreview() to ensure all colors are applied
+     * Inject ALL CSS variables from workingTheme onto preview wrapper AND document root
+     * This ensures both the preview AND the real app UI (e.g., settings popup) show the correct colors
      */
     _injectAllPreviewVariables() {
         const wrapper = this.popup?.querySelector('#tc6-preview-wrapper');
         if (!wrapper) return;
 
         const c = this.workingTheme?.colors || {};
+        const root = document.documentElement; // Apply to real app too
 
         // Map JSON keys to CSS variable names (match ThemeManager)
         const varMappings = {
@@ -5052,54 +5069,67 @@ const ThemeCustomizer = {
             'settingsSectionColor': '--settings-section-color',
             'buttonTextOnAccent': '--button-text-on-accent',
             'terminalOpacity': '--terminal-opacity',
-            'panelOpacity': '--panel-opacity'
+            'panelOpacity': '--panel-opacity',
+            // Button token colors - for header/sidebar SVG icon colors and button styling
+            'btnBg': '--btn-bg',
+            'btnBgHover': '--btn-bg-hover',
+            'btnBorder': '--btn-border',
+            'btnText': '--btn-text',
+            'btnTextHover': '--btn-text-hover',
+            'btnPrimaryBg': '--btn-primary-bg',
+            'btnPrimaryBgHover': '--btn-primary-bg-hover',
+            'btnPrimaryText': '--btn-primary-text'
         };
 
         // Apply all color values from workingTheme with same rules as ThemeManager
+        // Helper function to apply CSS variable to both wrapper (preview) and root (real app)
+        const applyVar = (target, cssVar, value) => {
+            wrapper.style.setProperty(cssVar, value);
+            root.style.setProperty(cssVar, value);
+        };
+
         for (const [key, cssVar] of Object.entries(varMappings)) {
             const value = c[key];
             if (value !== undefined && value !== null) {
                 if (key === 'editorBackground' || key === 'appBackground') {
                     if (value && value !== 'none' && !value.startsWith('url(')) {
                         if (value.startsWith('data:')) {
-                            wrapper.style.setProperty(cssVar, `url("${value}")`);
+                            applyVar(root, cssVar, `url("${value}")`);
                         } else {
                             const escapedValue = value.replace(/'/g, "\\'");
-                            wrapper.style.setProperty(cssVar, `url('${escapedValue}')`);
+                            applyVar(root, cssVar, `url('${escapedValue}')`);
                         }
                     } else {
-                        wrapper.style.setProperty(cssVar, value || 'none');
+                        applyVar(root, cssVar, value || 'none');
                     }
                 } else if (key === 'bgOpacity' || key === 'editorBgOpacity' ||
                     key === 'bgBrightness' || key === 'editorBgBrightness' ||
                     key === 'terminalOpacity' || key === 'panelOpacity') {
-                    wrapper.style.setProperty(cssVar, (parseFloat(value) / 100).toString());
+                    applyVar(root, cssVar, (parseFloat(value) / 100).toString());
                 } else if (key === 'bgBlur' || key === 'editorBgBlur' || key === 'terminalBgBlur') {
-                    wrapper.style.setProperty(cssVar, `${parseInt(value)}px`);
+                    applyVar(root, cssVar, `${parseInt(value)}px`);
                 } else if (key === 'bgPosition' || key === 'editorBgPosition') {
-                    wrapper.style.setProperty(cssVar, value || 'center center');
+                    applyVar(root, cssVar, value || 'center center');
                 } else {
-                    wrapper.style.setProperty(cssVar, value);
+                    applyVar(root, cssVar, value);
                 }
             }
         }
 
         // Apply inheritance for variant colors (match ThemeManager behavior)
-        if (!c['bgHeader-main'] && c.bgHeader) {
-            wrapper.style.setProperty('--bg-header-main', c.bgHeader);
-        }
-        if (!c['bgHeader-statusbar'] && c.bgHeader) {
-            wrapper.style.setProperty('--bg-header-statusbar', makeOpaque(c.bgHeader));
-        }
-        if (!c['bgPanel-problems'] && c.bgPanel) {
-            wrapper.style.setProperty('--bg-panel-problems', c.bgPanel);
-        }
-        if (!c['bgPanel-input'] && c.bgPanel) {
-            wrapper.style.setProperty('--bg-panel-input', c.bgPanel);
-        }
-        if (!c['bgPanel-expected'] && c.bgPanel) {
-            wrapper.style.setProperty('--bg-panel-expected', c.bgPanel);
-        }
+        const applyInheritance = (childKey, parentKey, cssVar, transform = v => v) => {
+            if (!c[childKey] && c[parentKey]) {
+                const value = transform(c[parentKey]);
+                wrapper.style.setProperty(cssVar, value);
+                root.style.setProperty(cssVar, value);
+            }
+        };
+
+        applyInheritance('bgHeader-main', 'bgHeader', '--bg-header-main');
+        applyInheritance('bgHeader-statusbar', 'bgHeader', '--bg-header-statusbar', makeOpaque);
+        applyInheritance('bgPanel-problems', 'bgPanel', '--bg-panel-problems');
+        applyInheritance('bgPanel-input', 'bgPanel', '--bg-panel-input');
+        applyInheritance('bgPanel-expected', 'bgPanel', '--bg-panel-expected');
 
         // Also apply syntax colors
         const syn = this.workingTheme?.editor?.syntax || {};

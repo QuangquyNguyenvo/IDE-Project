@@ -58,6 +58,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // Process events
     onProcessStarted: (callback) => ipcRenderer.on('process-started', () => callback()),
+    onProcessExternalStarted: (callback) => ipcRenderer.on('process-external-started', () => callback()),
+    onProcessExternalExit: (callback) => ipcRenderer.on('process-external-exit', (event, data) => callback(data)),
     onProcessOutput: (callback) => ipcRenderer.on('process-output', (event, data) => callback(data)),
     onProcessError: (callback) => ipcRenderer.on('process-error', (event, data) => callback(data)),
     onProcessExit: (callback) => ipcRenderer.on('process-exit', (event, data) => callback(data)),

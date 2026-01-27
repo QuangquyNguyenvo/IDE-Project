@@ -40,7 +40,8 @@ const DEFAULT_SETTINGS = {
         timeLimitEnabled: false,
         timeLimitSeconds: 3,
         clearTerminal: true,
-        autoSendInput: true
+        autoSendInput: true,
+        useExternalTerminal: false
     },
     appearance: {
         theme: 'kawaii-light',
@@ -1620,6 +1621,7 @@ function openSettings() {
     document.getElementById('set-timeLimitSeconds').value = App.settings.execution.timeLimitSeconds;
     document.getElementById('set-clearTerminal').checked = App.settings.execution.clearTerminal;
     document.getElementById('set-autoSendInput').checked = App.settings.execution.autoSendInput;
+    document.getElementById('set-useExternalTerminal').checked = App.settings.execution.useExternalTerminal || false;
 
     document.getElementById('set-terminalColorScheme').value = App.settings.terminal?.colorScheme || 'ansi-16';
 
@@ -1706,6 +1708,7 @@ function saveSettingsAndClose() {
     App.settings.execution.timeLimitSeconds = parseInt(document.getElementById('set-timeLimitSeconds').value);
     App.settings.execution.clearTerminal = document.getElementById('set-clearTerminal').checked;
     App.settings.execution.autoSendInput = document.getElementById('set-autoSendInput').checked;
+    App.settings.execution.useExternalTerminal = document.getElementById('set-useExternalTerminal').checked;
 
     if (!App.settings.terminal) App.settings.terminal = {};
     App.settings.terminal.colorScheme = document.getElementById('set-terminalColorScheme').value;
@@ -3822,8 +3825,14 @@ async function run(clearTerminal = true) {
 
     await window.electronAPI.run({
         exePath: App.exePath,
-        cwd: sourceDir
+        cwd: sourceDir,
+        useExternalTerminal: App.settings.execution.useExternalTerminal
     });
+
+    // Skip auto-send input if using external terminal
+    if (App.settings.execution.useExternalTerminal) {
+        return;
+    }
 
     if (App.inputLines.length > 0) {
         setTimeout(sendNextInput, 100);
@@ -4284,6 +4293,22 @@ if (window.electronAPI) {
     });
 
     window.electronAPI.onProcessStarted?.(() => setRunning(true));
+    window.electronAPI.onProcessExternalStarted?.(() => {
+        log('[Running in external CMD window]', 'system');
+        setRunning(false); // Not tracking external process
+    });
+    window.electronAPI.onProcessExternalExit?.(data => {
+        const execTime = data?.executionTime;
+        let timeStr = '';
+        if (execTime !== null && execTime !== undefined) {
+            if (execTime >= 1000) {
+                timeStr = (execTime / 1000).toFixed(2) + 's';
+            } else {
+                timeStr = execTime + 'ms';
+            }
+            log(`[External process finished - Time: ${timeStr}]`, 'system');
+        }
+    });
     window.electronAPI.onProcessOutput?.(d => log(d));
     window.electronAPI.onProcessError?.(d => log(d, 'error'));
     window.electronAPI.onProcessExit?.(data => {

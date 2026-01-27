@@ -23,7 +23,7 @@
     <div class="app-container">
         <!-- Background Video (Optimized) -->
         <video id="app-bg-video" autoplay loop muted playsinline
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; opacity: var(--app-bg-opacity, 1); filter: blur(var(--app-bg-blur, 0px)) brightness(var(--app-bg-brightness, 1)); pointer-events: none; display: none;"></video>
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--app-bg-position, center center); z-index: -2; opacity: var(--app-bg-opacity, 1); filter: blur(var(--app-bg-blur, 0px)) brightness(var(--app-bg-brightness, 1)); pointer-events: none; display: none;"></video>
 
         <!-- ===== HEADER ===== -->
         <div class="header-bar">
@@ -576,6 +576,14 @@
                                 </label>
                             </div>
                             <div class="setting-row">
+                                <label>External Terminal <span class="tooltip"
+                                        title="Open CMD window for output.&#10;Fixes infinite loop crashes.&#10;Disables in-app terminal.">?</span></label>
+                                <label class="switch">
+                                    <input type="checkbox" id="set-useExternalTerminal">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
                                 <label>Auto-send Input</label>
                                 <label class="switch">
                                     <input type="checkbox" id="set-autoSendInput" checked>
@@ -651,7 +659,6 @@
 
                             <!-- Options Section -->
                             <div class="appearance-section">
-                                <h3>Options</h3>
                                 <div class="setting-row">
                                     <label>Reduce Animations <span class="tooltip"
                                             title="Disable fancy animations and transitions for smoother experience on low-end devices">?</span></label>

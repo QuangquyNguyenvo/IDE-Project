@@ -33,7 +33,10 @@ function registerHandlers() {
     });
 
     // Run
-    ipcMain.handle(IPC.COMPILER.RUN, async (event, { exePath, cwd }) => {
+    ipcMain.handle(IPC.COMPILER.RUN, async (event, { exePath, cwd, useExternalTerminal }) => {
+        if (useExternalTerminal) {
+            return await compiler.runExternal({ exePath, cwd });
+        }
         return await compiler.run({ exePath, cwd });
     });
 

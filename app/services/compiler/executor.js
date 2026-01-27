@@ -231,6 +231,51 @@ async function compile({ filePath, content, flags, useLLD }) {
 }
 
 /**
+ * Run compiled executable in external CMD window (Windows only)
+ * 
+ * @param {Object} options
+ * @param {string} options.exePath - Path to executable
+ * @param {string} [options.cwd] - Working directory
+ * @returns {Promise<import('../../../shared/types').RunResult>}
+ */
+async function runExternal({ exePath, cwd }) {
+    if (!exePath || !fs.existsSync(exePath)) {
+        return { success: false, error: 'Executable not found. Please compile first.' };
+    }
+
+    const workingDir = cwd || path.dirname(exePath);
+    const env = getCompilerEnv();
+    const exeName = path.basename(exePath);
+    const startTime = Date.now();
+
+    // Simple CMD output with separator
+    const title = `C++ Program - ${exeName}`;
+    const innerCommand = [
+        `@echo off`,
+        `cls`,
+        `"${exePath}"`, 
+        `echo.`,        
+        `echo.`,          
+        `echo --------------------------------`,
+        `echo Program finished. Press any key to close...`,
+        `pause >nul`
+    ].join(" & ");
+    const command = `start "${title}" /D "${workingDir}" cmd /c "${innerCommand}"`;
+    exec(command, {
+        cwd: workingDir,
+        env: env,
+        windowsHide: false
+    }, () => {
+        // Callback when CMD window closes
+        const execTime = Date.now() - startTime;
+        sendToRenderer('process-external-exit', { executionTime: execTime });
+    });
+
+    sendToRenderer('process-external-started');
+    return { success: true, external: true, message: 'Running in external terminal' };
+}
+
+/**
  * Run compiled executable
  * 
  * @param {Object} options
@@ -392,6 +437,7 @@ function getRunningProcess() {
 module.exports = {
     compile,
     run,
+    runExternal,
     sendInput,
     stopProcess,
     isProcessRunning,

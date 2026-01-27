@@ -35,6 +35,7 @@ module.exports = {
     // Executor
     compile: executor.compile,
     run: executor.run,
+    runExternal: executor.runExternal,
     sendInput: executor.sendInput,
     stopProcess: executor.stopProcess,
     isProcessRunning: executor.isProcessRunning,
