@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-01-27
+
+### Added
+- **External Terminal Integration**: Launch external terminal for interactive debugging and testing
+- **Video Background Support**: Use custom video files as editor background with opacity control
+- **Enhanced C++ IntelliSense**: Improved suggestions for STL functions, keywords, and common patterns
+- **Performance Optimizations**: Faster compilation, improved editor responsiveness, optimized memory usage
+
+### Changed
+- Bundled GCC/MinGW compiler included in all distributions for seamless setup
+- Improved theme rendering and editor performance
+
+### Fixed
+- Various stability improvements and bug fixes from beta releases
+
 ## [1.0.0-beta.9] - 2026-01-18
 
 ### Added

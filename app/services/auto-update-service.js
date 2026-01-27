@@ -37,10 +37,17 @@ class AutoUpdateService {
         this.mainWindow = mainWindow;
         log.info('[AutoUpdate] Service initialized');
         
-        // Check for updates on startup (after 5 seconds delay)
-        setTimeout(() => {
-            this.checkForUpdates(false); // silent check
-        }, 5000);
+        // Only check for updates in packaged app (skip in development/first run)
+        if (app.isPackaged) {
+            // Check for updates on startup (after 10 seconds delay, non-blocking)
+            setTimeout(() => {
+                this.checkForUpdates(false).catch(err => {
+                    log.warn('[AutoUpdate] Startup check failed (non-critical):', err.message);
+                });
+            }, 10000);
+        } else {
+            log.info('[AutoUpdate] Skipping update check in development mode');
+        }
     }
 
     /**
@@ -131,7 +138,15 @@ class AutoUpdateService {
                 this.sendStatusToRenderer('checking-for-update');
             }
             
-            const result = await autoUpdater.checkForUpdates();
+            // Add timeout to prevent hanging (15 seconds)
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Update check timed out')), 15000);
+            });
+            
+            const result = await Promise.race([
+                autoUpdater.checkForUpdates(),
+                timeoutPromise
+            ]);
             
             // Handle null/undefined result safely
             if (showNoUpdateDialog && (!result || !result.updateInfo)) {

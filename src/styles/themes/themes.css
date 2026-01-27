@@ -161,7 +161,7 @@
 
     /* Welcome Box */
     --welcome-box-opacity: 0.4;
-    --welcome-box-bg: rgba(37, 64, 90, 0.4);
+    --welcome-box-bg: rgba(255, 182, 193, 0.4);
     --welcome-btn-border: var(--border-strong, #ffb7c5);
     --welcome-btn-primary-border: var(--accent, #ff9aaf);
     --settings-label-color: #8b5f65;

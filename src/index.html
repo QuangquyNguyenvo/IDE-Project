@@ -1186,8 +1186,19 @@
 
     </div>
 
+    <script>
+        // Debug: Catch all errors
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('[GLOBAL ERROR]', msg, url, line, col, error);
+            return false;
+        };
+        window.onunhandledrejection = function(event) {
+            console.error('[UNHANDLED REJECTION]', event.reason);
+        };
+        console.log('[DEBUG] Scripts starting to load...');
+    </script>
     <script>var require = { paths: { vs: '../node_modules/monaco-editor/min/vs' } };</script>
-    <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script src="../node_modules/monaco-editor/min/vs/loader.js" onerror="console.error('[ERROR] Failed to load Monaco loader')"></script>
     <script src="features/suggestions/cpp-suggestions.js"></script>
     <script src="features/snippets/snippet-editor.js"></script>
     <script src="renderer/ui/theme-tokens.js"></script>

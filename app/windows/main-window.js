@@ -61,11 +61,20 @@ function getBasePath() {
 }
 
 function getAppRoot() {
+    // For packaged app without asar, __dirname is inside resources/app
+    if (app.isPackaged) {
+        return path.join(__dirname, '..', '..');
+    }
     return path.join(__dirname, '..', '..');
 }
 
 function createMainWindow() {
     const appRoot = getAppRoot();
+    
+    console.log('[Window] App is packaged:', app.isPackaged);
+    console.log('[Window] __dirname:', __dirname);
+    console.log('[Window] appRoot:', appRoot);
+    console.log('[Window] index.html path:', path.join(appRoot, 'src', 'index.html'));
 
     mainWindow = new BrowserWindow({
         width: WINDOW.DEFAULT_WIDTH,
@@ -97,20 +106,27 @@ function createMainWindow() {
 
     console.log('[Window] Main window created');
 
-    // Enable DevTools shortcut (Ctrl+Shift+I) - ONLY IN DEVELOPMENT
-    if (!app.isPackaged) {
-        mainWindow.webContents.on('before-input-event', (event, input) => {
-            if (input.control && input.shift && input.key.toLowerCase() === 'i') {
-                mainWindow.webContents.toggleDevTools();
-                event.preventDefault();
-            }
-            // F12 support
-            if (input.key === 'F12') {
-                mainWindow.webContents.toggleDevTools();
-                event.preventDefault();
-            }
-        });
-    }
+    // Enable DevTools shortcut (Ctrl+Shift+I) - FOR DEBUGGING
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.control && input.shift && input.key.toLowerCase() === 'i') {
+            mainWindow.webContents.toggleDevTools();
+            event.preventDefault();
+        }
+        // F12 support
+        if (input.key === 'F12') {
+            mainWindow.webContents.toggleDevTools();
+            event.preventDefault();
+        }
+    });
+    
+    // Log renderer errors
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        console.error('[Window] Failed to load:', errorCode, errorDescription);
+    });
+    
+    mainWindow.webContents.on('render-process-gone', (event, details) => {
+        console.error('[Window] Render process gone:', details);
+    });
 
     return mainWindow;
 }

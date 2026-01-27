@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build:win
+
+      - name: Get tag name
+        id: tag
+        run: echo "tag_name=${GITHUB_REF#refs/tags/}" >> $env:GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          release_name: Release ${{ steps.tag.outputs.tag_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release_build/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Portable ZIP
+        run: |
+          $version = "${{ steps.tag.outputs.tag_name }}".TrimStart('v')
+          $portable_exe = "release_build\Sameko Dev C++-${version}-Portable.exe"
+          $zip_name = "release_build\Sameko Dev C++-${version}-Portable.zip"
+          
+          if (Test-Path $portable_exe) {
+            # Create a 7z archive from the portable exe
+            7z x $portable_exe -o"release_build\temp-extract" -y
+            
+            # Zip the extracted folder
+            Compress-Archive -Path "release_build\temp-extract\*" -DestinationPath $zip_name -Force
+            
+            # Cleanup
+            Remove-Item -Recurse -Force "release_build\temp-extract"
+            
+            Write-Host "Created ZIP: $zip_name"
+          }
+
+      - name: Upload ZIP to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release_build/*Portable.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

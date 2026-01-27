@@ -1,6 +1,6 @@
 {
     "name": "sameko-dev-cpp",
-    "version": "1.0.0-beta.10",
+    "version": "1.0.0",
     "description": "A fast, modern, and beautiful C++ IDE built with Electron and Monaco Editor",
     "main": "app/main.js",
     "author": "QuangquyNguyenvo",
@@ -91,7 +91,7 @@
         },
         "files": [
             "app/**/*",
-            "preload/**/*",
+            "preload.js",
             "shared/**/*",
             "src/**/*",
             "node_modules/**/*",
@@ -135,6 +135,7 @@
             "publisherName": "Sameko Project"
         },
         "nsis": {
+            "artifactName": "${productName}-Setup-${version}.${ext}",
             "oneClick": false,
             "allowToChangeInstallationDirectory": true,
             "createDesktopShortcut": true,

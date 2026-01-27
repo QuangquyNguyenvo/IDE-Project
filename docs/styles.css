@@ -1885,3 +1885,143 @@ footer p {
     color: var(--text-muted);
     opacity: 1;
 }
+
+/* === Download Dropdown === */
+.hero-wrapper .dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.hero-wrapper .drop-menu {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 0;
+    width: 340px;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.98);
+    transform-origin: top left;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+}
+
+[data-theme="dark"] .hero-wrapper .drop-menu {
+    background: rgba(30, 30, 35, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.hero-wrapper .dropdown-wrapper.active .drop-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.drop-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: background 0.2s;
+    gap: 16px;
+    margin-bottom: 2px;
+}
+
+.drop-item:last-child {
+    margin-bottom: 0;
+}
+
+.drop-item:hover {
+    background: var(--border-secondary, rgba(0, 0, 0, 0.05));
+    text-decoration: none;
+    transform: translateX(4px);
+}
+
+[data-theme="dark"] .drop-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.drop-item .item-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    color: var(--primary);
+    margin-top: 2px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.drop-item:hover .item-icon {
+    transform: scale(1.1);
+}
+
+.drop-item .item-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.drop-item .item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: nowrap;
+}
+
+.drop-title {
+    font-weight: 700;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.badge-rec {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    letter-spacing: 0.2px;
+}
+
+.drop-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+/* Chevron animation */
+.btn .chevron {
+    width: 18px;
+    height: 18px;
+    margin-left: 8px;
+    margin-right: -4px !important;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dropdown-wrapper.active .btn .chevron {
+    transform: rotate(180deg);
+}
+
+/* Close overlay for click-outside */
+.dropdown-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: none;
+}
+
+.dropdown-wrapper.active .dropdown-overlay {
+    display: block;
+}

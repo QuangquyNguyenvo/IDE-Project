@@ -130,13 +130,53 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
+// Dropdown Logic
+const dlTrigger = document.getElementById('download-trigger');
+const dlWrapper = document.querySelector('.dropdown-wrapper');
+
+if (dlTrigger && dlWrapper) {
+    dlTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dlWrapper.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dlWrapper.contains(e.target)) {
+            dlWrapper.classList.remove('active');
+        }
+    });
+}
+
+// Fetch Releases
 fetch('https://api.github.com/repos/QuangquyNguyenvo/Sameko-Dev-CPP/releases')
     .then(res => res.json())
     .then(data => {
         if (data && data.length > 0) {
+            // Find latest pre-release or release
             const latest = data[0];
-            const btn = document.getElementById('download-btn');
-            if (btn) btn.href = latest.html_url;
+            // Note: Users asked for "latest pre-release", usually API returns sorted by date.
+            // If we strictly want specific types, we can filter. 
+            // data[0] is usually the latest created, which includes pre-releases if not filtered.
+
+            const installerBtn = document.getElementById('dl-installer');
+            const portableBtn = document.getElementById('dl-portable');
+
+            let installerUrl = latest.html_url; // Fallback
+            let portableUrl = latest.html_url;  // Fallback
+
+            if (latest.assets && latest.assets.length > 0) {
+                latest.assets.forEach(asset => {
+                    const name = asset.name.toLowerCase();
+                    if (name.endsWith('.exe')) {
+                        installerUrl = asset.browser_download_url;
+                    } else if (name.endsWith('.rar') || name.endsWith('.zip')) {
+                        portableUrl = asset.browser_download_url;
+                    }
+                });
+            }
+
+            if (installerBtn) installerBtn.href = installerUrl;
+            if (portableBtn) portableBtn.href = portableUrl;
         }
     })
     .catch(e => console.log('GitHub API warning: ', e));
