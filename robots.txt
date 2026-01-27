@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://quangquynguyenvo.github.io/Sameko-Dev-CPP/sitemap.xml
+
+
+
+# Disallow specific paths if needed (currently allowing all)
+# Disallow: /private/
