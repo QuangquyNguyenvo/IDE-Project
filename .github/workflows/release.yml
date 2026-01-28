@@ -63,6 +63,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: release_build/latest.yml
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: ${{ steps.tag.outputs.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -74,5 +76,7 @@ jobs:
           files: |
             release_build/*.zip
             release_build/*Setup*.exe
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: ${{ steps.tag.outputs.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
