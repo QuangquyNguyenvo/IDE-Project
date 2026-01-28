@@ -33,10 +33,10 @@ jobs:
           $tagName = $env:GITHUB_REF -replace 'refs/tags/', ''
           echo "tag_name=$tagName" >> $env:GITHUB_OUTPUT
 
-      - name: Build and Publish
+      - name: Build (No Publish)
         run: npm run build:win
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Removed GH_TOKEN to prevent electron-builder from auto-publishing
+        # We will handle the upload explicitly in the final step
 
       - name: Create Portable ZIP (optional)
         continue-on-error: true
@@ -59,24 +59,17 @@ jobs:
             Write-Host "Created ZIP: $zip_name"
           }
 
-      - name: Upload latest.yml
+      - name: Create Release & Upload Assets
         uses: softprops/action-gh-release@v1
         with:
-          files: release_build/latest.yml
           tag_name: ${{ steps.tag.outputs.tag_name }}
           name: ${{ steps.tag.outputs.tag_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Additional Assets (optional)
-        if: success()
-        continue-on-error: true
-        uses: softprops/action-gh-release@v1
-        with:
+          draft: false
+          prerelease: false
           files: |
+            release_build/*.exe
             release_build/*.zip
-            release_build/*Setup*.exe
-          tag_name: ${{ steps.tag.outputs.tag_name }}
-          name: ${{ steps.tag.outputs.tag_name }}
+            release_build/latest.yml
+            release_build/*.blockmap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
