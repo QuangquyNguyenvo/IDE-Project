@@ -919,7 +919,7 @@ function initSettings() {
     document.getElementById('settings-overlay').onclick = e => {
         if (e.target.id === 'settings-overlay') closeSettings();
     };
-    
+
     // Header restart/update button
     const headerUpdateBtn = document.getElementById('btn-restart-update');
     if (headerUpdateBtn) {
@@ -4570,7 +4570,8 @@ function handleProblemReceived(problem) {
 
 
     const id = 'tab_' + Date.now();
-    const template = DEFAULT_CODE;
+    // Use user template if available, otherwise default
+    const template = App.settings.template?.code || DEFAULT_CODE;
 
     App.tabs.push({
         id,
@@ -5447,7 +5448,7 @@ let pendingUpdateVersion = null;
 // Detect portable version (non-blocking)
 function detectPortableVersion() {
     if (!window.electronAPI?.getAppInfo) return;
-    
+
     window.electronAPI.getAppInfo()
         .then(info => {
             isPortableVersion = info?.isPortable || false;
