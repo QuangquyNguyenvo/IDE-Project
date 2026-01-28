@@ -253,9 +253,9 @@ async function runExternal({ exePath, cwd }) {
     const innerCommand = [
         `@echo off`,
         `cls`,
-        `"${exePath}"`, 
-        `echo.`,        
-        `echo.`,          
+        `"${exePath}"`,
+        `echo.`,
+        `echo.`,
         `echo --------------------------------`,
         `echo Program finished. Press any key to close...`,
         `pause >nul`

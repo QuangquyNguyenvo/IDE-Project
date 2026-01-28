@@ -86,8 +86,13 @@
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="src/assets/screenshot_welcome.png" alt="Welcome Screen" width="48%" />
-  <img src="src/assets/screenshot_editor.png" alt="Main Editor" width="48%" />
+  <img src="src/assets/screenshots/preview.gif" alt="Sameko IDE Demo" width="100%" />
+  <br /><br />
+  <img src="src/assets/screenshots/welcome.png" alt="Welcome Screen" width="48%" />
+  <img src="src/assets/screenshots/editor.png" alt="Main Editor" width="48%" />
+  <br />
+  <img src="src/assets/screenshots/customizer.png" alt="Theme Customizer" width="48%" />
+  <img src="src/assets/screenshots/settings.png" alt="Settings" width="48%" />
 </div>
 
 <br />
