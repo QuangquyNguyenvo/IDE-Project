@@ -132,6 +132,20 @@ window.registerCppIntellisense = function (monaco) {
                 insertText: s.text, insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                 documentation: s.doc, range: range
             }));
+
+            // User Custom Snippets (from App.settings)
+            if (typeof App !== 'undefined' && App.settings && Array.isArray(App.settings.snippets)) {
+                App.settings.snippets.forEach(s => {
+                    suggestions.push({
+                        label: s.trigger,
+                        kind: monaco.languages.CompletionItemKind.Snippet,
+                        insertText: s.content,
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        documentation: s.name || 'Custom Snippet',
+                        range: range
+                    });
+                });
+            }
         }
 
         // --- 3. KEYWORDS & STL METHODS (Luôn hiện) ---
