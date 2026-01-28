@@ -135,17 +135,19 @@
             "publisherName": "Sameko Project"
         },
         "nsis": {
-            "artifactName": "${productName}-Setup-${version}.${ext}",
+            "artifactName": "sameko-dev-cpp-setup-${version}.${ext}",
             "oneClick": false,
             "allowToChangeInstallationDirectory": true,
             "createDesktopShortcut": true,
             "createStartMenuShortcut": true,
             "shortcutName": "Sameko Dev C++",
             "perMachine": false,
-            "allowElevation": true
+            "allowElevation": true,
+            "deleteAppDataOnUninstall": false
         },
         "portable": {
-            "artifactName": "${productName}-${version}-Portable.${ext}"
+            "artifactName": "sameko-dev-cpp-${version}-portable.${ext}",
+            "unpackDirName": "Sameko Dev C++ Portable"
         },
         "mac": {
             "target": "dmg",
