@@ -20,23 +20,24 @@ class AutoUpdateService {
         this.mainWindow = null;
         this.updateDownloaded = false;
         this.updateInfo = null;
-        
+
         // Allow pre-release updates (beta versions)
         autoUpdater.allowPrerelease = true;
-        
-        // Don't auto-download updates, let user control it
-        autoUpdater.autoDownload = false;
-        
+
+        // Auto-download updates in background
+        autoUpdater.autoDownload = true;
+
         // Configure update check
-        autoUpdater.autoInstallOnAppQuit = true;
-        
+        // Do NOT install silently on quit - require explicit restart
+        autoUpdater.autoInstallOnAppQuit = false;
+
         this.setupEventHandlers();
     }
 
-        initialize(mainWindow) {
+    initialize(mainWindow) {
         this.mainWindow = mainWindow;
         log.info('[AutoUpdate] Service initialized');
-        
+
         // Only check for updates in packaged app (skip in development/first run)
         if (app.isPackaged) {
             // Check for updates on startup (after 10 seconds delay, non-blocking)
@@ -92,7 +93,7 @@ class AutoUpdateService {
         autoUpdater.on('download-progress', (progressObj) => {
             const logMessage = `Download speed: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}% (${progressObj.transferred}/${progressObj.total})`;
             log.info('[AutoUpdate]', logMessage);
-            
+
             this.sendStatusToRenderer('download-progress', {
                 percent: Math.round(progressObj.percent),
                 transferred: progressObj.transferred,
@@ -106,7 +107,7 @@ class AutoUpdateService {
             log.info('[AutoUpdate] Update downloaded:', info.version);
             this.updateDownloaded = true;
             this.updateInfo = info;
-            
+
             this.sendStatusToRenderer('update-downloaded', {
                 version: info.version,
                 releaseNotes: info.releaseNotes,
@@ -130,24 +131,24 @@ class AutoUpdateService {
         }
     }
 
-        async checkForUpdates(showNoUpdateDialog = true) {
+    async checkForUpdates(showNoUpdateDialog = true) {
         try {
             log.info('[AutoUpdate] Checking for updates manually...');
-            
+
             if (showNoUpdateDialog) {
                 this.sendStatusToRenderer('checking-for-update');
             }
-            
+
             // Add timeout to prevent hanging (15 seconds)
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => reject(new Error('Update check timed out')), 15000);
             });
-            
+
             const result = await Promise.race([
                 autoUpdater.checkForUpdates(),
                 timeoutPromise
             ]);
-            
+
             // Handle null/undefined result safely
             if (showNoUpdateDialog && (!result || !result.updateInfo)) {
                 this.sendStatusToRenderer('update-not-available', {
@@ -155,18 +156,18 @@ class AutoUpdateService {
                     showMessage: true
                 });
             }
-            
+
             return result;
         } catch (error) {
             log.error('[AutoUpdate] Check failed:', error);
-            
+
             if (showNoUpdateDialog) {
                 this.sendStatusToRenderer('update-error', {
                     message: error.message || 'Update check failed',
                     showMessage: true
                 });
             }
-            
+
             throw error;
         }
     }
@@ -194,18 +195,18 @@ class AutoUpdateService {
     quitAndInstall() {
         if (this.updateDownloaded) {
             log.info('[AutoUpdate] Quitting and installing update...');
-            
+
             // setImmediate ensures the app quits after this function returns
             setImmediate(() => {
                 // Disable all windows close event handlers
                 app.removeAllListeners('window-all-closed');
-                
+
                 // Close all windows
                 BrowserWindow.getAllWindows().forEach(window => {
                     window.removeAllListeners('close');
                     window.close();
                 });
-                
+
                 // Quit and install
                 autoUpdater.quitAndInstall(false, true);
             });
@@ -214,7 +215,7 @@ class AutoUpdateService {
         }
     }
 
-        getStatus() {
+    getStatus() {
         return {
             updateDownloaded: this.updateDownloaded,
             updateInfo: this.updateInfo,

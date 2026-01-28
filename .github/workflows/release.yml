@@ -26,9 +26,13 @@ jobs:
       - name: Build application
         run: npm run build:win
 
+
       - name: Get tag name
         id: tag
-        run: echo "tag_name=${GITHUB_REF#refs/tags/}" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+        run: |
+          $tagName = $env:GITHUB_REF -replace 'refs/tags/', ''
+          echo "tag_name=$tagName" >> $env:GITHUB_OUTPUT
 
       - name: Create Release
         uses: actions/create-release@v1
@@ -55,10 +59,11 @@ jobs:
           
           if (Test-Path $portable_exe) {
             # Create a 7z archive from the portable exe
-            7z x $portable_exe -o"release_build\temp-extract" -y
+            $extract_path = "release_build\temp-extract\Sameko Dev C++ Portable"
+            7z x $portable_exe -o"$extract_path" -y
             
-            # Zip the extracted folder
-            Compress-Archive -Path "release_build\temp-extract\*" -DestinationPath $zip_name -Force
+            # Zip the extracted folder (so user gets a single folder when unzipping)
+            Compress-Archive -Path "$extract_path" -DestinationPath $zip_name -Force
             
             # Cleanup
             Remove-Item -Recurse -Force "release_build\temp-extract"

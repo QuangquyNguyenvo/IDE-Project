@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-01-27
+## [1.0.1] - 2026-01-29
+
+### Fixed
+- **[[Performance] High CPU/Memory usage or UI Lag observed (Fixes #6)](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues/6)**:
+    - Implemented `Performance Mode` which optimizes background rendering (using `scroll` instead of `fixed` attachment) to reduce repaint lag.
+    - Disabled heavy visual effects like `backdrop-filter` and minimap rendering in Performance Mode.
+    - Limited terminal buffer size to 1000 lines to prevent DOM overload.
+- **[[UI] Background Blur setting has no effect on main window (Fixes #5)](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues/5)**: Adjusted window transparency handling and backdrop filter application.
+- **[[BUG] G++ fails to initialize on startup on specific machines (Fixes #4)](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues/4)**: Improved compiler path detection and initialization logic (LLD linker adjustments).
+- **[[BUG] Created snippets do not trigger/expand (Fixes #3)](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues/3)**: Fixed snippet registration logic to correctly load user-defined snippets from `App.settings`.
+- **[[BUG] Competitive Companion parser does not load template (Fixes #2)](https://github.com/QuangquyNguyenvo/Sameko-Dev-CPP/issues/2)**: Fixed issue where the default code template was not applying when receiving problems from OJ.
+
 
 ### Added
 - **External Terminal Integration**: Launch external terminal for interactive debugging and testing
