@@ -34,9 +34,9 @@ jobs:
           echo "tag_name=$tagName" >> $env:GITHUB_OUTPUT
 
       - name: Build (No Publish)
-        run: npm run build:win
-        # Removed GH_TOKEN to prevent electron-builder from auto-publishing
-        # We will handle the upload explicitly in the final step
+        run: npm run build:win -- -p never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Portable ZIP (optional)
         continue-on-error: true
