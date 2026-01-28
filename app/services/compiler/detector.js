@@ -123,6 +123,8 @@ function detectCompiler() {
     return 'g++';
 }
 
+detectCompiler();
+
 async function getCompilerVersion() {
     return new Promise((resolve) => {
         const compiler = detectedCompiler || 'g++';
