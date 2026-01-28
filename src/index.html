@@ -113,8 +113,10 @@
                 <span class="sep"></span>
 
                 <!-- Restart to Update button (hidden by default) -->
-                <button class="action-btn update-ready" id="btn-restart-update" title="Install the pending update" style="display: none;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <button class="action-btn update-ready" id="btn-restart-update" title="Install the pending update"
+                    style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round">
                         <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.3" />
                     </svg>
                     <span>Restart to Update</span>
@@ -1188,17 +1190,18 @@
 
     <script>
         // Debug: Catch all errors
-        window.onerror = function(msg, url, line, col, error) {
+        window.onerror = function (msg, url, line, col, error) {
             console.error('[GLOBAL ERROR]', msg, url, line, col, error);
             return false;
         };
-        window.onunhandledrejection = function(event) {
+        window.onunhandledrejection = function (event) {
             console.error('[UNHANDLED REJECTION]', event.reason);
         };
         console.log('[DEBUG] Scripts starting to load...');
     </script>
     <script>var require = { paths: { vs: '../node_modules/monaco-editor/min/vs' } };</script>
-    <script src="../node_modules/monaco-editor/min/vs/loader.js" onerror="console.error('[ERROR] Failed to load Monaco loader')"></script>
+    <script src="../node_modules/monaco-editor/min/vs/loader.js"
+        onerror="console.error('[ERROR] Failed to load Monaco loader')"></script>
     <script src="features/suggestions/cpp-suggestions.js"></script>
     <script src="features/snippets/snippet-editor.js"></script>
     <script src="renderer/ui/theme-tokens.js"></script>

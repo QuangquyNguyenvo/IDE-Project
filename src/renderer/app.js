@@ -90,19 +90,8 @@ int main() {
         formatCode: 'Ctrl+Shift+A'
     },
     snippets: [
-        {
-            trigger: 'cp',
-            name: 'CP Template',
-            content: '#include <bits/stdc++.h>\nusing namespace std;\n\n#define ll long long\n#define fi first\n#define se second\n#define pb push_back\n#define all(v) v.begin(), v.end()\n\nvoid solve() {\n\t${0}\n}\n\nint main() {\n\tios_base::sync_with_stdio(0); cin.tie(0);\n\tint t = 1;\n\t// cin >> t;\n\twhile (t--) solve();\n\treturn 0;\n}',
-            isBuiltin: true
-        },
-        { trigger: 'fori', name: 'For Loop I (0)', content: 'for(int i=0; i<${1:n}; i++) {\n\t${0}\n}', isBuiltin: true },
-        { trigger: 'fori1', name: 'For Loop I (1)', content: 'for(int i=1; i<=${1:n}; i++) {\n\t${0}\n}', isBuiltin: true },
-        { trigger: 'forj', name: 'For Loop J (0)', content: 'for(int j=0; j<${1:n}; j++) {\n\t${0}\n}', isBuiltin: true },
-        { trigger: 'forj1', name: 'For Loop J (1)', content: 'for(int j=1; j<=${1:n}; j++) {\n\t${0}\n}', isBuiltin: true },
-        { trigger: 'cout', name: 'Compact Print', content: 'cout<<${1:res}<<"\\n";', isBuiltin: true },
-        { trigger: 'cin', name: 'Compact Read', content: 'cin>>${1:n};', isBuiltin: true },
-        { trigger: 'vector', name: 'STL Vector', content: 'vector<${1:int}> ${2:v};', isBuiltin: true }
+        { trigger: 'hello', name: 'Hello World', content: '#include <iostream>\nusing namespace std;\n\nint main() {\n\tcout << "Hello World!";\n\treturn 0;\n}', isBuiltin: false },
+        { trigger: 'lcm', name: 'LCM Function', content: 'long long lcm(long long a, long long b) {\n\treturn (a / __gcd(a, b)) * b;\n}', isBuiltin: false }
     ]
 };
 
@@ -132,10 +121,10 @@ const App = {
 };
 
 const DEFAULT_CODE = `#include<bits/stdc++.h>
+#define ll long long
 using namespace std;
-
 int main() {
-    cout << "hello gaialime";
+    cout << "toi yeu gaialimi";
     return 0;
 }
 `;
@@ -4570,7 +4559,6 @@ function handleProblemReceived(problem) {
 
 
     const id = 'tab_' + Date.now();
-    // Use user template if available, otherwise default
     const template = App.settings.template?.code || DEFAULT_CODE;
 
     App.tabs.push({

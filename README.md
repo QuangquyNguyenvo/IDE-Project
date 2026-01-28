@@ -157,6 +157,7 @@ npm run build:win
 **💖 Contributors**
 
 - **Yunchan** (Special thanks for designing the logo!)
+- **aiko-chan-ai** (Fixed G++ spawn issue on some machines)
 
 **📝 Want to contribute?**
 
