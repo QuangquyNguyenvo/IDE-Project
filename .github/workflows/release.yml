@@ -59,6 +59,13 @@ jobs:
             Write-Host "Created ZIP: $zip_name"
           }
 
+      - name: Upload latest.yml
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release_build/latest.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload Additional Assets (optional)
         if: success()
         continue-on-error: true
