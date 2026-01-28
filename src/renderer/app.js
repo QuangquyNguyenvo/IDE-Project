@@ -90,8 +90,7 @@ int main() {
         formatCode: 'Ctrl+Shift+A'
     },
     snippets: [
-        { trigger: 'hello', name: 'Hello World', content: '#include <iostream>\nusing namespace std;\n\nint main() {\n\tcout << "Hello World!";\n\treturn 0;\n}', isBuiltin: false },
-        { trigger: 'lcm', name: 'LCM Function', content: 'long long lcm(long long a, long long b) {\n\treturn (a / __gcd(a, b)) * b;\n}', isBuiltin: false }
+        { trigger: 'hello', name: 'Hello World', content: '#include <iostream>\nusing namespace std;\n\nint main() {\n\tcout << "Hello World!";\n\treturn 0;\n}', isBuiltin: true },
     ]
 };
 
@@ -280,15 +279,15 @@ function createEditor(containerId) {
         fontSize: App.settings.editor.fontSize,
         fontFamily: App.settings.editor.fontFamily,
         fontLigatures: true,
-        minimap: { enabled: App.settings.editor.minimap },
         wordWrap: App.settings.editor.wordWrap ? 'on' : 'off',
         scrollBeyondLastLine: false,
         automaticLayout: true,
         tabSize: App.settings.editor.tabSize,
-        cursorBlinking: 'smooth',
-        smoothScrolling: false,
-        bracketPairColorization: { enabled: true },
+        cursorBlinking: App.settings.appearance.performanceMode ? 'solid' : 'smooth',
+        smoothScrolling: !App.settings.appearance.performanceMode,
+        bracketPairColorization: { enabled: !App.settings.appearance.performanceMode },
         padding: { top: 12 },
+        mouseWheelZoom: !App.settings.appearance.performanceMode,
 
         overviewRulerBorder: false,
         overviewRulerLanes: 0,
@@ -307,9 +306,9 @@ function createEditor(containerId) {
         },
 
         minimap: {
-            enabled: App.settings.editor.minimap,
-            showSlider: 'always',  // Show slider normally
-            renderCharacters: true,
+            enabled: App.settings.editor.minimap && !App.settings.appearance.performanceMode,
+            showSlider: 'always',
+            renderCharacters: !App.settings.appearance.performanceMode,
             scale: 1
         },
 
@@ -2088,6 +2087,16 @@ function applySettings() {
             showTypeParameters: App.settings.editor.intellisense !== false
         }
     };
+
+    // Performance optimizations
+    if (App.settings.appearance.performanceMode) {
+        opts.minimap = { enabled: false };
+        opts.bracketPairColorization = { enabled: false };
+        opts.cursorBlinking = 'solid';
+        opts.smoothScrolling = false;
+        opts.mouseWheelZoom = false;
+    }
+
     if (App.editor) App.editor.updateOptions(opts);
     if (App.editor2) App.editor2.updateOptions(opts);
 
@@ -4135,6 +4144,13 @@ function log(msg, type = '') {
     }
 
     t.appendChild(l);
+
+    // Performance: Limit terminal lines to prevent lagging
+    const MAX_TERM_LINES = 1000;
+    while (t.childElementCount > MAX_TERM_LINES) {
+        t.removeChild(t.firstChild);
+    }
+
     t.scrollTop = t.scrollHeight;
 
 
