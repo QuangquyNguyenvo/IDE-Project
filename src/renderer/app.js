@@ -4570,7 +4570,7 @@ function handleProblemReceived(problem) {
 
 
     const id = 'tab_' + Date.now();
-    const template = DEFAULT_CODE;
+    const template = App.settings.template?.code || DEFAULT_CODE;
 
     App.tabs.push({
         id,
