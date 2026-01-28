@@ -71,6 +71,8 @@ jobs:
         continue-on-error: true
         uses: softprops/action-gh-release@v1
         with:
-          files: release_build/*.zip
+          files: |
+            release_build/*.zip
+            release_build/*Setup*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
