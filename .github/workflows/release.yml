@@ -23,10 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
-        run: npm run build:win
-
-
       - name: Get tag name
         id: tag
         shell: pwsh
@@ -34,24 +30,13 @@ jobs:
           $tagName = $env:GITHUB_REF -replace 'refs/tags/', ''
           echo "tag_name=$tagName" >> $env:GITHUB_OUTPUT
 
-      - name: Create Release
-        uses: actions/create-release@v1
+      - name: Build and Publish
+        run: npm run build:win
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.tag.outputs.tag_name }}
-          release_name: Release ${{ steps.tag.outputs.tag_name }}
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release_build/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Portable ZIP
+      - name: Create Portable ZIP (optional)
+        continue-on-error: true
         run: |
           $version = "${{ steps.tag.outputs.tag_name }}".TrimStart('v')
           $portable_exe = "release_build\Sameko Dev C++-${version}-Portable.exe"
@@ -71,9 +56,11 @@ jobs:
             Write-Host "Created ZIP: $zip_name"
           }
 
-      - name: Upload ZIP to Release
+      - name: Upload Additional Assets (optional)
+        if: success()
+        continue-on-error: true
         uses: softprops/action-gh-release@v1
         with:
-          files: release_build/*Portable.zip
+          files: release_build/*.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
