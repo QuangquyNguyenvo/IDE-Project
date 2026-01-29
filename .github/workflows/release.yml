@@ -64,13 +64,30 @@ jobs:
             Write-Host "Total files in win-unpacked: $fileCount"
             
             # Verify Sameko-GCC is included
-            $gccPath = "$unpackedDir/resources/Sameko-GCC/bin/g++.exe"
-            if (Test-Path $gccPath) {
-              Write-Host "✓ Sameko-GCC bundled successfully"
+            $gccFolder = "$unpackedDir/resources/Sameko-GCC"
+            $gccExe = "$gccFolder/bin/g++.exe"
+            
+            Write-Host "Checking for Sameko-GCC..."
+            if (Test-Path $gccFolder) {
+              Write-Host "✓ Sameko-GCC folder exists"
+              # List what's inside
+              Write-Host "  Contents of Sameko-GCC:"
+              Get-ChildItem -Path $gccFolder | ForEach-Object { Write-Host "    $($_.Name)" }
+              
+              if (Test-Path $gccExe) {
+                Write-Host "✓ g++.exe found"
+              } else {
+                Write-Host "⚠ g++.exe not at expected path, checking bin folder..."
+                Get-ChildItem -Path "$gccFolder/bin" -ErrorAction SilentlyContinue | Select-Object -First 10 | ForEach-Object { Write-Host "    $($_.Name)" }
+              }
             } else {
-              Write-Host "✗ ERROR: Sameko-GCC not found at: $gccPath"
+              Write-Host "✗ ERROR: Sameko-GCC folder not found at: $gccFolder"
               Write-Host "Checking resources folder:"
               Get-ChildItem -Path "$unpackedDir/resources" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.Name)" }
+              
+              # Check if it's nested differently
+              Write-Host "Searching for g++.exe anywhere in resources..."
+              Get-ChildItem -Path "$unpackedDir/resources" -Recurse -Filter "g++.exe" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  Found: $($_.FullName)" }
               exit 1
             }
             
