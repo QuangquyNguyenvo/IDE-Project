@@ -27,6 +27,43 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Download Sameko-GCC from latest release
+        shell: pwsh
+        run: |
+          Write-Host "=== Downloading Sameko-GCC ==="
+          $repo = "${{ github.repository }}"
+          $apiUrl = "https://api.github.com/repos/$repo/releases/latest"
+          
+          # Get latest release assets
+          $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ "User-Agent" = "GitHub-Actions" }
+          $asset = $release.assets | Where-Object { $_.name -eq "Sameko-GCC.zip" } | Select-Object -First 1
+          
+          if (-not $asset) {
+            Write-Host "ERROR: Sameko-GCC.zip not found in latest release!"
+            exit 1
+          }
+          
+          Write-Host "Found: $($asset.name) ($([math]::Round($asset.size / 1MB, 2)) MB)"
+          
+          # Download
+          $downloadUrl = $asset.browser_download_url
+          Write-Host "Downloading from: $downloadUrl"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile "Sameko-GCC.zip" -UseBasicParsing
+          
+          # Extract to project root
+          Write-Host "Extracting..."
+          Expand-Archive -Path "Sameko-GCC.zip" -DestinationPath "." -Force
+          Remove-Item "Sameko-GCC.zip"
+          
+          # Verify
+          if (Test-Path "Sameko-GCC/bin/g++.exe") {
+            Write-Host "✓ Sameko-GCC extracted successfully"
+          } else {
+            Write-Host "ERROR: g++.exe not found after extraction!"
+            Get-ChildItem -Path "." -Depth 2 | ForEach-Object { Write-Host $_.FullName }
+            exit 1
+          }
+
       - name: Get version info
         id: version
         shell: pwsh
