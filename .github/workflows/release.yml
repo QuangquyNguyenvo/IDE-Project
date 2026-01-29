@@ -46,76 +46,73 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          $portableExe = "release_build/sameko-dev-cpp-${version}-portable.exe"
+          $unpackedDir = "release_build/win-unpacked"
           $zipName = "release_build/sameko-dev-cpp-${version}-portable.zip"
           
           Write-Host "=== Creating Portable ZIP ==="
-          Write-Host "Looking for: $portableExe"
+          Write-Host "Looking for unpacked directory: $unpackedDir"
           
-          # List all files in release_build for debugging
-          Write-Host "Files in release_build:"
+          # List all files/folders in release_build for debugging
+          Write-Host "Contents of release_build:"
           Get-ChildItem -Path "release_build" | ForEach-Object { Write-Host "  $($_.Name)" }
           
-          if (Test-Path $portableExe) {
-            Write-Host "Found portable exe, extracting..."
+          if (Test-Path $unpackedDir) {
+            Write-Host "Found win-unpacked directory"
             
-            # Create temp directory structure
+            # Count files
+            $fileCount = (Get-ChildItem -Path $unpackedDir -Recurse -File | Measure-Object).Count
+            Write-Host "Total files in win-unpacked: $fileCount"
+            
+            # Verify Sameko-GCC is included
+            $gccPath = "$unpackedDir/resources/Sameko-GCC/bin/g++.exe"
+            if (Test-Path $gccPath) {
+              Write-Host "✓ Sameko-GCC bundled successfully"
+            } else {
+              Write-Host "✗ ERROR: Sameko-GCC not found at: $gccPath"
+              Write-Host "Checking resources folder:"
+              Get-ChildItem -Path "$unpackedDir/resources" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.Name)" }
+              exit 1
+            }
+            
+            # Create temp structure with folder name
             $tempRoot = "release_build/temp-portable"
             $folderName = "Sameko Dev C++ Portable"
-            $extractPath = "$tempRoot/$folderName"
+            $targetPath = "$tempRoot/$folderName"
             
-            # Clean up if exists
             if (Test-Path $tempRoot) {
               Remove-Item -Recurse -Force $tempRoot
             }
             
-            New-Item -ItemType Directory -Path $extractPath -Force | Out-Null
+            # Copy win-unpacked to temp with proper folder name
+            Write-Host "Copying to: $targetPath"
+            Copy-Item -Path $unpackedDir -Destination $targetPath -Recurse
             
-            # Extract portable exe (NSIS portable is a self-extracting 7z archive)
-            Write-Host "Extracting with 7z..."
-            7z x $portableExe -o"$extractPath" -y
-            
-            # Verify extraction
-            $extractedFiles = Get-ChildItem -Path $extractPath -Recurse | Measure-Object
-            Write-Host "Extracted $($extractedFiles.Count) items"
-            
-            if ($extractedFiles.Count -eq 0) {
-              Write-Host "ERROR: Extraction failed - no files extracted"
-              exit 1
-            }
-            
-            # Verify Sameko-GCC is included
-            $gccPath = "$extractPath/resources/Sameko-GCC/bin/g++.exe"
-            if (Test-Path $gccPath) {
-              Write-Host "✓ Sameko-GCC bundled successfully"
-            } else {
-              Write-Host "⚠ Warning: Sameko-GCC not found at expected path: $gccPath"
-              Write-Host "Checking resources folder structure:"
-              Get-ChildItem -Path "$extractPath/resources" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.Name)" }
-            }
-            
-            # Create ZIP with the folder inside
-            # User will extract and get "Sameko Dev C++ Portable" folder ready to use
+            # Create ZIP (user extracts and gets "Sameko Dev C++ Portable" folder)
             Write-Host "Creating ZIP archive..."
-            Compress-Archive -Path $extractPath -DestinationPath $zipName -Force
+            Compress-Archive -Path $targetPath -DestinationPath $zipName -Force
             
             # Get ZIP size
             $zipSize = [math]::Round((Get-Item $zipName).Length / 1MB, 2)
             Write-Host "✓ Created: $zipName ($zipSize MB)"
             
-            # Show top-level ZIP structure
-            Write-Host "ZIP structure (top-level):"
-            7z l $zipName -ba | Select-Object -First 15
+            # Show ZIP structure
+            Write-Host "ZIP top-level structure:"
+            7z l $zipName -ba | Select-Object -First 10
             
             # Cleanup
             Remove-Item -Recurse -Force $tempRoot
-            Remove-Item -Force $portableExe
-            Write-Host "✓ Cleaned up temp files"
+            
+            # Remove portable exe (we only want the ZIP)
+            $portableExe = "release_build/sameko-dev-cpp-${version}-portable.exe"
+            if (Test-Path $portableExe) {
+              Remove-Item -Force $portableExe
+              Write-Host "✓ Removed portable exe"
+            }
             
           } else {
-            Write-Host "ERROR: Portable exe not found!"
-            Write-Host "Available files in release_build:"
-            Get-ChildItem -Path "release_build" -Recurse | ForEach-Object { Write-Host $_.FullName }
+            Write-Host "ERROR: win-unpacked directory not found!"
+            Write-Host "Available in release_build:"
+            Get-ChildItem -Path "release_build" -Recurse -Depth 1 | ForEach-Object { Write-Host $_.FullName }
             exit 1
           }
 
